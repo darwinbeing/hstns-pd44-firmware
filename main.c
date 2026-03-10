@@ -24,6 +24,7 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
 ** ADDITIONAL NOTES:       LLC SeriesResonant converter without output Inductor                                                                                                                                                                    
 *************************************************************************************************************************************************************/
+#include <xc.h>
 #include "p33Fxxxx.h"
 #include "define.h"
 

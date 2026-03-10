@@ -78,8 +78,8 @@ void initIOPorts(void)
 
 	AUXILIARY_START = ON;					/* Keep Aux on until 12V starts up */
 
-	RPINR29bits.FLT1R = 0b100000;                           /* PWM FLT1 Remapped to RP32 */
-	RPOR16bits.RP32R = 0b100111;                            /* ACMP1 (Current) Remapped to RP32 */
+	// RPINR29bits.FLT1R = 0b100000;                           /* PWM FLT1 Remapped to RP32 */
+	// RPOR16bits.RP32R = 0b100111;                            /* ACMP1 (Current) Remapped to RP32 */
 }
 
 void initPWM(void)
