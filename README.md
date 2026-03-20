@@ -265,3 +265,14 @@ confirming it modifies the feedback divider ratio, not a digital offset.
 - [ ] SPI Flash read/write — extract and store calibration parameters, coefficients, configuration
 - [ ] I2C/PMBus communication — voltage/current/temperature reporting, remote on/off, margin control
 - [ ] Firmware checksum — integrity verification at boot, dual firmware redundant backup for fail-safe update
+
+## Contributing
+
+Contributions are welcome! This is an open platform for digital power electronics research and development. Areas where help is especially appreciated:
+
+- **Control algorithms** — implement and benchmark alternative compensators (3P3Z, PID, state-space, MPC, adaptive/neural-network control)
+- **Firmware reverse engineering** — decompile additional functions (PMBus handler, PFC stage, standby converter, fault management)
+- **Hardware documentation** — schematic tracing, component identification, pinout mapping
+- **Testing & validation** — load transient measurements, Bode plots, efficiency curves, thermal characterization
+
+If you have an HSTNS-PD44 unit and a PICkit/ICD programmer, you can start experimenting right away. PRs, issues, and discussions are all welcome.
