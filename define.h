@@ -24,6 +24,19 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 
 #include "p33Fxxxx.h"
 
+#include <stdint.h>
+#include <stdbool.h>
+
+/* ============================================================
+ * Type aliases
+ * ============================================================ */
+
+typedef int16_t  s16;
+typedef uint16_t u16;
+typedef int32_t  s32;
+typedef uint32_t u32;
+typedef int64_t  s64;
+
 
 #define TRUE              1
 #define FALSE             0
@@ -43,10 +56,13 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 
 
 #define LED_FAULT           			LATBbits.LATB12
-#define LED_1         		 		LATBbits.LATB5
+#define LED_1         		 		LATDbits.LATB2
 #define LED_2         		 		LATBbits.LATB11
 #define AUXILIARY_START                         LATBbits.LATB15
 
+#define LED_ON()     do { LATDbits.LATD2 = 1; } while(0)
+#define LED_OFF()    do { LATDbits.LATD2 = 0; } while(0)
+#define LED_TOGGLE() do { LATDbits.LATD2 ^= 1; } while(0)
 
 #define FAULT_INPUTVOLTAGE			1                                           // Input under or over voltage
 #define FAULT_OVERCURRENT			2                                           // Output over current
@@ -104,7 +120,7 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 
 #else
 
-#define SOFTSTARTPERIOD                         1560                    // PTPER = ((1 / 300kHz) / 1.07ns) = 3115 / 2 (push-pull) = 1558 where 300kHz
+#define SOFTSTARTPERIOD                         286                    // PTPER = ((1 / 300kHz) / 1.07ns) = 3115 / 2 (push-pull) = 1558 where 300kHz
 								        //  is the desired initial switching frequency for the softstart.
                                                                         //  The Gate Drive Transformers maximum rated switching frequency (300kHz)
 
@@ -130,7 +146,7 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 
 #define SOFTSTARTMAXVOLTAGE			26366                   // Correspondes to 11.5V output
 
-#define OUTPUTVOLTAGEREFERENCE                  27520                   // Reference voltage is from resistor divider circuit
+#define OUTPUTVOLTAGEREFERENCE                  1071                   // Reference voltage is from resistor divider circuit
                                                                         // (1.5kOhm / (1.5kOhm + 4.99kOhm)) * 12V = 2.774V
                                                                         // Now calculate expected ADC value (2.774V * 1023)/3.3V = 860
 								    	// Then left shift by 5 for Q15 format (860 * 32) = 27520 = 0x6B80
@@ -140,15 +156,82 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 #define NOMINALPERIOD                           5140                     // 180kHz
 
 //Coefficient for Digital(3P3Z)Compensator
-#define n1 Q15(0.2711)  
-#define n2 Q15(0.178)   
-#define n3 Q15(0.1828)  
-#define n4 Q15(0.2663) 
-#define d2 Q15(0.6791)
-#define d3 Q15(0.7342)
-#define d4 Q15( 0.4133)
+//#define n1 Q15(0.2711)  
+//#define n2 Q15(0.178)   
+//#define n3 Q15(0.1828)  
+//#define n4 Q15(0.2663) 
+//#define d2 Q15(0.6791)
+//#define d3 Q15(0.7342)
+//#define d4 Q15( 0.4133)
+
+#define Q15_SHIFT 15
+#define Q15_SCALE (1L << Q15_SHIFT)
+#define Q15_FROM_FLOAT(x) ((int32_t)((x) * Q15_SCALE))
+
+// #define n1 (int32_t)Q15_FROM_FLOAT(-1.95197)  
+// #define n2 (int32_t)Q15_FROM_FLOAT(2.424896)   
+// #define n3 (int32_t)Q15_FROM_FLOAT(-0.69126)  
+// #define d2 (int16_t)Q15_FROM_FLOAT(0.25742)
+// #define d3 (int16_t)Q15_FROM_FLOAT(-0.00742)
 
 #define SPPIDOutputCLAMP (32767)
 #define PRESCALER 1 
 
+
+#define T1_PER 10000
+#define T2_PER 1000
+#define T3_PER 2000
+#define T4_PER 50000
+
+
+
+/* ============================================================
+ * Constants
+ * ============================================================ */
+
+/* Error limiting */
+#define ERR_SLEW_LIMIT      100     /* max |e(n) - e(n-1)| per cycle       */
+#define ERR_MAX             100     /* hard upper clamp on error            */
+#define ERR_MIN            (-100)   /* hard lower clamp on error            */
+
+/* Frequency control word operating range */
+#define U_EXEC_MIN         2600     /* lowest  allowed value  (~208 kHz)    */
+#define U_EXEC_MAX        24000     /* highest allowed value  (safety)      */
+
+/* Voltage-mode lower clamp values for u_exec */
+#define U_TARGET_BURST     3000     /* burst mode  (reduced set-point)      */
+#define U_TARGET_LIGHT     3400     /* no-load     (~272 kHz)               */
+#define U_TARGET_NORMAL    3200     /* full load   (~256 kHz)               */
+#define U_TARGET_LIGHT_THR 0x340    /* vin_adc threshold: light vs normal   */
+
+/* Gain scheduling (Kff) parameters */
+#define KFF_COEFF          1101     /* 0x44D - numerator slope              */
+#define KFF_OFFSET           74     /* 0x4A  - intercept subtracted         */
+#define KFF_MIN              44     /* 0x2C  - lower clamp on kff_vout      */
+#define KFF_MAX             128     /* 0x80  - upper clamp on kff_vout      */
+#define KFF_GAIN_NORMAL    1024     /* 0x400 - steady-state gain factor     */
+#define KFF_GAIN_BOOST     1500     /* 0x5DC - transient boost  (~x1.465)   */
+
+/* Transient gain boost */
+#define TRANS_THR_POS        20     /* positive transient arm threshold     */
+#define TRANS_THR_NEG      (-25)    /* negative transient arm threshold     */
+#define TRANS_DURATION       19     /* boost holds for 19 cycles (~760 us)  */
+
+/* Synchronous rectifier */
+#define SR_DISABLE_THR     6799     /* u_exec <= this -> SR off             */
+#define SR_FIXED_PDC3      0x36B    /* SR duty cycle at the disable boundary*/
+#define PHASE3_SLEW          10     /* max PHASE3 decrease per cycle        */
+
+/* Over-current protection */
+#define OCP_THRESHOLD      0x800    /* vout_sum OCP level                   */
+#define OCP_DURATION      25000     /* OCP must persist this many cycles    */
+
+/* Frequency calculation constant
+ *   0xB3FB00 = 11,796,224 = PWM_CLK_HZ / scaling_factor
+ *   PTPER = FREQ_CONST / u_exec / 2                                        */
+#define FREQ_CONST      0xB3FB00u
+
+
+int32_t __mulsi3(int32_t A, int32_t B);
+int16_t __builtin_divsd(const int32_t num, const int16_t den);
 

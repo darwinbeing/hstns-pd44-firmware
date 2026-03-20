@@ -31,7 +31,7 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 /* Configuration Bits */
 
 // Device: dsPIC33FJ64GS606
-// Config bits extracted from HSTNS-PD44 hardware via ICSP read
+// Config bits extracted from HSTNS-PD44 hardware via PICkit 5 read
 
 // FBS - Boot Segment
 #pragma config BWRP = WRPROTECT_OFF
@@ -75,219 +75,79 @@ extern void initClock(void);
 extern void initIOPorts(void);
 extern void initPWM(void);
 extern void initADC(void);
-extern void softStartRoutine(void);
-void delay_100us(unsigned int delay);
-void faultCheck(void);
-void faultLoop(void);
-
-volatile extern unsigned int timerInterruptCount;
-
-/* Local variables for fault management */
-unsigned char outputVoltageCnt = 0, tempCnt = 0, faultState = 0, tankCurrentCnt = 0, faultCheckFlag = 0;
-unsigned int outputVoltage = 0, tempPCB = 0, tankCurrent = 0, maxTankCurrent = 0;
+void initI2C2(void);
+void initSPI2(void);
+void delay_us(uint16_t us);
+void delay_ms(uint16_t ms);
+void initTIMER();
+void initCMP4(void);
+void initCMP3(void);
+void initUART(void);
 
 
 int main(void)
 {
 
-    	initClock();                            				/* Initialize Primary and Auxiliary oscillators */
+    initClock();                            				/* Initialize Primary and Auxiliary oscillators */
+    
+    initCMP4();
+    initCMP3();
 
 	initIOPorts();								/* Setup LEDs and other I/O Ports */
 
-	initPWM();								/* Initialize Half-bridge and synchronous rectification PWMs */
-
 	initADC();								/* Setup ADC module and ADC triggering */
+    
+    initTIMER();
+    
+    initPWM();								/* Initialize Half-bridge and synchronous rectification PWMs */
+    
+    initI2C2();
+    
+    initUART();
+    
+    initSPI2();
+    
+    SR &= 0x1F;
+    
+    LATDbits.LATD3 = 0; 
+    LATDbits.LATD5 = 1;   
+    LATFbits.LATF6 = 0;
+     LATFbits.LATF0 = 1;
+    
+     LED_ON();
+       /* Override PWM1H/L - full-bridge leg 1 */
+    IOCON1bits.OVRENH = 0;
+    Nop();
+    Nop();
+    Nop();
+    IOCON1bits.OVRENL = 0;
+    Nop();
+    Nop();
+    Nop();
+    /* Override PWM2H/L - full-bridge leg 2 */
+    IOCON2bits.OVRENH = 0;
+    Nop();
+    Nop();
+    Nop();
+    IOCON2bits.OVRENL = 0;
+    Nop();
+    Nop();
+    Nop();
 
-	delay_100us(30000);							/* Since Converter is stand alone we need to allow sufficient time for the
-                                                                                    DC Source to ramp up (SLOW) or for the PFC to complete its softstart.
-                                                                                    This value is adjustable depending on input voltage source */
-
-	PTCONbits.PTEN = 1;                                                     /* Enable PWM outputs */
-
-
-	/* To eliminate PWM glitch at start-up, enable PWM module and then give PWM ownership of the pin */
-
-	IOCON1bits.PENH = 1;                    /* PWM1H is controlled by PWM module */
-	IOCON1bits.PENL = 1;                    /* PWM1L is controlled by PWM module */
-
-	IOCON2bits.PENH = 1;                    /* PWM2H is controlled by PWM module */
-	IOCON2bits.PENL = 1;                    /* PWM2L is controlled by PWM module */
-
-
-	#ifndef OPEN_LOOP
-	softStartRoutine();
-
-	#endif
-
-	AUXILIARY_START = OFF;			/* Disable Auxiliary as output is now regulating */
-
+    /* Override PWM3H/L - synchronous rectifier */
+    IOCON3bits.OVRENH = 1;
+    Nop();
+    Nop();
+    Nop();
+    IOCON3bits.OVRENL = 0;
+    
+   
 
     while(1)
 	{
-		#ifndef OPEN_LOOP
-		if(faultCheckFlag == 4)
-		{
-			faultCheck();
-			faultCheckFlag = 0;
-		}
-		else
-		{
-			Nop();
-			Nop();
-			Nop();
-			Nop();
-			Nop();
-			faultCheckFlag++;
-		}
-		#endif
+        delay_ms(10);
 	}
 
 }
 
 
-void delay_100us ( unsigned int delay)
-{
-   	timerInterruptCount = 0;    			/* Clear Interrupt counter flag */
-
- 	PR1 = 0xFA0;					/* (100us / 25ns) = 4000 = 0xFA0 */
-
-	IEC0bits.T1IE = 1;          			/* Enable Timer1 interrupts */
-    	IPC0bits.T1IP = 5;
-    	T1CONbits.TON = 1;          			/* Enable Timer1 */
-
-    while (timerInterruptCount < delay);
-                                                        /* Wait for Interrupt counts to equal delay */
-
-    T1CONbits.TON = 0;          			/* Disable the Timer */
-}
-
-void faultCheck()
-{
-	if(tempPCB >= PCBTEMP_MAX)
-	{
-		tempCnt++;
-
-		/* To ensure over-temp, the measured PCB temp has to  exceed the max set point 250 consecutive times */
-
-		if (tempCnt >= 250)
-		{
-			AUXILIARY_START = ON;
-           		faultState = FAULT_OVERTEMP;
-        		}
-	}
-
-	else
-	{
-		tempCnt = 0;					/* Clear count */
-	}
-
-
-	if ((outputVoltage >= OUTPUTVOLTAGE_MAX) | (outputVoltage <= OUTPUTVOLTAGE_MIN))
-	{
-		outputVoltageCnt++;
-
-		/* The output voltage must be higher/lower then allowed limits for a few consecutive times
-		   this eliminates false faults due to load transients */
-
-		if (outputVoltageCnt >= 250)
-		{
-			AUXILIARY_START = ON;
-
-			if(outputVoltage >= OUTPUTVOLTAGE_MAX)
-			{
-				faultState = FAULT_OUTPUTOVERVOLTAGE;
-			}
-
-			else
-			{
-				faultState = FAULT_OUTPUTUNDERVOLTAGE;
-			}
-		}
-	}
-
-	else
-	{
-		outputVoltageCnt = 0;
-	}
-
-
-	/* Determine maxTankCurrent based on input voltage, will need to put in same scale as measured current
-	Below is a lookup table to determine the maxTankCurrent based on the Input Voltage Range (350V-420V) */
-
-
-          if ((PDC1 > 2700)&& (tankCurrent>15000))
-	{
-		maxTankCurrent = 15600;
-	}
-        else if((PDC1 > 2590)&& (tankCurrent>15750))
-        {
-            maxTankCurrent =15800;
-        }
-        else if((PDC1 > 2500)&& (tankCurrent>16100))
-        {
-            maxTankCurrent =16100;
-        }
-        else if((PDC1 > 2400)&& (tankCurrent>16200))
-        {
-            maxTankCurrent =16200;
-        }
-         else if((PDC1 > 2300)&& (tankCurrent>16300))
-        {
-            maxTankCurrent =16300;
-        }
-         else if((PDC1 > 2200)&& (tankCurrent>16400))
-        {
-            maxTankCurrent =16400;
-        }
-        else if((PDC1 > 2100)&& (tankCurrent>16500))
-        {
-            maxTankCurrent =16500;
-        }
-        else
-        {
-            maxTankCurrent=16600;
-        }
-
-        if(tankCurrent >= maxTankCurrent)
-	{
-		tankCurrentCnt++;
-		if (tankCurrentCnt >= 250)
-		{
-			AUXILIARY_START = ON;
-			faultState = FAULT_OVERCURRENT;
-		}
-	}
-	else
-	{
-		tankCurrentCnt = 0;
-	}
-	/* If a fault is detected call the fault loop */
-
-	if (faultState != 0) faultLoop();
-
-}
-
-void faultLoop()
-{
-	unsigned char faultCount = 0;
-
-    	PTCONbits.PTEN = 0;					/* Disable the PWM module */
-	ADCONbits.ADON = 0;					/* Disable the ADC module */
-
-	faultCount = faultState;
-
-	while(1)
-	{
-
-		while (faultCount != 0)
-		{
-			LED_FAULT = ON;
-			delay_100us(2500);
-			LED_FAULT = OFF;
-			delay_100us(2500);
-			faultCount--;
-		}
-			faultCount = faultState;
-			delay_100us(5000);
-	}
-}
