@@ -257,3 +257,11 @@ confirming it modifies the feedback divider ratio, not a digital offset.
 - **Output**: 12.3V / 800W
 - **ADC**: 10-bit, Vout divider 5.23/(5.23+20)
 - **PWM**: 3 channels, edge-aligned push-pull mode
+
+## TODO
+
+- [ ] OCP/OVP protection — implement overcurrent and overvoltage shutdown with configurable thresholds
+- [ ] Fan control — temperature-based fan PWM via Output Compare module
+- [ ] SPI Flash read/write — extract and store calibration parameters, coefficients, configuration
+- [ ] I2C/PMBus communication — voltage/current/temperature reporting, remote on/off, margin control
+- [ ] Firmware checksum — integrity verification at boot, dual firmware redundant backup for fail-safe update
