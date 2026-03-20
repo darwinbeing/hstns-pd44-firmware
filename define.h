@@ -1,21 +1,21 @@
 /******************************************************************************* ******************************************************************************
-MICROCHIP SOFTWARE NOTICE AND DISCLAIMER:  You may use this software, and any derivatives created by 
+MICROCHIP SOFTWARE NOTICE AND DISCLAIMER:  You may use this software, and any derivatives created by
 any person or entity by or on your behalf, exclusively with Microchip’s products.  Microchip and its licensors
- retain all ownership and intellectual property rights in the accompanying software and in all derivatives hereto.  
-This software and any accompanying information is for suggestion only.  It does not modify Microchip’s standard warranty for its products.  
-You agree that you are solely responsible for testing the software and determining its suitability.  Microchip has no obligation to modify, test, certify, 
+ retain all ownership and intellectual property rights in the accompanying software and in all derivatives hereto.
+This software and any accompanying information is for suggestion only.  It does not modify Microchip’s standard warranty for its products.
+You agree that you are solely responsible for testing the software and determining its suitability.  Microchip has no obligation to modify, test, certify,
 or support the software.
 
-THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, 
-BUT NOT LIMITED TO, IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE 
-APPLY TO THIS SOFTWARE, ITS INTERACTION WITH MICROCHIP’S PRODUCTS, COMBINATION WITH ANY OTHER PRODUCTS, OR USE IN 
-ANY APPLICATION. 
+THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING,
+BUT NOT LIMITED TO, IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE
+APPLY TO THIS SOFTWARE, ITS INTERACTION WITH MICROCHIP’S PRODUCTS, COMBINATION WITH ANY OTHER PRODUCTS, OR USE IN
+ANY APPLICATION.
 
 IN NO EVENT, WILL MICROCHIP BE LIABLE, WHETHER IN CONTRACT, WARRANTY, TORT (INCLUDING NEGLIGENCE OR BREACH OF STATUTORY DUTY),
 STRICT LIABILITY, INDEMNITY, CONTRIBUTION, OR OTHERWISE, FOR ANY INDIRECT, SPECIAL, PUNITIVE, EXEMPLARY, INCIDENTAL OR CONSEQUENTIAL LOSS,
-DAMAGE, FOR COST OR EXPENSE OF ANY KIND WHATSOEVER RELATED TO THE SOFTWARE, HOWSOEVER CAUSED, EVEN IF MICROCHIP HAS BEEN ADVISED 
-OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE.  TO THE FULLEST EXTENT ALLOWABLE BY LAW, MICROCHIP'S TOTAL LIABILITY ON 
-ALL CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP 
+DAMAGE, FOR COST OR EXPENSE OF ANY KIND WHATSOEVER RELATED TO THE SOFTWARE, HOWSOEVER CAUSED, EVEN IF MICROCHIP HAS BEEN ADVISED
+OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE.  TO THE FULLEST EXTENT ALLOWABLE BY LAW, MICROCHIP'S TOTAL LIABILITY ON
+ALL CLAIMS IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP
 FOR THIS SOFTWARE.
 MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TERMS.
 
@@ -50,7 +50,7 @@ typedef int64_t  s64;
 //#define OPEN_LOOP                             1
 
 
-// This #define allows the use of two arrays and various variables for dmci debugging/viewing in the ADCP0 interrupt service routine. 
+// This #define allows the use of two arrays and various variables for dmci debugging/viewing in the ADCP0 interrupt service routine.
 
 #define dmciVariables                           1
 
@@ -73,7 +73,7 @@ typedef int64_t  s64;
 
 
 #define PCBTEMP_MAX 	  			375                                         // PCB Temperature Check
-										  	    // Declare Fault if PCB temperature is greater than 55C 
+										  	    // Declare Fault if PCB temperature is greater than 55C
 											    // Vout = (Ta * Tc) + V0C, where Ta is the ambient temperature
 										 	    // Tc is the temperature coefficent and V0C is the voltage at 0C.
 											    // Vout = (70C * 10mV/C) + .5V = 1.2V, Convert to ADC reading
@@ -85,7 +85,7 @@ typedef int64_t  s64;
 #define MINPERIOD_LOAD				3100
 #define MAXPERIOD_NOLOAD			2000
 #define MAXPERIOD_HALFLOAD          		2150
-#define MAXPERIOD_LOAD				2240	
+#define MAXPERIOD_LOAD				2240
 #define OUTPUTVOLTAGE_MIN			24074                                         // Output voltage check
                                                                                               // [1.5k / (1.5k + 4.99k)] * 10.5
 											      // Convert to ADC reading and Q15 format
@@ -116,7 +116,7 @@ typedef int64_t  s64;
 												//1960		~240kHz
 												//1920		~245kHz
 												//1880		~250kHz
-												//1840		~255kHz	
+												//1840		~255kHz
 
 #else
 
@@ -130,23 +130,23 @@ typedef int64_t  s64;
 #define MAXDUTYCYCLE				1300                    // Soft start period minus dead time
 
 #define RESONANTPERIOD				2232                    // Resonant Period
-		
+
 #define MINPERIOD				1870                    // MINPERIOD = PTPER = ((1 / 250kHz) / 1.07ns) / 2 = 1870, where 250kHz
 									//	is the maximum operating range
 
 #define MAXPERIOD                               3222                    // MAXPERIOD = PTPER = ((1 / 145kHz) / 1.07ns) / 2 = 3222, where 145kHz
-									// is the minimum allowed as defined by the gain of the converter and input 
-									// voltage operating range (ensure inductive region)					
+									// is the minimum allowed as defined by the gain of the converter and input
+									// voltage operating range (ensure inductive region)
 
 #define DEADTIME				250                     // Dead-time of Halh-Bridge Converter
-#define SRDEADTIME				350			// Dead-time for Synchronous Rectifier 
+#define SRDEADTIME				350			// Dead-time for Synchronous Rectifier
 
 #define SOFTSTARTMINVOLTAGE			14000                   // The minimum output voltage at startup before changing the frequency
 									// is greater than 8V (@350V input full load) 300kHz switching frequency)
 
 #define SOFTSTARTMAXVOLTAGE			26366                   // Correspondes to 11.5V output
 
-#define OUTPUTVOLTAGEREFERENCE                  3149                   // Reference voltage is from resistor divider circuit
+#define VREF                                    3149                   // Reference voltage is from resistor divider circuit
                                                                         // (1.5kOhm / (1.5kOhm + 4.99kOhm)) * 12V = 2.774V
                                                                         // Now calculate expected ADC value (2.774V * 1023)/3.3V = 860
 								    	// Then left shift by 5 for Q15 format (860 * 32) = 27520 = 0x6B80
@@ -156,10 +156,10 @@ typedef int64_t  s64;
 #define NOMINALPERIOD                           5140                     // 180kHz
 
 //Coefficient for Digital(3P3Z)Compensator
-//#define n1 Q15(0.2711)  
-//#define n2 Q15(0.178)   
-//#define n3 Q15(0.1828)  
-//#define n4 Q15(0.2663) 
+//#define n1 Q15(0.2711)
+//#define n2 Q15(0.178)
+//#define n3 Q15(0.1828)
+//#define n4 Q15(0.2663)
 //#define d2 Q15(0.6791)
 //#define d3 Q15(0.7342)
 //#define d4 Q15( 0.4133)
@@ -168,14 +168,14 @@ typedef int64_t  s64;
 #define Q15_SCALE (1L << Q15_SHIFT)
 #define Q15_FROM_FLOAT(x) ((int32_t)((x) * Q15_SCALE))
 
-// #define n1 (int32_t)Q15_FROM_FLOAT(-1.95197)  
-// #define n2 (int32_t)Q15_FROM_FLOAT(2.424896)   
-// #define n3 (int32_t)Q15_FROM_FLOAT(-0.69126)  
+// #define n1 (int32_t)Q15_FROM_FLOAT(-1.95197)
+// #define n2 (int32_t)Q15_FROM_FLOAT(2.424896)
+// #define n3 (int32_t)Q15_FROM_FLOAT(-0.69126)
 // #define d2 (int16_t)Q15_FROM_FLOAT(0.25742)
 // #define d3 (int16_t)Q15_FROM_FLOAT(-0.00742)
 
 #define SPPIDOutputCLAMP (32767)
-#define PRESCALER 1 
+#define PRESCALER 1
 
 
 #define T1_PER 10000
@@ -234,4 +234,3 @@ typedef int64_t  s64;
 
 int32_t __mulsi3(int32_t A, int32_t B);
 int16_t __builtin_divsd(const int32_t num, const int16_t den);
-

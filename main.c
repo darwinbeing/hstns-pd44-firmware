@@ -55,6 +55,7 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 #pragma config WDTPRE  = PR32
 #pragma config WINDIS  = OFF
 #pragma config FWDTEN  = ON
+// #pragma config FWDTEN  = OFF
 
 // FPOR - Power-on Reset
 #pragma config FPWRT  = PWR32
@@ -84,70 +85,76 @@ void initCMP4(void);
 void initCMP3(void);
 void initUART(void);
 
+extern s16  vref;
 
 int main(void)
 {
 
-    initClock();                            				/* Initialize Primary and Auxiliary oscillators */
-    
-    initCMP4();
-    initCMP3();
+        initClock();                            				/* Initialize Primary and Auxiliary oscillators */
+
+        initCMP4();
+        initCMP3();
 
 	initIOPorts();								/* Setup LEDs and other I/O Ports */
 
 	initADC();								/* Setup ADC module and ADC triggering */
-    
-    initTIMER();
-    
-    initPWM();								/* Initialize Half-bridge and synchronous rectification PWMs */
-    
-    initI2C2();
-    
-    initUART();
-    
-    initSPI2();
-    
-    SR &= 0x1F;
-    
-    LATDbits.LATD3 = 0; 
-    LATDbits.LATD5 = 1;   
-    LATFbits.LATF6 = 0;
-     LATFbits.LATF0 = 1;
-    
-     LED_ON();
-       /* Override PWM1H/L - full-bridge leg 1 */
-    IOCON1bits.OVRENH = 0;
-    Nop();
-    Nop();
-    Nop();
-    IOCON1bits.OVRENL = 0;
-    Nop();
-    Nop();
-    Nop();
-    /* Override PWM2H/L - full-bridge leg 2 */
-    IOCON2bits.OVRENH = 0;
-    Nop();
-    Nop();
-    Nop();
-    IOCON2bits.OVRENL = 0;
-    Nop();
-    Nop();
-    Nop();
 
-    /* Override PWM3H/L - synchronous rectifier */
-    IOCON3bits.OVRENH = 1;
-    Nop();
-    Nop();
-    Nop();
-    IOCON3bits.OVRENL = 0;
-    
-   
+        initTIMER();
 
-    while(1)
-	{
-        delay_ms(10);
+        initPWM();								/* Initialize Half-bridge and synchronous rectification PWMs */
+
+        initI2C2();
+
+        initUART();
+
+        initSPI2();
+
+        SR &= 0x1F;
+
+        LATDbits.LATD3 = 0;
+        LATDbits.LATD5 = 1;
+        LATFbits.LATF6 = 0;
+        LATFbits.LATF0 = 1;
+
+        LED_ON();
+        /* Override PWM1H/L - full-bridge leg 1 */
+        IOCON1bits.OVRENH = 0;
+        Nop();
+        Nop();
+        Nop();
+        IOCON1bits.OVRENL = 0;
+        Nop();
+        Nop();
+        Nop();
+        /* Override PWM2H/L - full-bridge leg 2 */
+        IOCON2bits.OVRENH = 0;
+        Nop();
+        Nop();
+        Nop();
+        IOCON2bits.OVRENL = 0;
+        Nop();
+        Nop();
+        Nop();
+
+        /* Override PWM3H/L - synchronous rectifier */
+        IOCON3bits.OVRENH = 1;
+        Nop();
+        Nop();
+        Nop();
+        IOCON3bits.OVRENL = 0;
+
+        vref = 0xFFAF;
+
+        while(1) {
+
+                if(vref < (VREF - 30)) vref += 10;
+
+                ClrWdt();
+                Nop();
+                Nop();
+                Nop();
+                Nop();
+                Nop();
 	}
 
 }
-
-

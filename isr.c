@@ -46,7 +46,7 @@ u16  adc_vout_a_prev = 0;    /* AN0 raw sample (Vout path A)   */
 u16  adc_vout_b_prev = 0;    /* AN2 raw sample (Vout path B)   */
 u16  adc_4pt_avg = 0;
 u16  vout_sum;      /* (AN0 + AN2) * 2                */
-u16  vref = OUTPUTVOLTAGEREFERENCE;          /* output voltage set-point       */
+s16  vref = VREF;          /* output voltage set-point       */
 
 /* --- Frequency control word (after clamping) --- */
 s16  u_exec = 0x5DC0;        /* clamped output -> PTPER calc   */
