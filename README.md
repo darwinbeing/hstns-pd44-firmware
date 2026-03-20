@@ -1,177 +1,130 @@
-# HSTNS-PD44 Reverse Engineering — Secondary MCU Firmware
+# HSTNS-PD44 800W LLC Firmware Reverse Engineering
 
-> **Reverse-engineered & re-implemented firmware for the HP HSTNS-PD44 PSU secondary-side MCU (dsPIC33FJ64GS606), based on Microchip's 200 W LLC Resonant Converter reference design. Suitable for use as a development board.**
+Decompiled HP server PSU firmware (dsPIC33FJ64GS606) with AI (Claude) assistance.  
+Implemented closed-loop 12.3V output using 2P2Z digital compensator.
 
----
+## Timer Configuration
 
-## Overview
+```c
+// Fcy = 50MHz, period = Fcy / freq - 1
+#define T1_PER  10000   // Timer1: 5kHz (200us), slow loop (OCP, droop, ADC filter)
+#define T2_PER  1000    // Timer2: 50kHz (20us), 2P2Z compensator + PWM
+```
 
-The **HP HSTNS-PD44** is a high-density server power supply unit. Its secondary side is managed by a **Microchip dsPIC33FJ64GS606** — a high-performance Digital Signal Controller (DSC) specifically designed for digitally-controlled power conversion.
+## Architecture
 
-This project reverses the secondary MCU's role, re-implements the control algorithm from scratch using **Microchip's AN1336 / 200 W LLC Resonant Converter** reference design as a blueprint, and makes the hardware usable as a standalone **power electronics development board**.
+```
+TIMER2 ISR (fast, 50kHz)
+│
+├── ADC: vout_adc = 2×AN0 + 2×AN2
+├── Error: e[n] = vout_adc - vref (slew limited ±50, clamped ±100)
+├── 2P2Z: y[n] → freq_ctrl
+├── PWM:  PDC = PWM_CLK_80 / freq_ctrl >> 1, PTPER = PDC - 8
+└── Sub-functions:
+    ├── llc_current_fast_avg()    AN4 8-point filter
+    ├── llc_voltage_cal_ovp()     OVP protection
+    └── fan_speed_update()        fan PWM control
 
----
+TIMER1 (slow, 5kHz)
+│
+├── llc_adc_voltage_sample()      dual-channel Vout, 64-point avg
+├── llc_adc_current_sample()      Iout, 64+1024 point avg
+├── llc_droop_trim_calc()         load-dependent voltage droop
+└── llc_ocp_foldback_loop()       OCP/CC PI controller
+    └── vref = (0xC2F - trim) - ocp_output → TIMER2
+
+PWM Special Event ISR
+└── Atomic PWM register update (PTPER, PDC1/2/3, PHASE3, DTR3)
+```
+
+## 2P2Z Compensator
+
+### Transfer Function
+
+$$H(z) = \frac{-1.952 + 2.425 z^{-1} - 0.691 z^{-2}}{1 - 0.257 z^{-1} + 0.007 z^{-2}}$$
+
+### Coefficients
+
+| Parameter | Float | Q15 Hex | Role |
+|-----------|-------|---------|------|
+| b0 | -1.95197 | 0xFFFF0626 | e[n] |
+| b1 | 2.424896 | 0x00013663 | e[n-1] |
+| b2 | -0.69126 | 0xFFFFA785 | e[n-2] |
+| a1 | 0.25742 | 0x20F3 | y[n-1] |
+| a2 | -0.00742 | 0xFF0D | y[n-2] |
+
+### Zeros and Poles (fs = 50kHz)
+
+| | z | f (fs=50kHz) |
+|--|---|-------------|
+| Zero 1 | 0.443 | 6.48 kHz |
+| Zero 2 | 0.799 | 1.78 kHz |
+| Pole 1 | 0.226 | 11.83 kHz |
+| Pole 2 | 0.031 | 27.64 kHz |
+
+## PWM Frequency
+
+```
+PWM_CLK_80 = 0xB3FB00 (11,795,200)
+PDC = PWM_CLK_80 / freq_ctrl >> 1
+PTPER = PDC - 8
+f_sw = 1 / (2 × PTPER × 1.06ns)
+```
+
+| State | freq_ctrl | PTPER | f_sw |
+|-------|-----------|-------|------|
+| Startup max | 24000 | 237 | ~2 MHz |
+| Normal 12.3V | ~3800 | ~1553 | ~304 kHz |
+| Min freq (y_min) | 2600 | 2260 | ~209 kHz |
+
+## Soft Start
+
+Ramp `vref` from 0 to nominal (0xC2F). 2P2Z tracks the rising reference,  
+frequency naturally sweeps from high (low gain) to operating point.
+
+```
+vref:  0 ─────────────╱ 0xC2F
+Vout:  0V ────────────╱ 12.3V
+freq:  24000 ──╲
+                ╲──── ~3800
+```
+
+## OCP Foldback (PI Controller)
+
+```
+e[n] = Imeas - Iref
+u[n] = clamp( (I[n-1] + Kp × e[n]) >> 13,  0, 4000 )
+I[n] = clamp( I[n-1] + Ki × e[n] + aw[n],  0, 0x01F40000 )
+
+Kp = (gain_scale × 12000) >> 10
+Ki = (gain_scale × 2800) >> 10
+aw[n] = (u_clamped - u_raw) × 30
+```
+
+Normal load (Imeas < Iref): u[n] = 0, inactive.  
+Overcurrent (Imeas > Iref): u[n] rises sharply, pulls down vref → current limited.
+
+## Key RAM Variables
+
+| Address | Name | Description |
+|---------|------|-------------|
+| 0x0340 | AN0 | Vout sense A (10-bit ADC) |
+| 0x0344 | AN2 | Vout sense B |
+| 0x0348 | AN4 | Current sense (fast) |
+| 0x034a | AN5 | Vout sense (for OVP and calibration) |
+| 0x1da0 | vout_adc | 2×AN0 + 2×AN2 |
+| 0x1da4 | freq_ctrl | 2P2Z output → PWM frequency |
+| 0x1d4c | vref_2p2z | voltage reference for 2P2Z |
+| 0x1d38 | ocp_output | OCP PI output (0-4000) |
+| 0x1d3a | trim_offset | droop compensation (0-77) |
+| 0x1d44 | Imeas | measured output current |
+| 0x1d46 | iout_avg | AN4 8-point average |
+| 0x1d66 | vout_cal | AN5 calibrated voltage (for OVP) |
 
 ## Hardware
 
-| Item | Detail |
-|---|---|
-| PSU Model | HP HSTNS-PD44 |
-| Secondary MCU | dsPIC33FJ64GS606 |
-| Topology | LLC Resonant Converter (Full-Bridge) |
-| Rated Output | 12 V / ~70 A (server rail) |
-| Reference Design | Microchip 200 W LLC Resonant Converter (AN1336) |
-| Programming Interface | ICSP (PGC/PGD) — test points exposed on PCB |
-
-### dsPIC33FJ64GS606 Key Features Used
-
-- High-Speed PWM (HSPWM) — complementary pair for half-bridge gate drive
-- 10-bit ADC with dedicated S&H for Vout / Iout / temperature sensing
-- Hardware-accelerated PID / compensator (DSP MAC)
-- CAN / UART for telemetry
-- Fault input pins mapped to over-current / over-voltage trip
-
----
-
-## Firmware Architecture
-
-```
-firmware/
-├── src/
-│   ├── main.c              # Startup, scheduler
-│   ├── pwm.c / pwm.h       # HSPWM init, frequency modulation
-│   ├── adc.c / adc.h       # ADC sampling, calibration
-│   ├── control.c / control.h   # LLC control loop (SR compensator)
-│   ├── fault.c / fault.h   # OVP / OCP / OTP fault handling
-│   ├── telemetry.c         # UART debug output
-│   └── startup.s           # dsPIC reset vector, stack init
-├── inc/
-│   └── config_bits.h       # Device configuration bits (oscillator, WDT, etc.)
-├── Makefile
-└── README.md
-```
-
-### Control Algorithm
-
-The control loop follows the architecture described in **Microchip AN1336**:
-
-```
-         Vout_ref
-            │
-            ▼
-       ┌─────────┐     error     ┌──────────────┐    f_sw
-       │  Σ (−)  │──────────────▶│  Compensator │──────────▶  HSPWM
-       └─────────┘               │  (Type II/III│
-            ▲                    │   SR filter) │
-            │                    └──────────────┘
-         Vout_ADC
-```
-
-- **Regulation variable**: Switching frequency `f_sw` (LLC characteristic — frequency modulation)
-- **Compensator**: Discrete-time Type II (PI + lag) implemented with DSP multiply-accumulate
-- **Sampling**: Synchronized ADC trigger from PWM period event
-- **Soft-start**: Frequency swept from `f_max` down to operating point on enable
-- **SR (Synchronous Rectifier)**: Secondary side gate signals derived from HSPWM dead-time calculation
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- [MPLAB X IDE](https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide) ≥ 6.x
-- [XC16 Compiler](https://www.microchip.com/en-us/tools-resources/develop/mplab-xc-compilers) ≥ 2.x
-- MPLAB PICkit 4 / ICD 4 (or compatible ICSP programmer)
-- [Microchip AN1336 reference materials](https://www.microchip.com/en-us/application-notes/an1336) (recommended reading)
-
-### Build
-
-```bash
-git clone https://github.com/<your-handle>/hstns-pd44-firmware.git
-cd hstns-pd44-firmware
-make          # or open the .X project in MPLAB X
-```
-
-### Flash
-
-1. Connect PICkit 4 to the ICSP header (PGC / PGD / MCLR / VDD / GND test points).
-2. Apply 5 V logic supply (do **not** apply AC mains until the firmware is verified).
-3. Program via MPLAB X or:
-
-```bash
-make program
-```
-
-### UART Debug Output
-
-UART2 is routed to a test point at **115200 8N1**. Connect a USB–serial adapter to observe:
-
-```
-[BOOT] dsPIC33FJ64GS606 LLC Firmware v0.1.0
-[ADC ] Vout=12.02V  Iout=0.00A  Temp=32C
-[CTRL] fsw=120.4kHz  duty=--  mode=SOFTSTART
-[CTRL] fsw=103.7kHz  duty=--  mode=RUNNING
-```
-
----
-
-## Development Board Usage
-
-Once flashed, the PSU can be powered from mains AC and used as:
-
-| Use Case | Notes |
-|---|---|
-| 12 V bench supply | Up to ~100 A output (server-grade current capacity) |
-| LLC converter testbed | Probe gate drive, resonant tank, SR timing |
-| dsPIC33 DSC development | Full ICSP access, UART telemetry available |
-| Power electronics education | Waveform analysis of resonant converter behavior |
-
-> ⚠️ **Safety Warning**: This unit operates from mains AC voltage. Observe all electrical safety precautions. Primary-side voltages are lethal. Always use appropriate isolation and PPE.
-
----
-
-## Reverse Engineering Notes
-
-### ICSP Access
-
-ICSP test points (PGC / PGD / MCLR) are accessible on the secondary-side PCB. See [`docs/board_testpoints.md`](docs/board_testpoints.md) for pad locations.
-
-### Original Firmware
-
-The original HP firmware was read-protected. Control algorithm parameters and peripheral configuration were inferred by:
-
-- Oscilloscope probing of gate drive signals (switching frequency, dead-time)
-- Measurement of SR timing vs. load
-- Cross-referencing with Microchip AN1336 reference schematic
-
-### Known Differences from AN1336
-
-| Parameter | AN1336 Reference | This Implementation |
-|---|---|---|
-| Power level | 200 W | ~800 W |
-| Resonant tank | Reference values | Measured from hardware |
-| ADC reference | Internal | External (TBD) |
-| SR gate drive | Discrete | Integrated driver IC |
-
----
-
-## References
-
-- [Microchip AN1336 — 200W LLC Resonant Converter](https://www.microchip.com/en-us/application-notes/an1336)
-- [dsPIC33FJ64GS606 Datasheet](https://www.microchip.com/en-us/product/dsPIC33FJ64GS606)
-- [dsPIC33F High-Speed PWM Family Reference Manual (DS70329)](https://ww1.microchip.com/downloads/en/DeviceDoc/70329b.pdf)
-- Erickson & Maksimovic, *Fundamentals of Power Electronics* — LLC resonant converter analysis
-
----
-
-## License
-
-This project is released under the **MIT License**. See [`LICENSE`](LICENSE) for details.
-
-> This project is for educational and development purposes. No proprietary HP firmware or trade secrets are distributed. All code is independently written.
-
----
-
-## Contributing
-
-Issues and PRs welcome. If you have hardware measurements, schematic tracing, or control loop improvements — please share!
+- **MCU**: dsPIC33FJ64GS606, ~117.92MHz with PLL
+- **Topology**: LLC resonant converter, push-pull
+- **Output**: 12.3V / 800W
+- **ADC**: 10-bit, Vout divider 5.23/(5.23+20)
+- **PWM**: 3 channels, edge-aligned push-pull mode
