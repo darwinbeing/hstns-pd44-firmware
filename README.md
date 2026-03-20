@@ -238,17 +238,61 @@ confirming it modifies the feedback divider ratio, not a digital offset.
 | Address | Name | Description |
 |---------|------|-------------|
 | 0x0340 | AN0 | Vout sense A (10-bit ADC) |
-| 0x0344 | AN2 | Vout sense B |
+| 0x0344 | AN2 | Vout sense B (same Vout, dual channel) |
 | 0x0348 | AN4 | Current sense (fast) |
 | 0x034a | AN5 | Vout sense (for OVP and calibration) |
-| 0x1da0 | vout_adc | 2×AN0 + 2×AN2 |
+| 0x1da0 | vfb | 2×AN0 + 2×AN2 (4× oversampled voltage feedback) |
 | 0x1da4 | freq_ctrl | 2P2Z output → PWM frequency |
 | 0x1d4c | vref_2p2z | voltage reference for 2P2Z |
-| 0x1d38 | ocp_output | OCP PI output (0-4000) |
+| 0x1d38 | ocp_adj | OCP PI output (0-4000), offsets vref |
 | 0x1d3a | trim_offset | droop compensation (0-77) |
-| 0x1d44 | Imeas | measured output current |
-| 0x1d46 | iout_avg | AN4 8-point average |
+| 0x1d44 | Imeas | measured output current (cal_b, 8pt avg based) |
+| 0x1d46 | iout_avg | AN4 8-point average (from TIMER2) |
 | 0x1d66 | vout_cal | AN5 calibrated voltage (for OVP) |
+| 0x1e4e | Imeas_cal_a | calibrated current (64pt avg based) |
+| 0x1d1e | Imeas_longavg | 1024-point long-term current average |
+| 0x1d42 | Imeas_scaled | Imeas × 7.625 (for PMBus reporting) |
+
+## ADC Calibration
+
+Calibration coefficients read from SPI Flash at boot:
+
+### Voltage (AN5)
+```
+cal_coeff  = 0x200F (8207)    → gain = 8207/8192 = 1.0018
+cal_offset = 0x0001           → +1 count
+vout_cal = AN5 × 1.0018 + 1  (nearly 1:1 mapping)
+```
+
+### Current (AN4)
+```
+cal_a_gain   = 0x2030 (8240)  → gain = 8240/8192 = 1.00586
+cal_a_offset = 0xFFF8 (-8)    → -8 counts (zero-point correction)
+Imeas = avg × 1.00586 - 8    (zero offset compensates ADC bias at no load)
+```
+
+## Current Sensing Pipeline
+
+Three time scales for current measurement, all from the same AN4 input:
+
+```
+AN4 (DAT_ram_0348)
+  │
+  ├──→ TIMER2 (50kHz): iout_buf[8] → iout_avg (DAT_ram_1d46)
+  │      └──→ cal_b → Imeas (DAT_ram_1d44)           [for OCP, ~160us window]
+  │                     └──→ Imeas_scaled (DAT_ram_1d42) [× 7.625 for PMBus]
+  │
+  └──→ TIMER1 (5kHz):  ring64_buf[64] → avg64
+         └──→ cal_a → Imeas_cal_a (DAT_ram_1e4e)      [~12.8ms window]
+                         └──→ ring1k_buf[1024]
+                                └──→ Imeas_longavg (DAT_ram_1d1e) [~205ms window]
+```
+
+| Stage | Points | ISR | Window | Usage |
+|-------|--------|-----|--------|-------|
+| Fast | 8 | TIMER2 (50kHz) | 160μs | OCP detection |
+| Medium | 64 | TIMER1 (5kHz) | 12.8ms | Mid-term filtering |
+| Long | 1024 | TIMER1 (5kHz) | 205ms | PMBus reporting |
 
 ## Hardware
 
