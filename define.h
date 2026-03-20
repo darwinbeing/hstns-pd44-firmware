@@ -146,7 +146,7 @@ typedef int64_t  s64;
 
 #define SOFTSTARTMAXVOLTAGE			26366                   // Correspondes to 11.5V output
 
-#define OUTPUTVOLTAGEREFERENCE                  1071                   // Reference voltage is from resistor divider circuit
+#define OUTPUTVOLTAGEREFERENCE                  3149                   // Reference voltage is from resistor divider circuit
                                                                         // (1.5kOhm / (1.5kOhm + 4.99kOhm)) * 12V = 2.774V
                                                                         // Now calculate expected ADC value (2.774V * 1023)/3.3V = 860
 								    	// Then left shift by 5 for Q15 format (860 * 32) = 27520 = 0x6B80
@@ -229,7 +229,7 @@ typedef int64_t  s64;
 /* Frequency calculation constant
  *   0xB3FB00 = 11,796,224 = PWM_CLK_HZ / scaling_factor
  *   PTPER = FREQ_CONST / u_exec / 2                                        */
-#define FREQ_CONST      0xB3FB00u
+#define PWM_CLK_80      0xB3FB00u
 
 
 int32_t __mulsi3(int32_t A, int32_t B);
