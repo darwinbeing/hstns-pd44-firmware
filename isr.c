@@ -40,13 +40,13 @@ int16_t d2 = Q15_FROM_FLOAT(0.25742);
 int16_t d3 = Q15_FROM_FLOAT(-0.00742);
 
 /* --- ADC inputs --- */
-u16  adc_vout_a = 0;    /* AN0 raw sample (Vout path A)   */
-u16  adc_vout_b = 0;    /* AN2 raw sample (Vout path B)   */
-u16  adc_vout_a_prev = 0;    /* AN0 raw sample (Vout path A)   */
-u16  adc_vout_b_prev = 0;    /* AN2 raw sample (Vout path B)   */
-u16  adc_4pt_avg = 0;
-u16  vout_sum;      /* (AN0 + AN2) * 2                */
+u16  adc_an0 = 0;    /* AN0 raw sample (Vout path A)   */
+u16  adc_an2 = 0;    /* AN2 raw sample (Vout path B)   */
+u16  adc_an0_prev = 0;    /* AN0 raw sample (Vout path A)   */
+u16  adc_an2_prev = 0;    /* AN2 raw sample (Vout path B)   */
+s16  vfb_sum2ch;      /* (AN0 + AN2) * 2                */
 s16  vref = VREF;          /* output voltage set-point       */
+s16  comp_2p2z_vref;
 
 /* --- Frequency control word (after clamping) --- */
 s16  u_exec = 0x5DC0;        /* clamped output -> PTPER calc   */
@@ -65,28 +65,31 @@ s16  pdc3;          /* SR duty cycle                  */
 s16  dtr;           /* dead-time  (symmetric)         */
 
 
+extern  int16_t adc_4pt_sum;       // DAT_ram_1d9e, 4-point moving average
+
+
 static __attribute__((always_inline)) int16_t util_divsd(int32_t dividend, int16_t divisor)
 {
-        register int16_t quotient asm("w0");
-        register int32_t reg_w1w0 asm("w0") = dividend;
+        register int32_t result asm("w0") = dividend;
 
         __asm__ volatile (
             "push w1\n\t"
             "repeat #17\n\t"
-            "div.sd %1, %2\n\t"
+            "div.sd %0, %1\n\t"
             "pop w1\n\t"
-            : "=r"(quotient)
-            : "r"(reg_w1w0),
-              "r"(divisor)
+            : "+r"(result)
+            : "r"(divisor)
             : "cc"
-                          );
-        return quotient;
+        );
+        return (int16_t)result;
 }
 
 
 void __attribute__((__interrupt__, no_auto_psv)) _T1Interrupt()
 {
         // timerInterruptCount ++; 	/* Increment interrupt counter */
+        llc_adc_current_sample();
+        llc_ocp_foldback();
         IFS0bits.T1IF = 0; 		/* Clear Interrupt Flag */
 }
 
@@ -113,14 +116,14 @@ void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt()
          *   transient:     kff_gain=1500, result = kff_vout * 1.465       */
         kff_gain = 1024;
 
-        adc_vout_a = ADCBUF0;
-        adc_vout_b = ADCBUF2;
-        vout_sum = adc_vout_a * 2 + adc_vout_b * 2;
-        adc_4pt_avg = adc_vout_a + adc_vout_a_prev + adc_vout_b + adc_vout_b_prev;
-        adc_vout_a_prev = adc_vout_a;
-        adc_vout_b_prev = adc_vout_b;
+        adc_an0 = ADCBUF0;
+        adc_an2 = ADCBUF2;
+        vfb_sum2ch = adc_an0 * 2 + adc_an2 * 2;
+        adc_4pt_sum = adc_an0 + adc_an0_prev + adc_an2 + adc_an2_prev;
+        adc_an0_prev = adc_an0;
+        adc_an2_prev = adc_an2;
 
-        e_n = vref -  vout_sum;	    /* Find error */
+        e_n = comp_2p2z_vref -  vfb_sum2ch;	    /* Find error */
 
         delta = e_n - e_n1;
         if (delta > 100) {                      /* rate limit up */
@@ -164,8 +167,8 @@ void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt()
 
 
         /* Switching period */
-        // int16_t period     = ((s16)util_divsd((s32)PWM_CLK_80, (s16)u_exec)) >> 1;
-        int16_t period     = ((s16)__builtin_divsd((s32)PWM_CLK_80, (s16)u_exec)) >> 1;
+        int16_t period     = ((s16)util_divsd((s32)PWM_CLK_80, (s16)u_exec)) >> 1;
+        // int16_t period     = ((s16)__builtin_divsd((s32)PWM_CLK_80, (s16)u_exec)) >> 1;
         ptper = period - 8;
         pdc1 = period;
         pdc2 = period;
@@ -178,6 +181,9 @@ void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt()
         y_n1 = y_n;
         y_n2 = y_n1;
 
+        llc_current_fast_avg();
+        llc_voltage_cal_ovp();
+        
         IFS0bits.T2IF = 0; 		/* Clear Interrupt Flag */
         IFS3bits.PSEMIF         = 0;
         IEC3bits.PSEMIE         = 1;
@@ -192,7 +198,7 @@ void __attribute__((__interrupt__, no_auto_psv)) _SI2C2Interrupt()
 
 void __attribute__((__interrupt__, no_auto_psv)) _PWMSpEventMatchInterrupt()
 {
-        timerInterruptCount ++;    /* Increment interrupt counter */
+        // timerInterruptCount ++;    /* Increment interrupt counter */
 
         PTPER   = ptper;           /* period register (PDC-8)   */
         PDC1    = pdc1;            /* primary high-side: 100% DC   */

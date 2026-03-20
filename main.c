@@ -55,7 +55,7 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 #pragma config WDTPRE  = PR32
 #pragma config WINDIS  = OFF
 #pragma config FWDTEN  = ON
-// #pragma config FWDTEN  = OFF
+// #pragma config FWDTEN = OFF
 
 // FPOR - Power-on Reset
 #pragma config FPWRT  = PWR32
@@ -86,6 +86,9 @@ void initCMP3(void);
 void initUART(void);
 
 extern s16  vref;
+extern s16  vref;
+extern int16_t vref_ocp_adj;
+extern s16  comp_2p2z_vref;
 
 int main(void)
 {
@@ -147,7 +150,12 @@ int main(void)
 
         while(1) {
 
-                if(vref < (VREF - 30)) vref += 10;
+                if(vref < (VREF - 30)) {
+                        vref += 10;
+                        comp_2p2z_vref = vref;
+                } else {
+                        comp_2p2z_vref -= vref_ocp_adj;
+                }
 
                 ClrWdt();
                 Nop();

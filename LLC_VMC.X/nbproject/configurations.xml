@@ -22,6 +22,8 @@
       <itemPath>../isr.c</itemPath>
       <itemPath>../main.c</itemPath>
       <itemPath>../traps.c</itemPath>
+      <itemPath>../v_ctrl.c.c</itemPath>
+      <itemPath>../i_ctrl.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
