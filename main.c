@@ -114,7 +114,7 @@ int main(void)
         LATDbits.LATD3 = 0;
         LATDbits.LATD5 = 1;
         LATFbits.LATF6 = 0;
-        LATFbits.LATF0 = 1;
+        LATFbits.LATF0 = 0;
 
         LED_ON();
         /* Override PWM1H/L - full-bridge leg 1 */
