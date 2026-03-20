@@ -3,6 +3,32 @@
 Decompiled HP server PSU firmware (dsPIC33FJ64GS606) with AI (Claude) assistance.  
 Implemented closed-loop 12.3V output using 2P2Z digital compensator.
 
+## Digital Power Development Platform
+
+The HSTNS-PD44 is a fully digital-controlled 800W LLC resonant converter,
+making it an ideal platform for power electronics control algorithm development
+and verification:
+
+- **All-digital control**: no analog compensation — 2P2Z coefficients, OCP thresholds,
+  soft-start ramp rates are all software-configurable
+- **Real hardware**: 800W rated power with production-grade magnetics, MOSFETs, and
+  thermal design — not a low-power eval board
+- **Rich peripherals**: 10-bit ADC (voltage/current sense), 3-ch PWM with dead-time
+  control, Output Compare (fan PWM), UART/I2C (PMBus)
+- **Low cost**: widely available used server PSU ($5-15)
+
+### What You Can Experiment With
+
+| Area | Examples |
+|------|---------|
+| Compensator design | 2P2Z, 3P3Z, PID, state-space, MPC |
+| Soft-start | Linear ramp, S-curve, pre-bias handling |
+| Current limiting | Constant current, foldback, hiccup mode |
+| Load sharing | Droop compensation, active current sharing |
+| Adaptive control | Gain scheduling, auto-tuning, neural network |
+| Protection | OVP, OCP, OTP with configurable thresholds |
+| Frequency sweep | Bode plot measurement via injected perturbation |
+
 ## Timer Configuration
 
 ```c
