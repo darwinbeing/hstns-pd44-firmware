@@ -155,12 +155,14 @@ int main(void)
             delay_us(10);                         
         }
         
-        comp_2p2z_vref = VREF - vref_ls - vref_ocp_adj;
+        comp_2p2z_vref = VREF_NOMINAL - vref_ls - vref_ocp_adj;
         
         while(1) {
             
-                comp_2p2z_vref = VREF - vref_ls - vref_ocp_adj;
-
+                comp_2p2z_vref = VREF_NOMINAL - vref_ls - vref_ocp_adj;
+                if (comp_2p2z_vref > VREF_MAX) comp_2p2z_vref = VREF_MAX;
+                if (comp_2p2z_vref < VREF_MIN) comp_2p2z_vref = VREF_MIN;
+                
                 ClrWdt();
                 delay_us(10);
                 

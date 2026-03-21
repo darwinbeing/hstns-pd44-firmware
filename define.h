@@ -232,5 +232,9 @@ typedef int64_t  s64;
 #define PWM_CLK_80      0xB3FB00u
 
 
+#define VREF_NOMINAL  0xC2F     
+#define VREF_MIN      0x7ED     
+#define VREF_MAX      0xF0F     
+
 int32_t __mulsi3(int32_t A, int32_t B);
 int16_t __builtin_divsd(const int32_t num, const int16_t den);
