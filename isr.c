@@ -89,6 +89,7 @@ void __attribute__((__interrupt__, no_auto_psv)) _T1Interrupt()
 {
         // timerInterruptCount ++; 	/* Increment interrupt counter */
         llc_adc_current_sample();
+        llc_droop_trim_calc();
         llc_ocp_foldback();
         IFS0bits.T1IF = 0; 		/* Clear Interrupt Flag */
 }

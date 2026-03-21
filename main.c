@@ -86,9 +86,9 @@ void initCMP3(void);
 void initUART(void);
 
 extern s16  vref;
-extern s16  vref;
 extern int16_t vref_ocp_adj;
 extern s16  comp_2p2z_vref;
+extern int16_t  vref_ls;
 
 int main(void)
 {
@@ -154,9 +154,10 @@ int main(void)
                         vref += 10;
                         comp_2p2z_vref = vref;
                 } else {
-                        comp_2p2z_vref -= vref_ocp_adj;
-                }
+                        // comp_2p2z_vref = 0xC2F - vref_ls - vref_ocp_adj;
+                        comp_2p2z_vref = 0xC2F - vref_ocp_adj;
 
+                }
                 ClrWdt();
                 Nop();
                 Nop();

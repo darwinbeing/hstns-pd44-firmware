@@ -286,10 +286,10 @@ void llc_adc_current_sample(void)
 // =================================================================
 
 int32_t integrator = 0;
-// int16_t Iref = 0x30f;
 int16_t Iref = 0xA6;
+// int16_t Iref = 0x30F;
 
-int16_t vref_ocp_adj;
+int16_t vref_ocp_adj = 0;
 
 // int16_t Imeas = 0;
 extern int16_t vfb_sum2ch;
@@ -335,4 +335,20 @@ void llc_ocp_foldback(void)
 
     // Step5: Output ? offsets 2P2Z reference in TIMER2
     vref_ocp_adj = u_n;  // DAT_ram_1d38
+}
+
+// --- Output ---
+int16_t  vref_ls = 0;        // DAT_ram_1d3a ? vref offset load sharing, current sharing
+ 
+// --- Library ---
+extern int32_t __mulsi3(int32_t a, int32_t b);
+
+void llc_droop_trim_calc(void)
+{
+    int16_t trim = (int16_t)(__mulsi3((int32_t)Imeas, 0x0F0A) >> 15);
+
+    if (trim > 77)  trim = 77;
+    if (trim < 0)   trim = 0;
+
+    vref_ls = trim;
 }
