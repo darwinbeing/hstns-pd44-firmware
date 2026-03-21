@@ -85,7 +85,7 @@ void initCMP4(void);
 void initCMP3(void);
 void initUART(void);
 
-extern s16  vref;
+extern s16  VMC_Vref;
 extern int16_t vref_ocp_adj;
 extern s16  comp_2p2z_vref;
 extern int16_t  vref_ls;
@@ -146,19 +146,24 @@ int main(void)
         Nop();
         IOCON3bits.OVRENL = 0;
 
-        vref = 0xFFAF;
+        VMC_Vref = 0;
+        while (VMC_Vref < (VREF - 30)) {
+            VMC_Vref += 10;                                
+            comp_2p2z_vref = VMC_Vref;
 
+            ClrWdt();
+            delay_us(10);                         
+        }
+        
+        comp_2p2z_vref = VREF - vref_ls - vref_ocp_adj;
+        
         while(1) {
+            
+                comp_2p2z_vref = VREF - vref_ls - vref_ocp_adj;
 
-                if(vref < (VREF - 30)) {
-                        vref += 10;
-                        comp_2p2z_vref = vref;
-                } else {
-                        // comp_2p2z_vref = 0xC2F - vref_ls - vref_ocp_adj;
-                        comp_2p2z_vref = 0xC2F - vref_ocp_adj;
-
-                }
                 ClrWdt();
+                delay_us(10);
+                
                 Nop();
                 Nop();
                 Nop();

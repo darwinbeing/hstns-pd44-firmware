@@ -45,8 +45,8 @@ u16  adc_an2 = 0;    /* AN2 raw sample (Vout path B)   */
 u16  adc_an0_prev = 0;    /* AN0 raw sample (Vout path A)   */
 u16  adc_an2_prev = 0;    /* AN2 raw sample (Vout path B)   */
 s16  vfb_sum2ch;      /* (AN0 + AN2) * 2                */
-s16  vref = VREF;          /* output voltage set-point       */
-s16  comp_2p2z_vref;
+s16  VMC_Vref = 0;          /* output voltage set-point       */
+s16  comp_2p2z_vref = 0;
 
 /* --- Frequency control word (after clamping) --- */
 s16  u_exec = 0x5DC0;        /* clamped output -> PTPER calc   */
