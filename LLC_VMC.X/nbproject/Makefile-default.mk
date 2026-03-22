@@ -51,17 +51,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=../init.c ../isr.c ../main.c ../traps.c ../v_ctrl.c.c ../i_ctrl.c
+SOURCEFILES_QUOTED_IF_SPACED=../init.c ../isr.c ../main.c ../traps.c ../v_ctrl.c.c ../i_ctrl.c ../at45db.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1472/init.o ${OBJECTDIR}/_ext/1472/isr.o ${OBJECTDIR}/_ext/1472/main.o ${OBJECTDIR}/_ext/1472/traps.o ${OBJECTDIR}/_ext/1472/v_ctrl.c.o ${OBJECTDIR}/_ext/1472/i_ctrl.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1472/init.o.d ${OBJECTDIR}/_ext/1472/isr.o.d ${OBJECTDIR}/_ext/1472/main.o.d ${OBJECTDIR}/_ext/1472/traps.o.d ${OBJECTDIR}/_ext/1472/v_ctrl.c.o.d ${OBJECTDIR}/_ext/1472/i_ctrl.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1472/init.o ${OBJECTDIR}/_ext/1472/isr.o ${OBJECTDIR}/_ext/1472/main.o ${OBJECTDIR}/_ext/1472/traps.o ${OBJECTDIR}/_ext/1472/v_ctrl.c.o ${OBJECTDIR}/_ext/1472/i_ctrl.o ${OBJECTDIR}/_ext/1472/at45db.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1472/init.o.d ${OBJECTDIR}/_ext/1472/isr.o.d ${OBJECTDIR}/_ext/1472/main.o.d ${OBJECTDIR}/_ext/1472/traps.o.d ${OBJECTDIR}/_ext/1472/v_ctrl.c.o.d ${OBJECTDIR}/_ext/1472/i_ctrl.o.d ${OBJECTDIR}/_ext/1472/at45db.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/1472/init.o ${OBJECTDIR}/_ext/1472/isr.o ${OBJECTDIR}/_ext/1472/main.o ${OBJECTDIR}/_ext/1472/traps.o ${OBJECTDIR}/_ext/1472/v_ctrl.c.o ${OBJECTDIR}/_ext/1472/i_ctrl.o
+OBJECTFILES=${OBJECTDIR}/_ext/1472/init.o ${OBJECTDIR}/_ext/1472/isr.o ${OBJECTDIR}/_ext/1472/main.o ${OBJECTDIR}/_ext/1472/traps.o ${OBJECTDIR}/_ext/1472/v_ctrl.c.o ${OBJECTDIR}/_ext/1472/i_ctrl.o ${OBJECTDIR}/_ext/1472/at45db.o
 
 # Source Files
-SOURCEFILES=../init.c ../isr.c ../main.c ../traps.c ../v_ctrl.c.c ../i_ctrl.c
+SOURCEFILES=../init.c ../isr.c ../main.c ../traps.c ../v_ctrl.c.c ../i_ctrl.c ../at45db.c
 
 
 
@@ -125,6 +125,12 @@ ${OBJECTDIR}/_ext/1472/i_ctrl.o: ../i_ctrl.c  .generated_files/flags/default/1ff
 	@${RM} ${OBJECTDIR}/_ext/1472/i_ctrl.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  ../i_ctrl.c  -o ${OBJECTDIR}/_ext/1472/i_ctrl.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1472/i_ctrl.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../" -O1 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
+${OBJECTDIR}/_ext/1472/at45db.o: ../at45db.c  .generated_files/flags/default/fbb68ecff5f23df80cea31d5e4f7c773804f617b .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/at45db.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/at45db.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../at45db.c  -o ${OBJECTDIR}/_ext/1472/at45db.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1472/at45db.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../" -O1 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	
 else
 ${OBJECTDIR}/_ext/1472/init.o: ../init.c  .generated_files/flags/default/f0a7d9db7ade751829b0ee7b0d7ba2b59f168d3d .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
@@ -161,6 +167,12 @@ ${OBJECTDIR}/_ext/1472/i_ctrl.o: ../i_ctrl.c  .generated_files/flags/default/30f
 	@${RM} ${OBJECTDIR}/_ext/1472/i_ctrl.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1472/i_ctrl.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  ../i_ctrl.c  -o ${OBJECTDIR}/_ext/1472/i_ctrl.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1472/i_ctrl.o.d"        -g -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../" -O1 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	
+${OBJECTDIR}/_ext/1472/at45db.o: ../at45db.c  .generated_files/flags/default/2f30202dd03f328df35947fe28392f9dd0d9320f .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+	@${MKDIR} "${OBJECTDIR}/_ext/1472" 
+	@${RM} ${OBJECTDIR}/_ext/1472/at45db.o.d 
+	@${RM} ${OBJECTDIR}/_ext/1472/at45db.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../at45db.c  -o ${OBJECTDIR}/_ext/1472/at45db.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1472/at45db.o.d"        -g -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../" -O1 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
 endif
 

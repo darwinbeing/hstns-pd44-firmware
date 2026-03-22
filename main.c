@@ -98,9 +98,9 @@ int main(void)
         initCMP4();
         initCMP3();
 
-	initIOPorts();								/* Setup LEDs and other I/O Ports */
+        initIOPorts();								/* Setup LEDs and other I/O Ports */
 
-	initADC();								/* Setup ADC module and ADC triggering */
+        initADC();								/* Setup ADC module and ADC triggering */
 
         initTIMER();
 
@@ -145,7 +145,7 @@ int main(void)
         Nop();
         Nop();
         IOCON3bits.OVRENL = 0;
-
+        
         VMC_Vref = 0;
         while (VMC_Vref < (VREF - 30)) {
             VMC_Vref += 10;                                

@@ -24,6 +24,7 @@
       <itemPath>../traps.c</itemPath>
       <itemPath>../v_ctrl.c.c</itemPath>
       <itemPath>../i_ctrl.c</itemPath>
+      <itemPath>../at45db.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

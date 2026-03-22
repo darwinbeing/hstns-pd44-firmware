@@ -48,7 +48,9 @@ void initClock(void)
 	CLKDIVbits.PLLPOST = 0;   /* N1 = 2 */
 	CLKDIVbits.PLLPRE = 2;    /* N2 = 4 */
 
-    RCONbits.SWDTEN = 0;                       /* Disable Watch Dog Timer*/
+    // FWDTEN 1 = Watchdog Timer is always enabled (LPRC oscillator cannot bedisabled; 
+    // clearing the SWDTEN bit in the RCON register will have no effect
+    // RCONbits.SWDTEN = 0;                       /* Disable Watch Dog Timer*/
 
    	__builtin_write_OSCCONH(0x03);			/* New Oscillator External Crystal w/ PLL */
    	__builtin_write_OSCCONL(0x01);  		/* Enable Switch */
