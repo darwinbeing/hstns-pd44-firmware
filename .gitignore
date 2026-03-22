@@ -53,3 +53,16 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+
+# MPLAB X IDE
+*.log
+*.log.inx
+*.xml
+**/nbproject/private/
+**/nbproject/Makefile-*
+**/nbproject/Package-*
+**/queuelogs/
+**/.generated_files/
+**/build/
+**/dist/
