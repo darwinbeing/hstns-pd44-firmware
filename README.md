@@ -1,7 +1,20 @@
-# HSTNS-PD44 800W LLC Firmware Reverse Engineering
+# HSTNS-PD44 Firmware Reverse Engineering Project
 
-Decompiled HP server PSU firmware (dsPIC33FJ64GS606) with AI (Claude) assistance.  
-Implemented closed-loop 12.3V output using 2P2Z digital compensator.
+## Overview
+
+HSTNS-PD44 is a digital control board from an HP server 800W power supply module based on an LLC series-resonant converter topology. This project extracts the firmware from the physical PCB through hardware reverse engineering, decompiles it into readable C source code, and rebuilds the complete digital power control algorithms in an MPLAB X project.
+
+## Hardware Platform
+
+| Item | Specification |
+|------|---------------|
+| MCU | Microchip dsPIC33FJ64GS606 (16-bit DSC, 50 MIPS) |
+| Main Crystal | 16 MHz external, PLL to Fosc = 100 MHz, Fcy = 50 MHz |
+| Auxiliary Clock | FRC 7.37 MHz × 16 = ~120 MHz (dedicated PWM/ADC clock) |
+| External Flash | Adesto AT45DB021E 2Mbit SPI DataFlash (JEDEC ID: 1F 23 00) |
+| Power Topology | LLC series-resonant full-bridge converter + synchronous rectification |
+| Output | 12V / 800W |
+| Communication | I2C (slave addr 0x58), UART1 (4800 baud, 9N1), UART2 (115200 baud, 8N1), SPI2 |
 
 ## Digital Power Development Platform
 
@@ -29,39 +42,92 @@ and verification:
 | Protection | OVP, OCP, OTP with configurable thresholds |
 | Frequency sweep | Bode plot measurement via injected perturbation |
 
-## Timer Configuration
+## Reverse Engineering Methodology
 
-```c
-// Fcy = 50MHz, period = Fcy / freq - 1
-#define T1_PER  10000   // Timer1: 5kHz (200us), slow loop (OCP, droop, ADC filter)
-#define T2_PER  1000    // Timer2: 50kHz (20us), 2P2Z compensator + PWM
+### 1. Firmware Extraction
+
+A PICkit 5 programmer was used to read the full 64KB program Flash from the dsPIC33F via the ICSP (PGD2) interface, obtaining the complete machine code binary. The on-board AT45DB021E external Flash was also dumped — all 1024 pages (256KB) — via SPI for analysis of calibration parameters and configuration tables.
+
+### 2. Decompilation & Code Reconstruction
+
+The dsPIC33F 24-bit instruction set was disassembled and cross-referenced with Microchip datasheet SFR mappings to reconstruct equivalent C code function by function. Key annotation conventions:
+
+- `DAT_ram_XXXX` — Original decompiler RAM variable address labels
+- `FUN_rom_XXXXXX` — Original decompiler ROM function address labels
+- `__mulsi3` — dsPIC compiler's internal 32-bit multiplication library function
+
+### 3. Configuration Bits Verification
+
+All configuration bits were read directly from hardware, not guessed. This includes oscillator selection (PRIPLL + XT), watchdog configuration (WDT enabled, PS2048/PR32), comparator polarity, etc., ensuring the recompiled firmware matches the original clock and protection behavior.
+
+## Source Code Structure
+
+```
+├── main.c          — Main: peripheral init sequence, PWM release, soft-start voltage ramp, main loop
+├── init.c          — Peripheral init: clock PLL, IO ports, PWM (3-ch full-bridge + SR),
+│                     ADC, Timer, I2C, UART, SPI, comparator DAC (CMP3/CMP4)
+├── isr.c           — Interrupt service routines:
+│                     T1 (5kHz): current sampling + droop compensation + OCP foldback
+│                     T2 (50kHz): 2P2Z voltage loop compensator + Kff gain scheduling + PWM freq calc
+│                     I2C slave interrupt, PWM special event match (register update)
+├── i_ctrl.c        — Current measurement & protection:
+│                     8-point fast sliding average (TIMER2, 160us window)
+│                     64-point mid-term filter (TIMER1, 12.8ms window)
+│                     1024-point long-term average (TIMER1, 205ms window)
+│                     Dual calibration paths (fast OCP / precise long-term)
+│                     PI overcurrent foldback controller (adaptive gain + anti-windup)
+├── v_ctrl.c.c      — Voltage measurement & protection:
+│                     Dual-channel 64-point voltage sampling + calibration
+│                     OVP detection & shutdown (~20us response)
+├── at45db.c        — AT45DB021E SPI Flash driver:
+│                     Page read/write/erase, JEDEC ID read, binary page size config
+│                     UART dump with CRC-16/XMODEM verification
+├── serial.c        — UART driver: UART1/UART2 char/string output, debug frame TX
+├── traps.c         — CPU exception trap handlers (oscillator fail, address error, stack overflow, math error)
+├── define.h        — Global constants: control parameters, fault thresholds, Q15 fixed-point macros, type aliases
+└── LLC_VMC.X/      — MPLAB X IDE project files
+```
+## Control Algorithm Architecture
+
+### Voltage Loop — 2P2Z Digital Compensator (TIMER2, 50kHz)
+
+```
+              Vref ──┐
+                     ├─ e[n] ── slew rate limit ── amplitude clamp ──┐
+   AN0+AN2 ──────────┘                                               │
+                                                                      ▼
+                                              2P2Z: y[n] = d2·y[n-1] + d3·y[n-2]
+                                                         + Kff·(n1·e[n] + n2·e[n-1] + n3·e[n-2])
+                                                                      │
+                                                               clamp [2600, 25000]
+                                                                      │
+                                                               u_exec ── ÷ ── PTPER (switching freq)
 ```
 
-## Architecture
+- Frequency control range: 145 kHz – 250 kHz (near LLC resonant frequency)
+- Kff feedforward gain: linearly mapped from u_exec, with transient boost (×1.465)
+- PWM clock constant: 0xB3FB00 (11,796,224), PTPER = PWM_CLK / u_exec / 2
+
+### Current Loop — PI Overcurrent Foldback (TIMER1, 5kHz)
 
 ```
-TIMER2 ISR (fast, 50kHz)
-│
-├── ADC: vout_adc = 2×AN0 + 2×AN2
-├── Error: e[n] = vout_adc - vref (slew limited ±50, clamped ±100)
-├── 2P2Z: y[n] → freq_ctrl
-├── PWM:  PDC = PWM_CLK_80 / freq_ctrl >> 1, PTPER = PDC - 8
-└── Sub-functions:
-    ├── llc_current_fast_avg()    AN4 8-point filter
-    ├── llc_voltage_cal_ovp()     OVP protection
-    └── fan_speed_update()        fan PWM control
-
-TIMER1 (slow, 5kHz)
-│
-├── llc_adc_voltage_sample()      dual-channel Vout, 64-point avg
-├── llc_adc_current_sample()      Iout, 64+1024 point avg
-├── llc_droop_trim_calc()         load-dependent voltage droop
-└── llc_ocp_foldback_loop()       OCP/CC PI controller
-    └── vref = (0xC2F - trim) - ocp_output → TIMER2
-
-PWM Special Event ISR
-└── Atomic PWM register update (PTPER, PDC1/2/3, PHASE3, DTR3)
+   Imeas (8pt avg) ──┐
+                     ├─ i_error ── PI(Kp,Ki) ── anti-windup ── u[n]
+        Iref ────────┘                                           │
+                                                           ┌─────┘
+                                                           ▼
+                                              Vref_adj = VREF_NOMINAL - droop - u[n]
+                                                           │
+                                                           ▼ (fed into TIMER2 voltage loop)
 ```
+
+- Adaptive gain: PI Kp/Ki scale with output voltage (lower voltage = more aggressive foldback)
+- Anti-windup: back-calculation coefficient = 30
+- Droop compensation: Imeas × 0.4614, clamped to [0, 77]
+
+### OVP — Over-Voltage Protection (~20us Response)
+
+Independent AN5 sampling path, threshold at 879 counts (~13.9V). Upon detection, all PWM outputs are shut down within 1 TIMER2 cycle.
 
 ## 2P2Z Compensator
 
@@ -294,13 +360,22 @@ AN4 (DAT_ram_0348)
 | Medium | 64 | TIMER1 (5kHz) | 12.8ms | Mid-term filtering |
 | Long | 1024 | TIMER1 (5kHz) | 205ms | PMBus reporting |
 
-## Hardware
+## Development Environment
 
-- **MCU**: dsPIC33FJ64GS606, 100MHz with PLL
-- **Topology**: LLC resonant converter, push-pull
-- **Output**: 12.3V / 800W
-- **ADC**: 10-bit, Vout divider 5.23/(5.23+20)
-- **PWM**: 3 channels, edge-aligned push-pull mode
+- **IDE**: MPLAB X (Microchip)
+- **Compiler**: XC16 (dsPIC/PIC24)
+- **Programmer**: PICkit 5
+- **Debug Serial**: UART2 @ 115200 baud
+
+## Project Status
+
+Core control algorithm decompilation is complete, including:
+- 2P2Z voltage-mode compensator with Kff gain scheduling
+- PI overcurrent foldback controller with adaptive gain and anti-windup
+- Multi-stage current/voltage sampling and filtering pipeline
+- OVP over-voltage protection logic
+- AT45DB021E external Flash driver
+- Full peripheral initialization configuration
 
 ## TODO
 
