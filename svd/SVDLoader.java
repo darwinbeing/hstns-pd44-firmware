@@ -1,3 +1,5 @@
+// Derived from the Python version of SVD-Loader-Ghidra:
+// https://github.com/leveldown-security/SVD-Loader-Ghidra
 // Load specified SVD and generate peripheral memory maps & structures.
 //@author Thomas Roth <thomas.roth@leveldown.de>, Ryan Pavlik <ryan.pavlik@gmail.com>
 //@category leveldown security
@@ -126,7 +128,7 @@ public class SVDLoader extends GhidraScript {
 			if (!space.equals(other.space)) {
 				return false;
 			}
-			return !(other.end < start || end < other.start);
+			return start < other.end && other.start < end;
 		}
 
 		void combineFrom(MemoryRegion other) {
@@ -698,6 +700,9 @@ public class SVDLoader extends GhidraScript {
 			"RESERVED".equals(name) || "PROGRAM".equals(name)) {
 			return false;
 		}
+		if ("SFR_SPACE".equals(name)) {
+			return false;
+		}
 		if ("DEVID".equals(name) || "__DEVID".equals(name)) {
 			return false;
 		}
@@ -708,6 +713,10 @@ public class SVDLoader extends GhidraScript {
 		String name = peripheral.name != null ? peripheral.name.toUpperCase() : "";
 		if ("CONFIG".equals(name) || "DEVID".equals(name) || "__DEVID".equals(name)) {
 			return codeSpace;
+		}
+		if ("SFR_SPACE".equals(name) || "X_DATA_RAM".equals(name) || "Y_DATA_RAM".equals(name) ||
+			"DMA_RAM".equals(name) || "UNIMPLEMENTED".equals(name) || "PROGRAM_MAPPED_SPACE".equals(name)) {
+			return dataSpace;
 		}
 		if ("DATA".equals(name) || "SFR".equals(name)) {
 			return dataSpace;

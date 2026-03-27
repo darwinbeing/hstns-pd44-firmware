@@ -18530,6 +18530,66 @@
       </registers>
     </peripheral>
     <peripheral>
+      <name>SFR_SPACE</name>
+      <description>SFR space (peripheral registers), 16-bit register space (origin 0x0, length 0x800)</description>
+      <baseAddress>0x0</baseAddress>
+      <addressBlock>
+        <offset>0x0</offset>
+        <size>0x800</size>
+        <usage>registers</usage>
+      </addressBlock>
+    </peripheral>
+    <peripheral>
+      <name>X_DATA_RAM</name>
+      <description>X data RAM (origin 0x800, length 0x1000)</description>
+      <baseAddress>0x800</baseAddress>
+      <addressBlock>
+        <offset>0x0</offset>
+        <size>0x1000</size>
+        <usage>buffer</usage>
+      </addressBlock>
+    </peripheral>
+    <peripheral>
+      <name>Y_DATA_RAM</name>
+      <description>Y data RAM (origin 0x1800, length 0x800)</description>
+      <baseAddress>0x1800</baseAddress>
+      <addressBlock>
+        <offset>0x0</offset>
+        <size>0x800</size>
+        <usage>buffer</usage>
+      </addressBlock>
+    </peripheral>
+    <peripheral>
+      <name>DMA_RAM</name>
+      <description>DMA RAM (origin 0x2000, length 0x800)</description>
+      <baseAddress>0x2000</baseAddress>
+      <addressBlock>
+        <offset>0x0</offset>
+        <size>0x800</size>
+        <usage>buffer</usage>
+      </addressBlock>
+    </peripheral>
+    <peripheral>
+      <name>UNIMPLEMENTED</name>
+      <description>Unimplemented address space (origin 0x2800, length 0x400)</description>
+      <baseAddress>0x2800</baseAddress>
+      <addressBlock>
+        <offset>0x0</offset>
+        <size>0x400</size>
+        <usage>reserved</usage>
+      </addressBlock>
+    </peripheral>
+    <peripheral>
+      <name>PROGRAM_MAPPED_SPACE</name>
+      <description>Optional program memory mapped space (origin 0x2C00, length 0x5401)</description>
+      <baseAddress>0x2C00</baseAddress>
+      <addressBlock>
+        <offset>0x0</offset>
+        <size>0x5401</size>
+        <usage>buffer</usage>
+      </addressBlock>
+    </peripheral>
+    <peripheral>
       <name>CONFIG</name>
       <description>Configuration words stored in program space</description>
       <baseAddress>0xF80000</baseAddress>
