@@ -37,7 +37,6 @@
         <register>
           <name>ACCAU</name>
           <addressOffset>0x6</addressOffset>
-          <size>8</size>
         </register>
         <register>
           <name>ACCBL</name>
@@ -50,7 +49,6 @@
         <register>
           <name>ACCBU</name>
           <addressOffset>0xC</addressOffset>
-          <size>8</size>
         </register>
         <register>
           <name>PCL</name>
@@ -59,17 +57,14 @@
         <register>
           <name>PCH</name>
           <addressOffset>0x10</addressOffset>
-          <size>8</size>
         </register>
         <register>
           <name>TBLPAG</name>
           <addressOffset>0x12</addressOffset>
-          <size>8</size>
         </register>
         <register>
           <name>PSVPAG</name>
           <addressOffset>0x14</addressOffset>
-          <size>8</size>
         </register>
         <register>
           <name>RCOUNT</name>
@@ -2893,6 +2888,7 @@
       <registers>
         <register>
           <name>TMR1</name>
+          <description>Timer1 Register</description>
           <addressOffset>0x0</addressOffset>
           <fields>
             <field>
@@ -2905,6 +2901,7 @@
         </register>
         <register>
           <name>PR1</name>
+          <description>Period Register 1</description>
           <addressOffset>0x2</addressOffset>
           <fields>
             <field>
@@ -2995,6 +2992,7 @@
       <registers>
         <register>
           <name>TMR2</name>
+          <description>Timer2 Register</description>
           <addressOffset>0x0</addressOffset>
           <fields>
             <field>
@@ -3007,6 +3005,7 @@
         </register>
         <register>
           <name>PR2</name>
+          <description>Period Register 2</description>
           <addressOffset>0x6</addressOffset>
           <fields>
             <field>
@@ -3040,8 +3039,8 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>T32</name>
-              <description>Timer2 and Timer3 32-bit mode select bit</description>
+              <name>T</name>
+              <description>T2CON field T</description>
               <bitOffset>3</bitOffset>
               <bitWidth>1</bitWidth>
             </field>
@@ -3097,6 +3096,7 @@
       <registers>
         <register>
           <name>TMR3HLD</name>
+          <description>Timer3 Holding Register (32-bit mode)</description>
           <addressOffset>0x0</addressOffset>
           <fields>
             <field>
@@ -3199,6 +3199,7 @@
         </register>
         <register>
           <name>TMR3</name>
+          <description>Timer3 Register</description>
           <addressOffset>0x2</addressOffset>
           <fields>
             <field>
@@ -3211,6 +3212,7 @@
         </register>
         <register>
           <name>PR3</name>
+          <description>Period Register 3</description>
           <addressOffset>0x6</addressOffset>
           <fields>
             <field>
@@ -3295,6 +3297,7 @@
       <registers>
         <register>
           <name>TMR4</name>
+          <description>Timer4 Register</description>
           <addressOffset>0x0</addressOffset>
           <fields>
             <field>
@@ -3307,6 +3310,7 @@
         </register>
         <register>
           <name>PR4</name>
+          <description>Period Register 4</description>
           <addressOffset>0x6</addressOffset>
           <fields>
             <field>
@@ -3340,8 +3344,8 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>T32</name>
-              <description>Timer4 and Timer5 32-bit mode select bit</description>
+              <name>T</name>
+              <description>T4CON field T</description>
               <bitOffset>3</bitOffset>
               <bitWidth>1</bitWidth>
             </field>
@@ -3397,6 +3401,7 @@
       <registers>
         <register>
           <name>TMR5HLD</name>
+          <description>Timer5 Holding Register (32-bit mode)</description>
           <addressOffset>0x0</addressOffset>
           <fields>
             <field>
@@ -3499,6 +3504,7 @@
         </register>
         <register>
           <name>TMR5</name>
+          <description>Timer5 Register</description>
           <addressOffset>0x2</addressOffset>
           <fields>
             <field>
@@ -3511,6 +3517,7 @@
         </register>
         <register>
           <name>PR5</name>
+          <description>Period Register 5</description>
           <addressOffset>0x6</addressOffset>
           <fields>
             <field>
@@ -4554,36 +4561,12 @@
           </fields>
         </register>
         <register>
-          <name>I2CRCV</name>
-          <addressOffset>0x0</addressOffset>
-          <fields>
-            <field>
-              <name>I2CRCV</name>
-              <description>I2CRCV register value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>16</bitWidth>
-            </field>
-          </fields>
-        </register>
-        <register>
           <name>I2C1TRN</name>
           <addressOffset>0x2</addressOffset>
           <fields>
             <field>
               <name>I2C1TRN</name>
               <description>I2C1TRN register value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>16</bitWidth>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>I2CTRN</name>
-          <addressOffset>0x2</addressOffset>
-          <fields>
-            <field>
-              <name>I2CTRN</name>
-              <description>I2CTRN register value</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -4704,108 +4687,6 @@
           </fields>
         </register>
         <register>
-          <name>I2CCON</name>
-          <addressOffset>0x6</addressOffset>
-          <fields>
-            <field>
-              <name>SEN</name>
-              <description>I2CCON field SEN</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>RSEN</name>
-              <description>I2CCON field RSEN</description>
-              <bitOffset>1</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>PEN</name>
-              <description>I2CCON field PEN</description>
-              <bitOffset>2</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>RCEN</name>
-              <description>I2CCON field RCEN</description>
-              <bitOffset>3</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>ACKEN</name>
-              <description>I2CCON field ACKEN</description>
-              <bitOffset>4</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>ACKDT</name>
-              <description>I2CCON field ACKDT</description>
-              <bitOffset>5</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>STREN</name>
-              <description>I2CCON field STREN</description>
-              <bitOffset>6</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>GCEN</name>
-              <description>I2CCON field GCEN</description>
-              <bitOffset>7</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>SMEN</name>
-              <description>I2CCON field SMEN</description>
-              <bitOffset>8</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>DISSLW</name>
-              <description>I2CCON field DISSLW</description>
-              <bitOffset>9</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>A10M</name>
-              <description>I2CCON field A10M</description>
-              <bitOffset>10</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>IPMIEN</name>
-              <description>I2CCON field IPMIEN</description>
-              <bitOffset>11</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>SCLREL</name>
-              <description>I2CCON field SCLREL</description>
-              <bitOffset>12</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>I2CSIDL</name>
-              <description>I2CCON field I2CSIDL</description>
-              <bitOffset>13</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>14</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>I2CEN</name>
-              <description>I2CCON field I2CEN</description>
-              <bitOffset>15</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-          </fields>
-        </register>
-        <register>
           <name>I2C1STAT</name>
           <addressOffset>0x8</addressOffset>
           <fields>
@@ -4896,114 +4777,12 @@
           </fields>
         </register>
         <register>
-          <name>I2CSTAT</name>
-          <addressOffset>0x8</addressOffset>
-          <fields>
-            <field>
-              <name>TBF</name>
-              <description>I2CSTAT field TBF</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>RBF</name>
-              <description>I2CSTAT field RBF</description>
-              <bitOffset>1</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>2</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>S</name>
-              <description>I2CSTAT field S</description>
-              <bitOffset>3</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>P</name>
-              <description>I2CSTAT field P</description>
-              <bitOffset>4</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>RESERVED_1</name>
-              <description>Reserved</description>
-              <bitOffset>5</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>I2COV</name>
-              <description>I2CSTAT field I2COV</description>
-              <bitOffset>6</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>IWCOL</name>
-              <description>I2CSTAT field IWCOL</description>
-              <bitOffset>7</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>ADD10</name>
-              <description>I2CSTAT field ADD10</description>
-              <bitOffset>8</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>GCSTAT</name>
-              <description>I2CSTAT field GCSTAT</description>
-              <bitOffset>9</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BCL</name>
-              <description>I2CSTAT field BCL</description>
-              <bitOffset>10</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>RESERVED_2</name>
-              <description>Reserved</description>
-              <bitOffset>11</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
-              <name>TRSTAT</name>
-              <description>I2CSTAT field TRSTAT</description>
-              <bitOffset>14</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>ACKSTAT</name>
-              <description>I2CSTAT field ACKSTAT</description>
-              <bitOffset>15</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-          </fields>
-        </register>
-        <register>
           <name>I2C1ADD</name>
           <addressOffset>0xA</addressOffset>
           <fields>
             <field>
               <name>I2C1ADD</name>
               <description>I2C1ADD register value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>16</bitWidth>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>I2CADD</name>
-          <addressOffset>0xA</addressOffset>
-          <fields>
-            <field>
-              <name>I2CADD</name>
-              <description>I2CADD register value</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -9379,13 +9158,43 @@
               <name>SEVTPS</name>
               <description>PTCON field SEVTPS</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>SEVTPS</name>
+              <description>PTCON field SEVTPS</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>SEVTPS</name>
+              <description>PTCON field SEVTPS</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>SEVTPS</name>
+              <description>PTCON field SEVTPS</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>SYNCSRC</name>
               <description>PTCON field SYNCSRC</description>
               <bitOffset>4</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>SYNCSRC</name>
+              <description>PTCON field SYNCSRC</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>SYNCSRC</name>
+              <description>PTCON field SYNCSRC</description>
+              <bitOffset>6</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>SYNCEN</name>
@@ -9451,7 +9260,19 @@
               <name>PCLKDIV</name>
               <description>PTCON2 field PCLKDIV</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>PCLKDIV</name>
+              <description>PTCON2 field PCLKDIV</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>PCLKDIV</name>
+              <description>PTCON2 field PCLKDIV</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>RESERVED_0</name>
@@ -9463,11 +9284,12 @@
         </register>
         <register>
           <name>PTPER</name>
+          <description>PTPER&lt;15:0&gt;</description>
           <addressOffset>0x4</addressOffset>
           <fields>
             <field>
               <name>PTPER</name>
-              <description>PTPER register value</description>
+              <description>PTPER field PTPER</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -9479,19 +9301,26 @@
           <fields>
             <field>
               <name>SEVTCMP</name>
-              <description>SEVTCMP register value</description>
+              <description>SEVTCMP field SEVTCMP</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>16</bitWidth>
+              <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
         <register>
           <name>MDC</name>
+          <description>MDC&lt;15:0&gt;</description>
           <addressOffset>0xA</addressOffset>
           <fields>
             <field>
               <name>MDC</name>
-              <description>MDC register value</description>
+              <description>MDC field MDC</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -9505,13 +9334,43 @@
               <name>SEVTPS</name>
               <description>STCON field SEVTPS</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>SEVTPS</name>
+              <description>STCON field SEVTPS</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>SEVTPS</name>
+              <description>STCON field SEVTPS</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>SEVTPS</name>
+              <description>STCON field SEVTPS</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>SYNCSRC</name>
               <description>STCON field SYNCSRC</description>
               <bitOffset>4</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>SYNCSRC</name>
+              <description>STCON field SYNCSRC</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>SYNCSRC</name>
+              <description>STCON field SYNCSRC</description>
+              <bitOffset>6</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>SYNCEN</name>
@@ -9550,10 +9409,22 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>RESERVED_2</name>
               <description>Reserved</description>
               <bitOffset>13</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>15</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
           </fields>
         </register>
@@ -9565,7 +9436,19 @@
               <name>PCLKDIV</name>
               <description>STCON2 field PCLKDIV</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>PCLKDIV</name>
+              <description>STCON2 field PCLKDIV</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>PCLKDIV</name>
+              <description>STCON2 field PCLKDIV</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>RESERVED_0</name>
@@ -9577,11 +9460,12 @@
         </register>
         <register>
           <name>STPER</name>
+          <description>STPER&lt;15:0&gt;</description>
           <addressOffset>0x12</addressOffset>
           <fields>
             <field>
               <name>STPER</name>
-              <description>STPER register value</description>
+              <description>STPER field STPER</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -9593,9 +9477,15 @@
           <fields>
             <field>
               <name>SSEVTCMP</name>
-              <description>SSEVTCMP register value</description>
+              <description>SSEVTCMP field SSEVTCMP</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>16</bitWidth>
+              <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -9604,22 +9494,94 @@
           <addressOffset>0x1A</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
+              <name>RESERVED_7</name>
               <description>Reserved</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_6</name>
+              <description>Reserved</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_5</name>
+              <description>Reserved</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CHOPCLK</name>
               <description>CHOP field CHOPCLK</description>
               <bitOffset>3</bitOffset>
-              <bitWidth>7</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPCLK</name>
+              <description>CHOP field CHOPCLK</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPCLK</name>
+              <description>CHOP field CHOPCLK</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPCLK</name>
+              <description>CHOP field CHOPCLK</description>
+              <bitOffset>6</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPCLK</name>
+              <description>CHOP field CHOPCLK</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPCLK</name>
+              <description>CHOP field CHOPCLK</description>
+              <bitOffset>8</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPCLK</name>
+              <description>CHOP field CHOPCLK</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_4</name>
+              <description>Reserved</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_3</name>
+              <description>Reserved</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>12</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>RESERVED_1</name>
               <description>Reserved</description>
-              <bitOffset>10</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CHPCLKEN</name>
@@ -9685,7 +9647,13 @@
               <name>DTC</name>
               <description>PWMCON1 field DTC</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>DTC</name>
+              <description>PWMCON1 field DTC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>MDCS</name>
@@ -9757,19 +9725,37 @@
               <name>CLDAT</name>
               <description>IOCON1 field CLDAT</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLDAT</name>
+              <description>IOCON1 field CLDAT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTDAT</name>
               <description>IOCON1 field FLTDAT</description>
               <bitOffset>4</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTDAT</name>
+              <description>IOCON1 field FLTDAT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRDAT</name>
               <description>IOCON1 field OVRDAT</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>OVRDAT</name>
+              <description>IOCON1 field OVRDAT</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRENL</name>
@@ -9787,7 +9773,13 @@
               <name>PMOD</name>
               <description>IOCON1 field PMOD</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>PMOD</name>
+              <description>IOCON1 field PMOD</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>POLL</name>
@@ -9823,7 +9815,13 @@
               <name>FLTMOD</name>
               <description>FCLCON1 field FLTMOD</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTMOD</name>
+              <description>FCLCON1 field FLTMOD</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTPOL</name>
@@ -9835,7 +9833,31 @@
               <name>FLTSRC</name>
               <description>FCLCON1 field FLTSRC</description>
               <bitOffset>3</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON1 field FLTSRC</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON1 field FLTSRC</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON1 field FLTSRC</description>
+              <bitOffset>6</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON1 field FLTSRC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLMOD</name>
@@ -9853,7 +9875,31 @@
               <name>CLSRC</name>
               <description>FCLCON1 field CLSRC</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON1 field CLSRC</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON1 field CLSRC</description>
+              <bitOffset>12</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON1 field CLSRC</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON1 field CLSRC</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>IFLTMOD</name>
@@ -9865,11 +9911,12 @@
         </register>
         <register>
           <name>PDC1</name>
+          <description>PDC1&lt;15:0&gt;</description>
           <addressOffset>0x6</addressOffset>
           <fields>
             <field>
               <name>PDC1</name>
-              <description>PDC1 register value</description>
+              <description>PDC1 field PDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -9877,11 +9924,12 @@
         </register>
         <register>
           <name>PHASE1</name>
+          <description>PHASE1&lt;15:0&gt;</description>
           <addressOffset>0x8</addressOffset>
           <fields>
             <field>
               <name>PHASE1</name>
-              <description>PHASE1 register value</description>
+              <description>PHASE1 field PHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -9892,16 +9940,16 @@
           <addressOffset>0xA</addressOffset>
           <fields>
             <field>
+              <name>DTR</name>
+              <description>DTR1 field DTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
-            </field>
-            <field>
-              <name>DTR</name>
-              <description>DTR1 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
             </field>
           </fields>
         </register>
@@ -9910,26 +9958,27 @@
           <addressOffset>0xC</addressOffset>
           <fields>
             <field>
+              <name>ALTDTR</name>
+              <description>ALTDTR1 field ALTDTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
             </field>
-            <field>
-              <name>ALTDTR</name>
-              <description>ALTDTR1 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
-            </field>
           </fields>
         </register>
         <register>
           <name>SDC1</name>
+          <description>SDC1&lt;15:0&gt;</description>
           <addressOffset>0xE</addressOffset>
           <fields>
             <field>
               <name>SDC1</name>
-              <description>SDC1 register value</description>
+              <description>SDC1 field SDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -9937,11 +9986,12 @@
         </register>
         <register>
           <name>SPHASE1</name>
+          <description>SPHASE1&lt;15:0&gt;</description>
           <addressOffset>0x10</addressOffset>
           <fields>
             <field>
               <name>SPHASE1</name>
-              <description>SPHASE1 register value</description>
+              <description>SPHASE1 field SPHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -9952,16 +10002,16 @@
           <addressOffset>0x12</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>TRGCMP</name>
               <description>TRIG1 field TRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -9973,10 +10023,40 @@
               <name>TRGSTRT</name>
               <description>TRGCON1 field TRGSTRT</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>6</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>TRGSTRT</name>
+              <description>TRGCON1 field TRGSTRT</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON1 field TRGSTRT</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON1 field TRGSTRT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON1 field TRGSTRT</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON1 field TRGSTRT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_4</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
               <bitWidth>1</bitWidth>
@@ -9988,16 +10068,52 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>TRGDIV</name>
               <description>TRGCON1 field TRGDIV</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON1 field TRGDIV</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON1 field TRGDIV</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON1 field TRGDIV</description>
+              <bitOffset>15</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
           </fields>
         </register>
@@ -10006,16 +10122,16 @@
           <addressOffset>0x16</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>STRGCMP</name>
               <description>STRIG1 field STRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -10024,16 +10140,16 @@
           <addressOffset>0x18</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
+              <name>PWMCAP</name>
+              <description>PWMCAP1 field PWMCAP</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>13</bitWidth>
             </field>
             <field>
-              <name>PWMCAP</name>
-              <description>PWMCAP1 PWM capture value</description>
-              <bitOffset>3</bitOffset>
-              <bitWidth>13</bitWidth>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -10078,10 +10194,28 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>8</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLLEBEN</name>
@@ -10126,22 +10260,16 @@
           <addressOffset>0x1C</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>LEB</name>
               <description>LEBDLY1 field LEB</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>9</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_0</name>
               <description>Reserved</description>
-              <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitOffset>9</bitOffset>
+              <bitWidth>7</bitWidth>
             </field>
           </fields>
         </register>
@@ -10165,25 +10293,73 @@
               <name>CHOPSEL</name>
               <description>AUXCON1 field CHOPSEL</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>CHOPSEL</name>
+              <description>AUXCON1 field CHOPSEL</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON1 field CHOPSEL</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON1 field CHOPSEL</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>BLANKSEL</name>
               <description>AUXCON1 field BLANKSEL</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON1 field BLANKSEL</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON1 field BLANKSEL</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON1 field BLANKSEL</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>RESERVED_1</name>
               <description>Reserved</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>HRDDIS</name>
@@ -10255,7 +10431,13 @@
               <name>DTC</name>
               <description>PWMCON2 field DTC</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>DTC</name>
+              <description>PWMCON2 field DTC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>MDCS</name>
@@ -10327,19 +10509,37 @@
               <name>CLDAT</name>
               <description>IOCON2 field CLDAT</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLDAT</name>
+              <description>IOCON2 field CLDAT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTDAT</name>
               <description>IOCON2 field FLTDAT</description>
               <bitOffset>4</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTDAT</name>
+              <description>IOCON2 field FLTDAT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRDAT</name>
               <description>IOCON2 field OVRDAT</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>OVRDAT</name>
+              <description>IOCON2 field OVRDAT</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRENL</name>
@@ -10357,7 +10557,13 @@
               <name>PMOD</name>
               <description>IOCON2 field PMOD</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>PMOD</name>
+              <description>IOCON2 field PMOD</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>POLL</name>
@@ -10393,7 +10599,13 @@
               <name>FLTMOD</name>
               <description>FCLCON2 field FLTMOD</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTMOD</name>
+              <description>FCLCON2 field FLTMOD</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTPOL</name>
@@ -10405,7 +10617,31 @@
               <name>FLTSRC</name>
               <description>FCLCON2 field FLTSRC</description>
               <bitOffset>3</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON2 field FLTSRC</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON2 field FLTSRC</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON2 field FLTSRC</description>
+              <bitOffset>6</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON2 field FLTSRC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLMOD</name>
@@ -10423,7 +10659,31 @@
               <name>CLSRC</name>
               <description>FCLCON2 field CLSRC</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON2 field CLSRC</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON2 field CLSRC</description>
+              <bitOffset>12</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON2 field CLSRC</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON2 field CLSRC</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>IFLTMOD</name>
@@ -10435,11 +10695,12 @@
         </register>
         <register>
           <name>PDC2</name>
+          <description>PDC2&lt;15:0&gt;</description>
           <addressOffset>0x6</addressOffset>
           <fields>
             <field>
-              <name>PDC2</name>
-              <description>PDC2 register value</description>
+              <name>PDC1</name>
+              <description>PDC2 field PDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -10447,11 +10708,12 @@
         </register>
         <register>
           <name>PHASE2</name>
+          <description>PHASE2&lt;15:0&gt;</description>
           <addressOffset>0x8</addressOffset>
           <fields>
             <field>
-              <name>PHASE2</name>
-              <description>PHASE2 register value</description>
+              <name>PHASE1</name>
+              <description>PHASE2 field PHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -10462,16 +10724,16 @@
           <addressOffset>0xA</addressOffset>
           <fields>
             <field>
+              <name>DTR</name>
+              <description>DTR2 field DTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
-            </field>
-            <field>
-              <name>DTR</name>
-              <description>DTR2 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
             </field>
           </fields>
         </register>
@@ -10480,26 +10742,27 @@
           <addressOffset>0xC</addressOffset>
           <fields>
             <field>
+              <name>ALTDTR</name>
+              <description>ALTDTR2 field ALTDTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
             </field>
-            <field>
-              <name>ALTDTR</name>
-              <description>ALTDTR2 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
-            </field>
           </fields>
         </register>
         <register>
           <name>SDC2</name>
+          <description>SDC2&lt;15:0&gt;</description>
           <addressOffset>0xE</addressOffset>
           <fields>
             <field>
-              <name>SDC2</name>
-              <description>SDC2 register value</description>
+              <name>SDC1</name>
+              <description>SDC2 field SDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -10507,11 +10770,12 @@
         </register>
         <register>
           <name>SPHASE2</name>
+          <description>SPHASE2&lt;15:0&gt;</description>
           <addressOffset>0x10</addressOffset>
           <fields>
             <field>
-              <name>SPHASE2</name>
-              <description>SPHASE2 register value</description>
+              <name>SPHASE1</name>
+              <description>SPHASE2 field SPHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -10522,16 +10786,16 @@
           <addressOffset>0x12</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>TRGCMP</name>
               <description>TRIG2 field TRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -10543,10 +10807,40 @@
               <name>TRGSTRT</name>
               <description>TRGCON2 field TRGSTRT</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>6</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>TRGSTRT</name>
+              <description>TRGCON2 field TRGSTRT</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON2 field TRGSTRT</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON2 field TRGSTRT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON2 field TRGSTRT</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON2 field TRGSTRT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_4</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
               <bitWidth>1</bitWidth>
@@ -10558,16 +10852,52 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>TRGDIV</name>
               <description>TRGCON2 field TRGDIV</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON2 field TRGDIV</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON2 field TRGDIV</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON2 field TRGDIV</description>
+              <bitOffset>15</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
           </fields>
         </register>
@@ -10576,16 +10906,16 @@
           <addressOffset>0x16</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>STRGCMP</name>
               <description>STRIG2 field STRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -10594,16 +10924,16 @@
           <addressOffset>0x18</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
+              <name>PWMCAP</name>
+              <description>PWMCAP2 field PWMCAP</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>13</bitWidth>
             </field>
             <field>
-              <name>PWMCAP</name>
-              <description>PWMCAP2 PWM capture value</description>
-              <bitOffset>3</bitOffset>
-              <bitWidth>13</bitWidth>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -10648,10 +10978,28 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>8</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLLEBEN</name>
@@ -10696,22 +11044,16 @@
           <addressOffset>0x1C</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>LEB</name>
               <description>LEBDLY2 field LEB</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>9</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_0</name>
               <description>Reserved</description>
-              <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitOffset>9</bitOffset>
+              <bitWidth>7</bitWidth>
             </field>
           </fields>
         </register>
@@ -10735,25 +11077,73 @@
               <name>CHOPSEL</name>
               <description>AUXCON2 field CHOPSEL</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>CHOPSEL</name>
+              <description>AUXCON2 field CHOPSEL</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON2 field CHOPSEL</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON2 field CHOPSEL</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>BLANKSEL</name>
               <description>AUXCON2 field BLANKSEL</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON2 field BLANKSEL</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON2 field BLANKSEL</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON2 field BLANKSEL</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>RESERVED_1</name>
               <description>Reserved</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>HRDDIS</name>
@@ -10825,7 +11215,13 @@
               <name>DTC</name>
               <description>PWMCON3 field DTC</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>DTC</name>
+              <description>PWMCON3 field DTC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>MDCS</name>
@@ -10897,19 +11293,37 @@
               <name>CLDAT</name>
               <description>IOCON3 field CLDAT</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLDAT</name>
+              <description>IOCON3 field CLDAT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTDAT</name>
               <description>IOCON3 field FLTDAT</description>
               <bitOffset>4</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTDAT</name>
+              <description>IOCON3 field FLTDAT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRDAT</name>
               <description>IOCON3 field OVRDAT</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>OVRDAT</name>
+              <description>IOCON3 field OVRDAT</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRENL</name>
@@ -10927,7 +11341,13 @@
               <name>PMOD</name>
               <description>IOCON3 field PMOD</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>PMOD</name>
+              <description>IOCON3 field PMOD</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>POLL</name>
@@ -10963,7 +11383,13 @@
               <name>FLTMOD</name>
               <description>FCLCON3 field FLTMOD</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTMOD</name>
+              <description>FCLCON3 field FLTMOD</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTPOL</name>
@@ -10975,7 +11401,31 @@
               <name>FLTSRC</name>
               <description>FCLCON3 field FLTSRC</description>
               <bitOffset>3</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON3 field FLTSRC</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON3 field FLTSRC</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON3 field FLTSRC</description>
+              <bitOffset>6</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON3 field FLTSRC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLMOD</name>
@@ -10993,7 +11443,31 @@
               <name>CLSRC</name>
               <description>FCLCON3 field CLSRC</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON3 field CLSRC</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON3 field CLSRC</description>
+              <bitOffset>12</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON3 field CLSRC</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON3 field CLSRC</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>IFLTMOD</name>
@@ -11005,11 +11479,12 @@
         </register>
         <register>
           <name>PDC3</name>
+          <description>PDC3&lt;15:0&gt;</description>
           <addressOffset>0x6</addressOffset>
           <fields>
             <field>
-              <name>PDC3</name>
-              <description>PDC3 register value</description>
+              <name>PDC1</name>
+              <description>PDC3 field PDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -11017,11 +11492,12 @@
         </register>
         <register>
           <name>PHASE3</name>
+          <description>PHASE3&lt;15:0&gt;</description>
           <addressOffset>0x8</addressOffset>
           <fields>
             <field>
-              <name>PHASE3</name>
-              <description>PHASE3 register value</description>
+              <name>PHASE1</name>
+              <description>PHASE3 field PHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -11032,16 +11508,16 @@
           <addressOffset>0xA</addressOffset>
           <fields>
             <field>
+              <name>DTR</name>
+              <description>DTR3 field DTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
-            </field>
-            <field>
-              <name>DTR</name>
-              <description>DTR3 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
             </field>
           </fields>
         </register>
@@ -11050,26 +11526,27 @@
           <addressOffset>0xC</addressOffset>
           <fields>
             <field>
+              <name>ALTDTR</name>
+              <description>ALTDTR3 field ALTDTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
             </field>
-            <field>
-              <name>ALTDTR</name>
-              <description>ALTDTR3 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
-            </field>
           </fields>
         </register>
         <register>
           <name>SDC3</name>
+          <description>SDC3&lt;15:0&gt;</description>
           <addressOffset>0xE</addressOffset>
           <fields>
             <field>
-              <name>SDC3</name>
-              <description>SDC3 register value</description>
+              <name>SDC1</name>
+              <description>SDC3 field SDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -11077,11 +11554,12 @@
         </register>
         <register>
           <name>SPHASE3</name>
+          <description>SPHASE3&lt;15:0&gt;</description>
           <addressOffset>0x10</addressOffset>
           <fields>
             <field>
-              <name>SPHASE3</name>
-              <description>SPHASE3 register value</description>
+              <name>SPHASE1</name>
+              <description>SPHASE3 field SPHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -11092,16 +11570,16 @@
           <addressOffset>0x12</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>TRGCMP</name>
               <description>TRIG3 field TRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -11113,10 +11591,40 @@
               <name>TRGSTRT</name>
               <description>TRGCON3 field TRGSTRT</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>6</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>TRGSTRT</name>
+              <description>TRGCON3 field TRGSTRT</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON3 field TRGSTRT</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON3 field TRGSTRT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON3 field TRGSTRT</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON3 field TRGSTRT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_4</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
               <bitWidth>1</bitWidth>
@@ -11128,16 +11636,52 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>TRGDIV</name>
               <description>TRGCON3 field TRGDIV</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON3 field TRGDIV</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON3 field TRGDIV</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON3 field TRGDIV</description>
+              <bitOffset>15</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
           </fields>
         </register>
@@ -11146,16 +11690,16 @@
           <addressOffset>0x16</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>STRGCMP</name>
               <description>STRIG3 field STRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -11164,16 +11708,16 @@
           <addressOffset>0x18</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
+              <name>PWMCAP</name>
+              <description>PWMCAP3 field PWMCAP</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>13</bitWidth>
             </field>
             <field>
-              <name>PWMCAP</name>
-              <description>PWMCAP3 PWM capture value</description>
-              <bitOffset>3</bitOffset>
-              <bitWidth>13</bitWidth>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -11218,10 +11762,28 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>8</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLLEBEN</name>
@@ -11266,22 +11828,16 @@
           <addressOffset>0x1C</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>LEB</name>
               <description>LEBDLY3 field LEB</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>9</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_0</name>
               <description>Reserved</description>
-              <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitOffset>9</bitOffset>
+              <bitWidth>7</bitWidth>
             </field>
           </fields>
         </register>
@@ -11305,25 +11861,73 @@
               <name>CHOPSEL</name>
               <description>AUXCON3 field CHOPSEL</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>CHOPSEL</name>
+              <description>AUXCON3 field CHOPSEL</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON3 field CHOPSEL</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON3 field CHOPSEL</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>BLANKSEL</name>
               <description>AUXCON3 field BLANKSEL</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON3 field BLANKSEL</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON3 field BLANKSEL</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON3 field BLANKSEL</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>RESERVED_1</name>
               <description>Reserved</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>HRDDIS</name>
@@ -11395,7 +11999,13 @@
               <name>DTC</name>
               <description>PWMCON4 field DTC</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>DTC</name>
+              <description>PWMCON4 field DTC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>MDCS</name>
@@ -11467,19 +12077,37 @@
               <name>CLDAT</name>
               <description>IOCON4 field CLDAT</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLDAT</name>
+              <description>IOCON4 field CLDAT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTDAT</name>
               <description>IOCON4 field FLTDAT</description>
               <bitOffset>4</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTDAT</name>
+              <description>IOCON4 field FLTDAT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRDAT</name>
               <description>IOCON4 field OVRDAT</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>OVRDAT</name>
+              <description>IOCON4 field OVRDAT</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRENL</name>
@@ -11497,7 +12125,13 @@
               <name>PMOD</name>
               <description>IOCON4 field PMOD</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>PMOD</name>
+              <description>IOCON4 field PMOD</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>POLL</name>
@@ -11533,7 +12167,13 @@
               <name>FLTMOD</name>
               <description>FCLCON4 field FLTMOD</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTMOD</name>
+              <description>FCLCON4 field FLTMOD</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTPOL</name>
@@ -11545,7 +12185,31 @@
               <name>FLTSRC</name>
               <description>FCLCON4 field FLTSRC</description>
               <bitOffset>3</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON4 field FLTSRC</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON4 field FLTSRC</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON4 field FLTSRC</description>
+              <bitOffset>6</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON4 field FLTSRC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLMOD</name>
@@ -11563,7 +12227,31 @@
               <name>CLSRC</name>
               <description>FCLCON4 field CLSRC</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON4 field CLSRC</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON4 field CLSRC</description>
+              <bitOffset>12</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON4 field CLSRC</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON4 field CLSRC</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>IFLTMOD</name>
@@ -11575,11 +12263,12 @@
         </register>
         <register>
           <name>PDC4</name>
+          <description>PDC4&lt;15:0&gt;</description>
           <addressOffset>0x6</addressOffset>
           <fields>
             <field>
-              <name>PDC4</name>
-              <description>PDC4 register value</description>
+              <name>PDC1</name>
+              <description>PDC4 field PDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -11587,11 +12276,12 @@
         </register>
         <register>
           <name>PHASE4</name>
+          <description>PHASE4&lt;15:0&gt;</description>
           <addressOffset>0x8</addressOffset>
           <fields>
             <field>
-              <name>PHASE4</name>
-              <description>PHASE4 register value</description>
+              <name>PHASE1</name>
+              <description>PHASE4 field PHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -11602,16 +12292,16 @@
           <addressOffset>0xA</addressOffset>
           <fields>
             <field>
+              <name>DTR</name>
+              <description>DTR4 field DTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
-            </field>
-            <field>
-              <name>DTR</name>
-              <description>DTR4 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
             </field>
           </fields>
         </register>
@@ -11620,26 +12310,27 @@
           <addressOffset>0xC</addressOffset>
           <fields>
             <field>
+              <name>ALTDTR</name>
+              <description>ALTDTR4 field ALTDTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
             </field>
-            <field>
-              <name>ALTDTR</name>
-              <description>ALTDTR4 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
-            </field>
           </fields>
         </register>
         <register>
           <name>SDC4</name>
+          <description>SDC4&lt;15:0&gt;</description>
           <addressOffset>0xE</addressOffset>
           <fields>
             <field>
-              <name>SDC4</name>
-              <description>SDC4 register value</description>
+              <name>SDC1</name>
+              <description>SDC4 field SDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -11647,11 +12338,12 @@
         </register>
         <register>
           <name>SPHASE4</name>
+          <description>SPHASE4&lt;15:0&gt;</description>
           <addressOffset>0x10</addressOffset>
           <fields>
             <field>
-              <name>SPHASE4</name>
-              <description>SPHASE4 register value</description>
+              <name>SPHASE1</name>
+              <description>SPHASE4 field SPHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -11662,16 +12354,16 @@
           <addressOffset>0x12</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>TRGCMP</name>
               <description>TRIG4 field TRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -11683,10 +12375,40 @@
               <name>TRGSTRT</name>
               <description>TRGCON4 field TRGSTRT</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>6</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>TRGSTRT</name>
+              <description>TRGCON4 field TRGSTRT</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON4 field TRGSTRT</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON4 field TRGSTRT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON4 field TRGSTRT</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON4 field TRGSTRT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_4</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
               <bitWidth>1</bitWidth>
@@ -11698,16 +12420,52 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>TRGDIV</name>
               <description>TRGCON4 field TRGDIV</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON4 field TRGDIV</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON4 field TRGDIV</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON4 field TRGDIV</description>
+              <bitOffset>15</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
           </fields>
         </register>
@@ -11716,16 +12474,16 @@
           <addressOffset>0x16</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>STRGCMP</name>
               <description>STRIG4 field STRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -11734,16 +12492,16 @@
           <addressOffset>0x18</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
+              <name>PWMCAP</name>
+              <description>PWMCAP4 field PWMCAP</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>13</bitWidth>
             </field>
             <field>
-              <name>PWMCAP</name>
-              <description>PWMCAP4 PWM capture value</description>
-              <bitOffset>3</bitOffset>
-              <bitWidth>13</bitWidth>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -11788,10 +12546,28 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>8</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLLEBEN</name>
@@ -11836,22 +12612,16 @@
           <addressOffset>0x1C</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>LEB</name>
               <description>LEBDLY4 field LEB</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>9</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_0</name>
               <description>Reserved</description>
-              <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitOffset>9</bitOffset>
+              <bitWidth>7</bitWidth>
             </field>
           </fields>
         </register>
@@ -11875,25 +12645,73 @@
               <name>CHOPSEL</name>
               <description>AUXCON4 field CHOPSEL</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>CHOPSEL</name>
+              <description>AUXCON4 field CHOPSEL</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON4 field CHOPSEL</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON4 field CHOPSEL</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>BLANKSEL</name>
               <description>AUXCON4 field BLANKSEL</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON4 field BLANKSEL</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON4 field BLANKSEL</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON4 field BLANKSEL</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>RESERVED_1</name>
               <description>Reserved</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>HRDDIS</name>
@@ -11965,7 +12783,13 @@
               <name>DTC</name>
               <description>PWMCON5 field DTC</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>DTC</name>
+              <description>PWMCON5 field DTC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>MDCS</name>
@@ -12037,19 +12861,37 @@
               <name>CLDAT</name>
               <description>IOCON5 field CLDAT</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLDAT</name>
+              <description>IOCON5 field CLDAT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTDAT</name>
               <description>IOCON5 field FLTDAT</description>
               <bitOffset>4</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTDAT</name>
+              <description>IOCON5 field FLTDAT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRDAT</name>
               <description>IOCON5 field OVRDAT</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>OVRDAT</name>
+              <description>IOCON5 field OVRDAT</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRENL</name>
@@ -12067,7 +12909,13 @@
               <name>PMOD</name>
               <description>IOCON5 field PMOD</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>PMOD</name>
+              <description>IOCON5 field PMOD</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>POLL</name>
@@ -12103,7 +12951,13 @@
               <name>FLTMOD</name>
               <description>FCLCON5 field FLTMOD</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTMOD</name>
+              <description>FCLCON5 field FLTMOD</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTPOL</name>
@@ -12115,7 +12969,31 @@
               <name>FLTSRC</name>
               <description>FCLCON5 field FLTSRC</description>
               <bitOffset>3</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON5 field FLTSRC</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON5 field FLTSRC</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON5 field FLTSRC</description>
+              <bitOffset>6</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON5 field FLTSRC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLMOD</name>
@@ -12133,7 +13011,31 @@
               <name>CLSRC</name>
               <description>FCLCON5 field CLSRC</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON5 field CLSRC</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON5 field CLSRC</description>
+              <bitOffset>12</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON5 field CLSRC</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON5 field CLSRC</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>IFLTMOD</name>
@@ -12145,11 +13047,12 @@
         </register>
         <register>
           <name>PDC5</name>
+          <description>PDC5&lt;15:0&gt;</description>
           <addressOffset>0x6</addressOffset>
           <fields>
             <field>
-              <name>PDC5</name>
-              <description>PDC5 register value</description>
+              <name>PDC1</name>
+              <description>PDC5 field PDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -12157,11 +13060,12 @@
         </register>
         <register>
           <name>PHASE5</name>
+          <description>PHASE5&lt;15:0&gt;</description>
           <addressOffset>0x8</addressOffset>
           <fields>
             <field>
-              <name>PHASE5</name>
-              <description>PHASE5 register value</description>
+              <name>PHASE1</name>
+              <description>PHASE5 field PHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -12172,16 +13076,16 @@
           <addressOffset>0xA</addressOffset>
           <fields>
             <field>
+              <name>DTR</name>
+              <description>DTR5 field DTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
-            </field>
-            <field>
-              <name>DTR</name>
-              <description>DTR5 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
             </field>
           </fields>
         </register>
@@ -12190,26 +13094,27 @@
           <addressOffset>0xC</addressOffset>
           <fields>
             <field>
+              <name>ALTDTR</name>
+              <description>ALTDTR5 field ALTDTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
             </field>
-            <field>
-              <name>ALTDTR</name>
-              <description>ALTDTR5 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
-            </field>
           </fields>
         </register>
         <register>
           <name>SDC5</name>
+          <description>SDC5&lt;15:0&gt;</description>
           <addressOffset>0xE</addressOffset>
           <fields>
             <field>
-              <name>SDC5</name>
-              <description>SDC5 register value</description>
+              <name>SDC1</name>
+              <description>SDC5 field SDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -12217,11 +13122,12 @@
         </register>
         <register>
           <name>SPHASE5</name>
+          <description>SPHASE5&lt;15:0&gt;</description>
           <addressOffset>0x10</addressOffset>
           <fields>
             <field>
-              <name>SPHASE5</name>
-              <description>SPHASE5 register value</description>
+              <name>SPHASE1</name>
+              <description>SPHASE5 field SPHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -12232,16 +13138,16 @@
           <addressOffset>0x12</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>TRGCMP</name>
               <description>TRIG5 field TRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -12253,10 +13159,40 @@
               <name>TRGSTRT</name>
               <description>TRGCON5 field TRGSTRT</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>6</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>TRGSTRT</name>
+              <description>TRGCON5 field TRGSTRT</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON5 field TRGSTRT</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON5 field TRGSTRT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON5 field TRGSTRT</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON5 field TRGSTRT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_4</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
               <bitWidth>1</bitWidth>
@@ -12268,16 +13204,52 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>TRGDIV</name>
               <description>TRGCON5 field TRGDIV</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON5 field TRGDIV</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON5 field TRGDIV</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON5 field TRGDIV</description>
+              <bitOffset>15</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
           </fields>
         </register>
@@ -12286,16 +13258,16 @@
           <addressOffset>0x16</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>STRGCMP</name>
               <description>STRIG5 field STRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -12304,16 +13276,16 @@
           <addressOffset>0x18</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
+              <name>PWMCAP</name>
+              <description>PWMCAP5 field PWMCAP</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>13</bitWidth>
             </field>
             <field>
-              <name>PWMCAP</name>
-              <description>PWMCAP5 PWM capture value</description>
-              <bitOffset>3</bitOffset>
-              <bitWidth>13</bitWidth>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -12358,10 +13330,28 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>8</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLLEBEN</name>
@@ -12406,22 +13396,16 @@
           <addressOffset>0x1C</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>LEB</name>
               <description>LEBDLY5 field LEB</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>9</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_0</name>
               <description>Reserved</description>
-              <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitOffset>9</bitOffset>
+              <bitWidth>7</bitWidth>
             </field>
           </fields>
         </register>
@@ -12445,25 +13429,73 @@
               <name>CHOPSEL</name>
               <description>AUXCON5 field CHOPSEL</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>CHOPSEL</name>
+              <description>AUXCON5 field CHOPSEL</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON5 field CHOPSEL</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON5 field CHOPSEL</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>BLANKSEL</name>
               <description>AUXCON5 field BLANKSEL</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON5 field BLANKSEL</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON5 field BLANKSEL</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON5 field BLANKSEL</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>RESERVED_1</name>
               <description>Reserved</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>HRDDIS</name>
@@ -12535,7 +13567,13 @@
               <name>DTC</name>
               <description>PWMCON6 field DTC</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>DTC</name>
+              <description>PWMCON6 field DTC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>MDCS</name>
@@ -12607,19 +13645,37 @@
               <name>CLDAT</name>
               <description>IOCON6 field CLDAT</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLDAT</name>
+              <description>IOCON6 field CLDAT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTDAT</name>
               <description>IOCON6 field FLTDAT</description>
               <bitOffset>4</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTDAT</name>
+              <description>IOCON6 field FLTDAT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRDAT</name>
               <description>IOCON6 field OVRDAT</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>OVRDAT</name>
+              <description>IOCON6 field OVRDAT</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>OVRENL</name>
@@ -12637,7 +13693,13 @@
               <name>PMOD</name>
               <description>IOCON6 field PMOD</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>PMOD</name>
+              <description>IOCON6 field PMOD</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>POLL</name>
@@ -12673,7 +13735,13 @@
               <name>FLTMOD</name>
               <description>FCLCON6 field FLTMOD</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTMOD</name>
+              <description>FCLCON6 field FLTMOD</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>FLTPOL</name>
@@ -12685,7 +13753,31 @@
               <name>FLTSRC</name>
               <description>FCLCON6 field FLTSRC</description>
               <bitOffset>3</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON6 field FLTSRC</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON6 field FLTSRC</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON6 field FLTSRC</description>
+              <bitOffset>6</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>FLTSRC</name>
+              <description>FCLCON6 field FLTSRC</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLMOD</name>
@@ -12703,7 +13795,31 @@
               <name>CLSRC</name>
               <description>FCLCON6 field CLSRC</description>
               <bitOffset>10</bitOffset>
-              <bitWidth>5</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON6 field CLSRC</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON6 field CLSRC</description>
+              <bitOffset>12</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON6 field CLSRC</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CLSRC</name>
+              <description>FCLCON6 field CLSRC</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>IFLTMOD</name>
@@ -12715,11 +13831,12 @@
         </register>
         <register>
           <name>PDC6</name>
+          <description>PDC6&lt;15:0&gt;</description>
           <addressOffset>0x6</addressOffset>
           <fields>
             <field>
-              <name>PDC6</name>
-              <description>PDC6 register value</description>
+              <name>PDC1</name>
+              <description>PDC6 field PDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -12727,11 +13844,12 @@
         </register>
         <register>
           <name>PHASE6</name>
+          <description>PHASE6&lt;15:0&gt;</description>
           <addressOffset>0x8</addressOffset>
           <fields>
             <field>
-              <name>PHASE6</name>
-              <description>PHASE6 register value</description>
+              <name>PHASE1</name>
+              <description>PHASE6 field PHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -12742,16 +13860,16 @@
           <addressOffset>0xA</addressOffset>
           <fields>
             <field>
+              <name>DTR</name>
+              <description>DTR6 field DTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
-            </field>
-            <field>
-              <name>DTR</name>
-              <description>DTR6 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
             </field>
           </fields>
         </register>
@@ -12760,26 +13878,27 @@
           <addressOffset>0xC</addressOffset>
           <fields>
             <field>
+              <name>ALTDTR</name>
+              <description>ALTDTR6 field ALTDTR</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>14</bitWidth>
+            </field>
+            <field>
               <name>RESERVED_0</name>
               <description>Reserved</description>
               <bitOffset>14</bitOffset>
               <bitWidth>2</bitWidth>
             </field>
-            <field>
-              <name>ALTDTR</name>
-              <description>ALTDTR6 dead-time value</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>14</bitWidth>
-            </field>
           </fields>
         </register>
         <register>
           <name>SDC6</name>
+          <description>SDC6&lt;15:0&gt;</description>
           <addressOffset>0xE</addressOffset>
           <fields>
             <field>
-              <name>SDC6</name>
-              <description>SDC6 register value</description>
+              <name>SDC1</name>
+              <description>SDC6 field SDC1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -12787,11 +13906,12 @@
         </register>
         <register>
           <name>SPHASE6</name>
+          <description>SPHASE6&lt;15:0&gt;</description>
           <addressOffset>0x10</addressOffset>
           <fields>
             <field>
-              <name>SPHASE6</name>
-              <description>SPHASE6 register value</description>
+              <name>SPHASE1</name>
+              <description>SPHASE6 field SPHASE1</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
             </field>
@@ -12802,16 +13922,16 @@
           <addressOffset>0x12</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>TRGCMP</name>
               <description>TRIG6 field TRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -12823,10 +13943,40 @@
               <name>TRGSTRT</name>
               <description>TRGCON6 field TRGSTRT</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>6</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>TRGSTRT</name>
+              <description>TRGCON6 field TRGSTRT</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON6 field TRGSTRT</description>
+              <bitOffset>2</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON6 field TRGSTRT</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON6 field TRGSTRT</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGSTRT</name>
+              <description>TRGCON6 field TRGSTRT</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_4</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
               <bitWidth>1</bitWidth>
@@ -12838,16 +13988,52 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>TRGDIV</name>
               <description>TRGCON6 field TRGDIV</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON6 field TRGDIV</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON6 field TRGDIV</description>
+              <bitOffset>14</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>TRGDIV</name>
+              <description>TRGCON6 field TRGDIV</description>
+              <bitOffset>15</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
           </fields>
         </register>
@@ -12856,16 +14042,16 @@
           <addressOffset>0x16</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>STRGCMP</name>
               <description>STRIG6 field STRGCMP</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>13</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -12874,16 +14060,16 @@
           <addressOffset>0x18</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
+              <name>PWMCAP</name>
+              <description>PWMCAP6 field PWMCAP</description>
               <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
+              <bitWidth>13</bitWidth>
             </field>
             <field>
-              <name>PWMCAP</name>
-              <description>PWMCAP6 PWM capture value</description>
-              <bitOffset>3</bitOffset>
-              <bitWidth>13</bitWidth>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>3</bitWidth>
             </field>
           </fields>
         </register>
@@ -12928,10 +14114,28 @@
               <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_1</name>
+              <description>Reserved</description>
+              <bitOffset>8</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>CLLEBEN</name>
@@ -12976,22 +14180,16 @@
           <addressOffset>0x1C</addressOffset>
           <fields>
             <field>
-              <name>RESERVED_0</name>
-              <description>Reserved</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>3</bitWidth>
-            </field>
-            <field>
               <name>LEB</name>
               <description>LEBDLY6 field LEB</description>
-              <bitOffset>3</bitOffset>
+              <bitOffset>0</bitOffset>
               <bitWidth>9</bitWidth>
             </field>
             <field>
-              <name>RESERVED_1</name>
+              <name>RESERVED_0</name>
               <description>Reserved</description>
-              <bitOffset>12</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitOffset>9</bitOffset>
+              <bitWidth>7</bitWidth>
             </field>
           </fields>
         </register>
@@ -13015,25 +14213,73 @@
               <name>CHOPSEL</name>
               <description>AUXCON6 field CHOPSEL</description>
               <bitOffset>2</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
-              <name>RESERVED_0</name>
+              <name>CHOPSEL</name>
+              <description>AUXCON6 field CHOPSEL</description>
+              <bitOffset>3</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON6 field CHOPSEL</description>
+              <bitOffset>4</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>CHOPSEL</name>
+              <description>AUXCON6 field CHOPSEL</description>
+              <bitOffset>5</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>6</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_2</name>
+              <description>Reserved</description>
+              <bitOffset>7</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>BLANKSEL</name>
               <description>AUXCON6 field BLANKSEL</description>
               <bitOffset>8</bitOffset>
-              <bitWidth>4</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON6 field BLANKSEL</description>
+              <bitOffset>9</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON6 field BLANKSEL</description>
+              <bitOffset>10</bitOffset>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>BLANKSEL</name>
+              <description>AUXCON6 field BLANKSEL</description>
+              <bitOffset>11</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>RESERVED_1</name>
               <description>Reserved</description>
               <bitOffset>12</bitOffset>
-              <bitWidth>2</bitWidth>
+              <bitWidth>1</bitWidth>
+            </field>
+            <field>
+              <name>RESERVED_0</name>
+              <description>Reserved</description>
+              <bitOffset>13</bitOffset>
+              <bitWidth>1</bitWidth>
             </field>
             <field>
               <name>HRDDIS</name>
@@ -16401,116 +17647,6 @@
               <name>RESERVED_3</name>
               <description>Reserved</description>
               <bitOffset>15</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>OSCCONL</name>
-          <addressOffset>0x2</addressOffset>
-          <size>8</size>
-          <fields>
-            <field>
-              <name>BIT0</name>
-              <description>OSCCONL bit 0</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT1</name>
-              <description>OSCCONL bit 1</description>
-              <bitOffset>1</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT2</name>
-              <description>OSCCONL bit 2</description>
-              <bitOffset>2</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT3</name>
-              <description>OSCCONL bit 3</description>
-              <bitOffset>3</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT4</name>
-              <description>OSCCONL bit 4</description>
-              <bitOffset>4</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT5</name>
-              <description>OSCCONL bit 5</description>
-              <bitOffset>5</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT6</name>
-              <description>OSCCONL bit 6</description>
-              <bitOffset>6</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT7</name>
-              <description>OSCCONL bit 7</description>
-              <bitOffset>7</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>OSCCONH</name>
-          <addressOffset>0x3</addressOffset>
-          <size>8</size>
-          <fields>
-            <field>
-              <name>BIT0</name>
-              <description>OSCCONH bit 0</description>
-              <bitOffset>0</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT1</name>
-              <description>OSCCONH bit 1</description>
-              <bitOffset>1</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT2</name>
-              <description>OSCCONH bit 2</description>
-              <bitOffset>2</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT3</name>
-              <description>OSCCONH bit 3</description>
-              <bitOffset>3</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT4</name>
-              <description>OSCCONH bit 4</description>
-              <bitOffset>4</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT5</name>
-              <description>OSCCONH bit 5</description>
-              <bitOffset>5</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT6</name>
-              <description>OSCCONH bit 6</description>
-              <bitOffset>6</bitOffset>
-              <bitWidth>1</bitWidth>
-            </field>
-            <field>
-              <name>BIT7</name>
-              <description>OSCCONH bit 7</description>
-              <bitOffset>7</bitOffset>
               <bitWidth>1</bitWidth>
             </field>
           </fields>
