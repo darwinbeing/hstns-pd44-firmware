@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="65">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>../decompiled/variables.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="true">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+    <logicalFolder name="LinkerScript"
+                   displayName="Linker Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>../decompiled/main.c</itemPath>
+      <itemPath>../decompiled/init.c</itemPath>
+      <itemPath>../decompiled/state_machine.c</itemPath>
+      <itemPath>../decompiled/monitoring.c</itemPath>
+      <itemPath>../decompiled/isr.c</itemPath>
+      <itemPath>../decompiled/isr_t1.c</itemPath>
+      <itemPath>../decompiled/isr_t2.c</itemPath>
+      <itemPath>../decompiled/voltage_loop.c</itemPath>
+      <itemPath>../decompiled/adc.c</itemPath>
+      <itemPath>../decompiled/pwm.c</itemPath>
+      <itemPath>../decompiled/protection.c</itemPath>
+      <itemPath>../decompiled/pmbus.c</itemPath>
+      <itemPath>../decompiled/flash.c</itemPath>
+      <itemPath>../decompiled/system.c</itemPath>
+      <itemPath>../decompiled/utilities.c</itemPath>
+      <itemPath>../decompiled/variables.c</itemPath>
+      <itemPath>../decompiled/stubs.c</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>../decompiled</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="default" type="2">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <targetDevice>dsPIC33FJ64GS606</targetDevice>
+        <targetHeader></targetHeader>
+        <targetPluginBoard></targetPluginBoard>
+        <platformTool>noID</platformTool>
+        <languageToolchain>XC16</languageToolchain>
+        <languageToolchainVersion>2.10</languageToolchainVersion>
+        <platform>4</platform>
+      </toolsSet>
+      <packs>
+        <pack name="dsPIC33F-GS_DFP" vendor="Microchip" version="1.4.228"/>
+      </packs>
+      <ScriptingSettings>
+      </ScriptingSettings>
+      <compileType>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+        <archiverTool>
+        </archiverTool>
+        <loading>
+          <useAlternateLoadableFile>false</useAlternateLoadableFile>
+          <parseOnProdLoad>false</parseOnProdLoad>
+          <alternateLoadableFile></alternateLoadableFile>
+        </loading>
+        <subordinates>
+        </subordinates>
+      </compileType>
+      <makeCustomizationType>
+        <makeCustomizationPreStepEnabled>false</makeCustomizationPreStepEnabled>
+        <makeUseCleanTarget>false</makeUseCleanTarget>
+        <makeCustomizationPreStep></makeCustomizationPreStep>
+        <makeCustomizationPostStepEnabled>false</makeCustomizationPostStepEnabled>
+        <makeCustomizationPostStep></makeCustomizationPostStep>
+        <makeCustomizationPutChecksumInUserID>false</makeCustomizationPutChecksumInUserID>
+        <makeCustomizationEnableLongLines>false</makeCustomizationEnableLongLines>
+        <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
+      </makeCustomizationType>
+      <C30>
+        <property key="enable-all-warnings" value="true"/>
+        <property key="enable-symbols" value="true"/>
+        <property key="extra-include-directories" value="../decompiled"/>
+        <property key="oXC16gcc-no-isr-warn" value="true"/>
+        <property key="oXC16gcc-sfr-warn" value="false"/>
+        <property key="oXC16gcc-smar-io-lvl" value="1"/>
+        <property key="optimization-level" value="1"/>
+      </C30>
+      <C30-AR>
+        <property key="additional-options-chop-files" value="false"/>
+      </C30-AR>
+      <C30-CO>
+        <property key="coverage-enable" value=""/>
+        <property key="stack-guidance" value="false"/>
+      </C30-CO>
+      <C30-LD>
+        <property key="enable-check-sections" value="false"/>
+        <property key="enable-data-init" value="true"/>
+        <property key="enable-default-isr" value="true"/>
+        <property key="enable-handles" value="true"/>
+        <property key="enable-pack-data" value="true"/>
+        <property key="map-file" value="${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map"/>
+        <property key="report-memory-usage" value="true"/>
+        <property key="stack-size" value="16"/>
+      </C30-LD>
+      <C30Global>
+        <property key="common-include-directories" value="../decompiled"/>
+        <property key="legacy-libc" value="true"/>
+        <property key="output-file-format" value="elf"/>
+      </C30Global>
+    </conf>
+  </confs>
+</configurationDescriptor>
