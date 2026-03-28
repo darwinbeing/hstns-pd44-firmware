@@ -700,7 +700,8 @@ public class SVDLoader extends GhidraScript {
 			"RESERVED".equals(name) || "PROGRAM".equals(name)) {
 			return false;
 		}
-		if ("SFR_SPACE".equals(name)) {
+		if ("SFR_SPACE".equals(name) || "X_DATA_RAM".equals(name) || "Y_DATA_RAM".equals(name) ||
+			"DMA_RAM".equals(name) || "UNIMPLEMENTED".equals(name) || "PROGRAM_MAPPED_SPACE".equals(name)) {
 			return false;
 		}
 		if ("DEVID".equals(name) || "__DEVID".equals(name)) {
