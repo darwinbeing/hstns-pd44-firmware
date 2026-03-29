@@ -54,7 +54,7 @@ extern void pwmOverrideEnable(void);      /* 0x4B50 - enable PWM outputs */
  *   droopPeriod (0x1DD6), uvpDebounce (0x1DD4), hbSeqState (0x1DDA),
  *   ocpDetCount (0x1DD0), latfTimer (0x1DD8), voutRefInitial (0x1DA2),
  *   pdc1 (0x1D70), pdc2 (0x1D6E), ptper (0x1D72), dtr3_shadow (0x1D6A),
- *   pdc3 (0x1D6C), ptper_computed (0x1D74)
+ *   pdc3 (0x1D6C), ptperCommand (0x1D74)
  */
 
 /* ============================================================================ */
@@ -62,7 +62,7 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
 {
     /* ==== Section 1: DAC setpoint (Kff gain scheduling) ==== */
     /* 0x4580-0x459E */
-    int16_t vr = voutReference;                          /* 0x1DA4 */
+    int16_t vr = llcPeriodCmd;                          /* 0x1DA4 */
     int16_t dac_sp = (int16_t)(((int32_t)vr * 0x44D) >> 15) - 0x4A;
 
     if (dac_sp <= 44)       dac_sp = 44;
@@ -88,7 +88,8 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
 
     /* ==== Section 3: Voltage error with slew-rate limiter ==== */
     /* 0x45C2-0x45F4 */
-    int16_t error = vs - voutSetpoint;               /* vs - 0x1D4C */
+    /* 45C4: SUB 0x1D4C, WREG  => WREG = [0x1D4C] - WREG */
+    int16_t error = voutSetpoint - vs;
     voltageError = error;                          /* 0x1DE0 */
 
     int16_t pe = prevError;                        /* 0x1DDE (saved in W14) */
@@ -117,16 +118,17 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
             }
         } else {
             steadyCount = 0;
+            statusFlags &= ~(1u << 11);
         }
     } else {
         steadyCount = 0;
-        statusFlags &= ~(1u << 11);                 /* clear bit3 */
+        statusFlags &= ~(1u << 11);                 /* clear 0x125B bit3 */
     }
 
     /* ==== Section 5: OVP threshold flag (bit9) ==== */
-    /* 0x463A-0x4658: set statusFlags bit9 if voutReference in [0x1D4C..9999] */
-    if (statusFlags & (1u << 3)) {                   /* bit3 check */
-        if (voutReference > 0x1D4C && voutReference <= 0x270F) {
+    /* 0x463A-0x4658: set statusFlags bit9 if llcPeriodCmd in [0x1D4C..9999] */
+    if (statusFlags & (1u << 11)) {                  /* 0x125B bit3 */
+        if (llcPeriodCmd > 0x1D4C && llcPeriodCmd <= 0x270F) {
             statusFlags |= (1u << 9);
         } else {
             statusFlags &= ~(1u << 9);
@@ -136,10 +138,10 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
     }
 
     /* ==== Section 5b: OCV threshold flag (bit10) ==== */
-    /* 0x465A-0x4678: set statusFlags bit10 if bit11 set and voutReference in [0x1194..0x2133] */
+    /* 0x465A-0x4678: set statusFlags bit10 if bit11 set and llcPeriodCmd in [0x1194..0x2133] */
     if (statusFlags & (1u << 11)) {
-        if (voutReference <= 0x2133) {
-            uint16_t ocv_flag = (voutReference > 0x1194) ? 1 : 0;
+        if (llcPeriodCmd <= 0x2133) {
+            uint16_t ocv_flag = (llcPeriodCmd > 0x1194) ? 1 : 0;
             statusFlags = (statusFlags & ~(1u << 10)) | (ocv_flag << 10);
         } else {
             statusFlags &= ~(1u << 10);
@@ -289,7 +291,7 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
         pwmOverrideEnable();                       /* 0x4B50 */
 
         /* Check statusFlags bit0/bit1 for half-bridge ordering */
-        if (!(statusFlags & 0x01) || (statusFlags & 0x02)) {
+        if ((statusFlags & 0x01) || (statusFlags & 0x02)) {
             /* Load initial frequency from var_1D34 */
             int16_t init_freq = initFreq;
             compY_out = (int32_t)init_freq;          /* sign-extend 16->32 */
@@ -307,12 +309,13 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
             /* Half-bridge A: disable IOCON1 PENH/PENL */
             if (hbSeqState == 0) {
                 IOCON1bits.PENH = 0;                 /* 0x423 bit1 clr */
-                asm("nop"); asm("nop"); asm("nop");
+                Nop(); Nop(); Nop();
                 IOCON1bits.PENL = 0;                 /* 0x423 bit0 clr */
+                hbSeqState = 1;
                 goto history_shift;
             } else if (hbSeqState == 1) {
                 IOCON2bits.PENH = 0;                 /* 0x463 bit1 clr */
-                asm("nop"); asm("nop"); asm("nop");
+                Nop(); Nop(); Nop();
                 IOCON2bits.PENL = 0;                 /* 0x463 bit0 clr */
                 hbSeqState = 0;                    /* faultFlags bit2=0 group */
                 faultFlags &= ~(1u << 0);
@@ -327,18 +330,18 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
             if (hbSeqState == 0) {
                 /* Disable all PWM outputs in sequence with NOP delays */
                 IOCON1bits.PENH = 0;
-                asm("nop"); asm("nop"); asm("nop");
+                Nop(); Nop(); Nop();
                 IOCON1bits.PENL = 0;
-                asm("nop"); asm("nop"); asm("nop");
+                Nop(); Nop(); Nop();
                 IOCON2bits.PENH = 0;
-                asm("nop"); asm("nop"); asm("nop");
+                Nop(); Nop(); Nop();
                 IOCON2bits.PENL = 0;
-                asm("nop"); asm("nop"); asm("nop");
+                Nop(); Nop(); Nop();
                 hbSeqState = 1;
                 goto history_shift;
             } else if (hbSeqState == 1) {
                 IOCON2bits.PENH = 0;
-                asm("nop"); asm("nop"); asm("nop");
+                Nop(); Nop(); Nop();
                 IOCON2bits.PENL = 0;
                 hbSeqState = 0;
                 faultFlags &= ~(1u << 0);
@@ -353,9 +356,8 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
 
     /* ==== Section 9: History shift (error & coefficient pipeline) ==== */
 history_shift:
-    prevPrevError = prevError;                    /* 0x1DDC = 0x1DDE */
-    prevError = 0;                                  /* clear for restart */
-    prevPrevError = 0;
+    prevError = 0;                                  /* 0x48A0 */
+    prevPrevError = 0;                              /* 0x48A2 */
 
 skip_softstart:
 
@@ -418,15 +420,15 @@ skip_softstart:
                 freqTarget = 0x1F40;                /* floor at 8000 */
             }
 
-            /* Apply current derating to voutReference */
+            /* Apply current derating to llcPeriodCmd */
             if (Imeas <= 24)
-                voutReference = (int16_t)compY_out + 0x190;
+                llcPeriodCmd = (int16_t)compY_out + 0x190;
             else
-                voutReference = (int16_t)compY_out;
+                llcPeriodCmd = (int16_t)compY_out;
 
-            /* Clamp voutReference minimum to 0xD48 (3400) */
-            if (voutReference <= 0xD47)
-                voutReference = 0xD48;
+            /* Clamp llcPeriodCmd minimum to 0xD48 (3400) */
+            if (llcPeriodCmd <= 0xD47)
+                llcPeriodCmd = 0xD48;
 
             faultFlags |= (1u << 7);                /* set soft-start active */
             softStartCounter = 0;                      /* 0x1DE2:0x1DE4 */
@@ -437,7 +439,7 @@ skip_softstart:
             latfTimer++;
             if (latfTimer > 20000) {                /* 0x4E20 */
                 LATFbits.LATF0 = 1;
-                voutReference += 1000;                    /* 0x3E8 */
+                llcPeriodCmd += 1000;                    /* 0x3E8 */
             }
         } else {
             latfTimer = 0;
@@ -451,22 +453,26 @@ skip_softstart:
             if (!(LATF & 0x01)) {
                 if (Imeas <= 24) {
                     LATFbits.LATF0 = 1;
-                    voutReference = voutReference + 1000;
+                    llcPeriodCmd = llcPeriodCmd + 1000;
                 } else {
-                    voutReference = voutReference + 1;         /* slow ramp */
+                    llcPeriodCmd = llcPeriodCmd + 1;         /* slow ramp */
                 }
             }
-        } else if (vc > 0x2CB) {
-            /* High voltage: ramp voutReference by +100 */
-            voutReference += 100;                         /* 0x64 */
+        } else if (vc >= 0x2CB || (LATF & 0x01)) {
+            /* 0x49A6-0x49C6: for vc >= 0x2CB, or for lower vc once LATF0 is
+             * already asserted, ramp by +100. If LATF0 is still low, the
+             * assembly overwrites that with old_cmd + 0x44C, not +0x64+0x44C.
+             */
+            int16_t prev_cmd = llcPeriodCmd;
+            llcPeriodCmd = prev_cmd + 100;               /* 0x64 */
             if (!(LATF & 0x01)) {
                 LATFbits.LATF0 = 1;
-                voutReference += 0x44C;                   /* +1100 */
+                llcPeriodCmd = prev_cmd + 0x44C;         /* +1100 total */
             }
         }
 
-        /* Write back voutReference and initialize 2P2Z state for startup */
-        compY_out = (int32_t)voutReference;
+        /* Write back llcPeriodCmd and initialize 2P2Z state for startup */
+        compY_out = (int32_t)llcPeriodCmd;
         compY_n1 = compY_out;
         compY_n2 = compY_out;
 
@@ -488,12 +494,11 @@ skip_softstart:
                     /* Interpolate: avg of freqCoeffA/2 + freqTarget/2 */
                     freqCoeffC = (freqCoeffA >> 1) + (freqTarget >> 1);
                 }
-            } else if (adc_1bde <= 0xA0) {
-                /* Mid range: use freqCoeffB */
+            } else if (adc_1bde > 0xA0) {
+                /* 0x4A18-0x4A20: high ADC region uses freqCoeffB */
                 freqCoeffC = freqCoeffB;        /* 0x1DAA */
-            } else {
-                freqCoeffC = freqCoeffA;        /* 0x1DA8 */
             }
+            /* For adc_1bde in (0x7F..0xA0], assembly keeps freqCoeffC unchanged. */
         }
 
         /* Select limiting frequency */
@@ -503,9 +508,9 @@ skip_softstart:
         else
             freq_limit = freqCoeffC;               /* 0x1DAC */
 
-        /* Clamp voutReference to freq_limit */
-        if (voutReference > freq_limit) {
-            voutReference = freq_limit;                   /* cap at limit */
+        /* Clamp llcPeriodCmd to freq_limit */
+        if (llcPeriodCmd > freq_limit) {
+            llcPeriodCmd = freq_limit;                   /* cap at limit */
         }
     } else {
         /* Not running: idle mode frequency calculation */
@@ -524,11 +529,11 @@ skip_softstart:
         int32_t y32 = compY_out;
         int32_t idle_ext = (int32_t)(uint16_t)idle_freq;
         if (y32 < idle_ext) {
-            voutReference = idle_freq;
+            llcPeriodCmd = idle_freq;
         } else if (y32 > 0x5DC0) {                  /* > 24000 */
-            voutReference = 0x5DC0;
+            llcPeriodCmd = 0x5DC0;
         } else {
-            voutReference = (int16_t)compY_out;
+            llcPeriodCmd = (int16_t)compY_out;
         }
     }
 
@@ -537,19 +542,19 @@ skip_softstart:
     if (statusFlags & (1u << 7)) {                    /* bit7 = 12V present */
         if (vrefModeSelect == 0xC4D) {
             /* 12V standard: set 0x32C8 (13000) as reference */
-            voutReference = 0x32C8;
+            llcPeriodCmd = 0x32C8;
             compY_out = 0x32C8;
             compY_n1 = 0x32C8;
             compY_n2 = 0x32C8;
         } else if (vrefModeSelect == 0x6B3) {
             /* 12V alternate: set 0x38A4 (14500) */
-            voutReference = 0x38A4;
+            llcPeriodCmd = 0x38A4;
             compY_out = 0x38A4;
             compY_n1 = 0x38A4;
             compY_n2 = 0x38A4;
         }
-        /* Check if voutSetpoint reached: if target > vout_sum, clear bit7 */
-        if (voutSetpoint > vout_sum)
+        /* 0x4AA8-0x4AB0: clear bit7 once measured output exceeds the target. */
+        if (vout_sum > voutSetpoint)
             statusFlags &= ~(1u << 7);
     }
 
@@ -557,12 +562,10 @@ skip_softstart:
     /* 0x4AB2-0x4B0C */
     frequencyLimitControl();                            /* 0x4508 */
 
-    /* PTPER = PWM_CLK / voutReference / 2
-     * PWM_CLK = 0xB3FB00 (11,796,224)
-     * Actually: PTPER = (voutReference * 0x1BB) >> 15 - 0x65, clamped [0..0x8E]
+    /* llcPeriodCmd is the voltage-loop output expressed in the LLC switching
+     * period domain. The T2 path derives period / duty values from that command.
      */
-    int16_t vr_final = voutReference;
-    int32_t ptper_prod = (int32_t)vr_final * (int32_t)0x1BB;
+    int32_t ptper_prod = (int32_t)llcPeriodCmd * (int32_t)0x1BB;
     int16_t ptper_raw = (int16_t)(ptper_prod >> 15) - 0x65;  /* 0xFF9B = -101 */
 
     if (ptper_raw > 0x8E)       ptper_raw = 0x8E;   /* 142 */
@@ -576,14 +579,20 @@ skip_softstart:
     if (dt_raw > 0x47)       dt_raw = 0x47;         /* 71 */
     else if (dt_raw <= 0x2E) dt_raw = 0x2F;         /* 47 */
 
-    /* PTPER from 32-bit division: 0x00B3FB00 / voutReference */
-    /* 0x4AF8: DIV.SD W0, W5 where W0:W1 = 0xB3FB00, W5 = voutReference */
-    int32_t pwm_clk = 0x00B3FB00L;
-    int16_t ptper_div = (int16_t)(pwm_clk / (int32_t)vr_final);
-    int16_t ptper_shifted = ptper_div >> ((int16_t)compY_out - 8);  /* ASR by variable */
-    /* Note: exact shift logic depends on runtime values */
+    /* 0x4AF8-0x4B08:
+     *   W1:W0 = 0x00B3FB00
+     *   DIV.SD W0, W5
+     *   ASR W0, W2
+     *   ptperCommand = W2 - 8
+     *   pdc1/pdc2 = W2
+     *
+     * The previous decompilation introduced an extra variable right shift by
+     * (compY_out - 8), which does not exist in the assembly and produced
+     * obviously wrong PTPER values.
+     */
+    int16_t ptper_shifted = (int16_t)(__builtin_divsd(0x00B3FB00L, llcPeriodCmd) >> 1);
 
-    ptper_computed = ptper_shifted - 8;                 /* 0x1D74 */
+    ptperCommand = ptper_shifted - 8;                  /* 0x1D74 */
     ptper    = ptper_raw;                         /* 0x1D72 */
     pdc1   = ptper_shifted;                     /* 0x1D70 */
     pdc2     = ptper_shifted;                     /* 0x1D6E */
@@ -593,7 +602,7 @@ skip_softstart:
     if (faultFlags & (1u << 5)) {
         pdc3 = 0;                                /* 0x1D6C */
     } else {
-        if (voutReference > 0x1A8F) {
+        if (llcPeriodCmd > 0x1A8F) {
             pdc3 = ptper_shifted;                /* full duty */
         } else {
             pdc3 = 0x36B;                        /* fixed 875 */

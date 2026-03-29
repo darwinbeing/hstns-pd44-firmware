@@ -31,7 +31,6 @@ extern void softStartRamp2(void);     /* 0x2DF6 - soft-start ramp phase 2 */
 extern void modeCheck(void);           /* 0x32E0 - operating mode check */
 extern void fanControl(void);              /* 0x3EBC - fan control */
 extern void stateControlMachine(void);        /* 0x2E2C - LLC sub-state machine */
-extern void i2cTxAccumulate(void);              /* 0x2506 - I2C Tx accumulate */
 extern void protectionCheck(void);     /* 0x30F8 - protection check */
 extern void pwmUpdate(void);           /* 0x33F4 - PWM update */
 extern void stateInit(void);           /* 0x2E3C - state initialization */
@@ -51,7 +50,7 @@ extern void standbyCheck(void);        /* 0x3052 - standby check */
 extern void eepromHandler(void);           /* 0x26D6 - EEPROM handling */
 extern void tempSample(void);          /* 0x316E - temperature sampling */
 extern void diagCheck(void);           /* 0x30AA - diagnostics check */
-extern void timerTickHandler(void);       /* 0x583E - timer tick handling */
+extern void uartRxTickService(void);      /* 0x583E - UART RX tick service */
 
 /* ============================================================================
  * _T1Interrupt — Timer1 ISR, 5kHz
@@ -188,12 +187,31 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
 
     /* ---- State machine & I2C ---- */
     stateControlMachine();              /* 0x2E2C */
+#ifndef SIMULATION_MODE
     i2cBusStuckHandler();               /* 0x2506 */
+#endif
     protectionCheck();                  /* 0x30F8 */
 
-    /* ---- PWM output gate: update only when PWM1/2 are both enabled ---- */
-    /* Check IOCON1.PENH, PENL, IOCON2.PENH, PENL */
-    pwmUpdate();                 /* 0x33F4 */
+    /* ---- PWM update gate (matches 0x3844..0x385C) ----
+     * Assembly calls pwmUpdate() when IOCON1L/IOCON2L gate bits are not all set.
+     * If IOCON1L bit1/bit0 and IOCON2L bit1/bit0 are all 1, the call is skipped.
+     */
+    {
+        uint8_t iocon1l = (uint8_t)IOCON1;
+        uint8_t iocon2l = (uint8_t)IOCON2;
+        uint8_t skip_pwm_update = 0u;
+
+        if ((iocon1l & (1u << 1)) != 0u &&
+            (iocon1l & (1u << 0)) != 0u &&
+            (iocon2l & (1u << 1)) != 0u &&
+            (iocon2l & (1u << 0)) != 0u) {
+            skip_pwm_update = 1u;
+        }
+
+        if (!skip_pwm_update) {
+            pwmUpdate();             /* 0x33F4 */
+        }
+    }
 
     /* ---- Delay-triggered state initialization ---- */
     if (delayTimer == 0) {
@@ -217,13 +235,19 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
     watchdogService();                  /* 0x37AA */
     vinCheck();                         /* 0x3254 */
     portdSample();                      /* 0x2F48 */
+#ifndef SIMULATION_MODE
     i2cTxAccumulate();                  /* 0x24B2 */
+#endif
     flagProcess();                      /* 0x2FA6 */
     standbyCheck();              /* 0x3052 */
+#ifndef SIMULATION_MODE
     eepromHandler();                 /* 0x26D6 */
+#endif
     tempSample();                /* 0x316E */
     diagCheck();                 /* 0x30AA */
+#ifndef SIMULATION_MODE
     uartRxTickService();             /* 0x583E */
+#endif
 
     IFS0bits.T1IF = 0;               /* clear T1 interrupt flag */
 }

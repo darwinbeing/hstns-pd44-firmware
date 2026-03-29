@@ -27,20 +27,20 @@ extern void monitorVin(void);               /* 0x4DBC */
 extern void monitorVout(void);              /* 0x4DEA */
 extern void monitorIout(void);              /* 0x4EFC */
 extern void monitorTemperature(void);       /* 0x4F92 */
-extern void updateStatusLeds(void);        /* 0x571E */
-extern void adcProcess(void);               /* 0x29FA */
-extern void checkFanControl(void);         /* 0x4FBC */
-extern void checkStandbyRail(void);        /* 0x4FEE */
-extern void checkEnablePin(void);          /* 0x5108 */
-extern void updatePmbusStatus(void);       /* 0x546C */
-extern void checkOtp(void);                /* 0x4D94 */
-extern void pidControl(void);              /* 0x3B5E */
-extern void voltageRegulation(void);        /* 0x40C2 */
+extern void updateStatusLeds(void);         /* 0x571E */
+extern void t1IsrI2cBody(void);             /* 0x29FA */
+extern void checkFanControl(void);          /* 0x4FBC */
+extern void checkStandbyRail(void);         /* 0x4FEE */
+extern void checkEnablePin(void);           /* 0x5108 */
+extern void updatePmbusStatus(void);        /* 0x546C */
+extern void checkOtp(void);                 /* 0x4D94 */
+extern void flashCalibrationLoad(void);     /* 0x3B5E */
+extern void voltageErrorTracking(void);     /* 0x40C2 */
 extern void currentRegulation(void);        /* 0x3F0E */
-extern void protectionCheck(void);          /* 0x42C8 */
+extern void flashReadbackHandler(void);     /* 0x42C8 */
 extern void uptimeCounter(void);            /* 0x50D4 */
-extern void vinUvpCheck(void);             /* 0x512C */
-extern void powerGoodCheck(void);          /* 0x514A */
+extern void vinUvpCheck(void);              /* 0x512C */
+extern void powerGoodCheck(void);           /* 0x514A */
 
 /* ============================================================================
  * i2cService() — 0x50C2
@@ -180,18 +180,13 @@ void startupControl(void)
  *   527E  RCALL 0x512C             ; vinUvpCheck
  *   5280  RCALL 0x514A             ; powerGoodCheck
  *   5282  CLRWDT                   ; clear watchdog
- *   5284  BCLR IFS0, #3            ; clear T4IF (note: actually IFS1 bit6 for T4?)
+ *   5284  BCLR 0x87, #3            ; clear IFS1bits.T4IF (0x87 = IFS1 high byte, bit3 = T4IF)
  *   5286  RETURN
- *
- * Note: BTST 0x87 bit3 appears to be T1IF in assembly, but the same flag
- *     is cleared in mainStateDispatch, suggesting it may actually use T4IF
- *     as the slow timer trigger. Further verification of 0x87 meaning needed
- *     (may be an alias for IFS0 or IFS1).
  * ============================================================================ */
 void mainStateDispatch(void)
 {
-    /* Check timer trigger flag */
-    if (!(IFS0 & (1u << 3)))
+    /* Check T4 timer trigger flag (BCLR/BTST 0x87 bit3 = IFS1 high byte bit3 = T4IF) */
+    if (!IFS1bits.T4IF)
         return;
 
     /* ---- State dispatch ---- */
@@ -216,21 +211,30 @@ void mainStateDispatch(void)
     controlStatus = (controlStatus & ~0x0002) | ((fault_bit << 1) & 0x0002);
 
     /* ---- Common services ---- */
-    updateStatusLeds();            /* 0x571E */
-    adcProcess();                   /* 0x29FA */
-    checkFanControl();             /* 0x4FBC */
-    checkStandbyRail();            /* 0x4FEE */
-    checkEnablePin();              /* 0x5108 */
-    updatePmbusStatus();           /* 0x546C */
+#ifndef SIMULATION_MODE
+    updateStatusLeds();             /* 0x571E */
+    t1IsrI2cBody();                 /* 0x29FA */
+    checkFanControl();              /* 0x4FBC */
+    checkStandbyRail();             /* 0x4FEE */
+    checkEnablePin();               /* 0x5108 */
+    updatePmbusStatus();            /* 0x546C */
     checkOtp();                     /* 0x4D94 */
-    pidControl();                   /* 0x3B5E */
-    voltageRegulation();            /* 0x40C2 */
+#ifndef SIMULATION_MODE
+    flashCalibrationLoad();         /* 0x3B5E */
+#endif
+    voltageErrorTracking();         /* 0x40C2 */
     currentRegulation();            /* 0x3F0E */
-    protectionCheck();              /* 0x42C8 */
+#ifndef SIMULATION_MODE
+    flashReadbackHandler();         /* 0x42C8 */
+#endif
     uptimeCounter();                /* 0x50D4 */
     vinUvpCheck();                 /* 0x512C */
     powerGoodCheck();              /* 0x514A */
+#else
+    uptimeCounter();                /* keep basic timebase alive */
+    powerGoodCheck();               /* keep power-good evaluation */
+#endif
 
     ClrWdt();
-    IFS0bits.T1IF = 0;              /* clear trigger flag */
+    IFS1bits.T4IF = 0;              /* clear T4 trigger flag */
 }

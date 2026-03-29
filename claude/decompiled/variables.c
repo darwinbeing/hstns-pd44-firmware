@@ -44,7 +44,7 @@ volatile int16_t prev_vout_a;
 volatile int16_t prev_vout_b;
 volatile int16_t vout_sum;
 volatile int16_t vout_avg_sum;
-volatile int16_t voutReference;
+volatile int16_t llcPeriodCmd;
 volatile int16_t voutSetpoint;
 volatile int16_t voutCalibrated;
 volatile int16_t outputVoltage;
@@ -145,7 +145,7 @@ volatile int16_t pdc3;
 volatile int16_t pdc2;
 volatile int16_t pdc1;
 volatile int16_t ptper;
-volatile int16_t ptper_computed;
+volatile int16_t ptperCommand;
 volatile int16_t phase3_target;
 
 /* I2C2 -> Flash command interface */
@@ -182,7 +182,7 @@ volatile int16_t  delayTimer;
 volatile int16_t  countdownTimer;
 volatile int16_t  delay_timer_1D40;
 volatile int16_t  countdown_1D20;
-volatile int16_t  var_1D4A;
+volatile int16_t  voutRefTarget;
 
 /* State handler variables */
 volatile uint16_t pwmSoftStartCnt;

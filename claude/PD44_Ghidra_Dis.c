@@ -1,8 +1,1624 @@
-// Function: thunk_FUN_rom_000200
+typedef unsigned char   undefined;
 
-/* WARNING: This function may have set the stack pointer */
-/* WARNING: Removing unreachable block (rom,0x000216) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+typedef unsigned char    byte;
+typedef unsigned char    undefined1;
+typedef unsigned int    undefined2;
+typedef unsigned short    ushort;
+typedef struct SPI2 SPI2, *PSPI2;
+
+struct SPI2 {
+    ushort SPI2STAT;
+    ushort SPI2CON1;
+    ushort SPI2CON2;
+    undefined field3_0x6;
+    undefined field4_0x7;
+    ushort SPI2BUF;
+};
+
+typedef struct ADC ADC, *PADC;
+
+struct ADC {
+    ushort ADCON;
+    ushort ADPCFG;
+    undefined field2_0x4;
+    undefined field3_0x5;
+    ushort ADSTAT;
+    ushort ADBASE;
+    ushort ADCPC0;
+    ushort ADCPC1;
+    ushort ADCPC2;
+    ushort ADCPC3;
+    undefined field10_0x12;
+    undefined field11_0x13;
+    undefined field12_0x14;
+    undefined field13_0x15;
+    ushort ADCPC6;
+    undefined field15_0x18;
+    undefined field16_0x19;
+    undefined field17_0x1a;
+    undefined field18_0x1b;
+    undefined field19_0x1c;
+    undefined field20_0x1d;
+    undefined field21_0x1e;
+    undefined field22_0x1f;
+    undefined field23_0x20;
+    undefined field24_0x21;
+    undefined field25_0x22;
+    undefined field26_0x23;
+    undefined field27_0x24;
+    undefined field28_0x25;
+    undefined field29_0x26;
+    undefined field30_0x27;
+    undefined field31_0x28;
+    undefined field32_0x29;
+    undefined field33_0x2a;
+    undefined field34_0x2b;
+    undefined field35_0x2c;
+    undefined field36_0x2d;
+    undefined field37_0x2e;
+    undefined field38_0x2f;
+    undefined field39_0x30;
+    undefined field40_0x31;
+    undefined field41_0x32;
+    undefined field42_0x33;
+    undefined field43_0x34;
+    undefined field44_0x35;
+    undefined field45_0x36;
+    undefined field46_0x37;
+    undefined field47_0x38;
+    undefined field48_0x39;
+    undefined field49_0x3a;
+    undefined field50_0x3b;
+    undefined field51_0x3c;
+    undefined field52_0x3d;
+    undefined field53_0x3e;
+    undefined field54_0x3f;
+    ushort ADCBUF0;
+    ushort ADCBUF1;
+    ushort ADCBUF2;
+    ushort ADCBUF3;
+    ushort ADCBUF4;
+    ushort ADCBUF5;
+    ushort ADCBUF6;
+    ushort ADCBUF7;
+    ushort ADCBUF8;
+    ushort ADCBUF9;
+    ushort ADCBUF10;
+    ushort ADCBUF11;
+    ushort ADCBUF12;
+    ushort ADCBUF13;
+    ushort ADCBUF14;
+    ushort ADCBUF15;
+    undefined field71_0x60;
+    undefined field72_0x61;
+    undefined field73_0x62;
+    undefined field74_0x63;
+    undefined field75_0x64;
+    undefined field76_0x65;
+    undefined field77_0x66;
+    undefined field78_0x67;
+    undefined field79_0x68;
+    undefined field80_0x69;
+    undefined field81_0x6a;
+    undefined field82_0x6b;
+    undefined field83_0x6c;
+    undefined field84_0x6d;
+    undefined field85_0x6e;
+    undefined field86_0x6f;
+    ushort ADCBUF24;
+    ushort ADCBUF25;
+};
+
+typedef struct SPI1 SPI1, *PSPI1;
+
+struct SPI1 {
+    ushort SPI1STAT;
+    ushort SPI1CON1;
+    ushort SPI1CON2;
+    undefined field3_0x6;
+    undefined field4_0x7;
+    ushort SPI1BUF;
+};
+
+typedef struct NVM NVM, *PNVM;
+
+struct NVM {
+    ushort NVMCON;
+    undefined field1_0x2;
+    undefined field2_0x3;
+    undefined field3_0x4;
+    undefined field4_0x5;
+    ushort NVMKEY;
+};
+
+typedef struct CONFIG CONFIG, *PCONFIG;
+
+struct CONFIG {
+    ushort FBS; // Configuration word
+    undefined field1_0x2;
+    undefined field2_0x3;
+    ushort FGS; // Configuration word
+    ushort FOSCSEL; // Configuration word
+    ushort FOSC; // Configuration word
+    ushort FWDT; // Configuration word
+    ushort FPOR; // Configuration word
+    ushort FICD; // Configuration word
+    ushort FCMP; // Configuration word
+};
+
+typedef struct CAN1 CAN1, *PCAN1;
+
+struct CAN1 {
+    ushort C1CTRL1;
+    ushort C1CTRL2;
+    ushort C1VEC;
+    ushort C1FCTRL;
+    ushort C1FIFO;
+    ushort C1INTF;
+    ushort C1INTE;
+    byte C1RERRCNT;
+    byte C1TERRCNT;
+    ushort C1CFG1;
+    ushort C1CFG2;
+    ushort C1FEN1;
+    undefined field12_0x16;
+    undefined field13_0x17;
+    ushort C1FMSKSEL1;
+    ushort C1FMSKSEL2;
+    undefined field16_0x1c;
+    undefined field17_0x1d;
+    undefined field18_0x1e;
+    undefined field19_0x1f;
+    ushort C1RXFUL1;
+    ushort C1RXFUL2;
+    ushort C1BUFPNT3;
+    ushort C1BUFPNT4;
+    ushort C1RXOVF1;
+    ushort C1RXOVF2;
+    undefined field26_0x2c;
+    undefined field27_0x2d;
+    undefined field28_0x2e;
+    undefined field29_0x2f;
+    ushort C1TR01CON;
+    ushort C1TR23CON;
+    ushort C1TR45CON;
+    ushort C1TR67CON;
+    ushort C1RXM2SID;
+    ushort C1RXM2EID;
+    undefined field36_0x3c;
+    undefined field37_0x3d;
+    undefined field38_0x3e;
+    undefined field39_0x3f;
+    ushort C1RXF0SID;
+    ushort C1TXD;
+    ushort C1RXF1SID;
+    ushort C1RXF1EID;
+    ushort C1RXF2SID;
+    ushort C1RXF2EID;
+    ushort C1RXF3SID;
+    ushort C1RXF3EID;
+    ushort C1RXF4SID;
+    ushort C1RXF4EID;
+    ushort C1RXF5SID;
+    ushort C1RXF5EID;
+    ushort C1RXF6SID;
+    ushort C1RXF6EID;
+    ushort C1RXF7SID;
+    ushort C1RXF7EID;
+    ushort C1RXF8SID;
+    ushort C1RXF8EID;
+    ushort C1RXF9SID;
+    ushort C1RXF9EID;
+    ushort C1RXF10SID;
+    ushort C1RXF10EID;
+    ushort C1RXF11SID;
+    ushort C1RXF11EID;
+    ushort C1RXF12SID;
+    ushort C1RXF12EID;
+    ushort C1RXF13SID;
+    ushort C1RXF13EID;
+    ushort C1RXF14SID;
+    ushort C1RXF14EID;
+    ushort C1RXF15SID;
+    ushort C1RXF15EID;
+};
+
+typedef struct CPU_CORE CPU_CORE, *PCPU_CORE;
+
+struct CPU_CORE {
+    ushort SPLIM;
+    ushort ACCAL;
+    ushort ACCAH;
+    ushort ACCAU;
+    ushort ACCBL;
+    ushort ACCBH;
+    ushort ACCBU;
+    ushort PCL;
+    ushort PCH;
+    ushort TBLPAG;
+    ushort PSVPAG;
+    ushort RCOUNT;
+    ushort DCOUNT;
+    ushort DOSTARTL;
+    ushort DOSTARTH;
+    ushort DOENDL;
+    ushort DOENDH;
+    ushort SR;
+    ushort CORCON;
+    ushort MODCON;
+    ushort XMODSRT;
+    ushort XMODEND;
+    ushort YMODSRT;
+    ushort YMODEND;
+    ushort XBREV;
+    ushort DISICNT;
+};
+
+typedef struct I2C1 I2C1, *PI2C1;
+
+struct I2C1 {
+    ushort I2C1RCV;
+    ushort I2C1TRN;
+    ushort I2C1BRG;
+    ushort I2C1CON;
+    ushort I2C1STAT;
+    ushort I2C1ADD;
+    ushort I2C1MSK;
+};
+
+typedef struct QEI2 QEI2, *PQEI2;
+
+struct QEI2 {
+    ushort QEI2CON;
+    ushort DFLT2CON;
+    ushort POS2CNT;
+    ushort MAX2CNT;
+};
+
+typedef struct I2C2 I2C2, *PI2C2;
+
+struct I2C2 {
+    ushort I2C2RCV;
+    ushort I2C2TRN;
+    ushort I2C2BRG;
+    ushort I2C2CON;
+    ushort I2C2STAT;
+    ushort I2C2ADD;
+    ushort I2C2MSK;
+};
+
+typedef struct QEI1 QEI1, *PQEI1;
+
+struct QEI1 {
+    ushort QEI1CON;
+    ushort DFLT1CON;
+    ushort POS1CNT;
+    ushort MAX1CNT;
+};
+
+typedef struct CLOCK CLOCK, *PCLOCK;
+
+struct CLOCK {
+    ushort RCON;
+    ushort OSCCON;
+    ushort CLKDIV;
+    ushort PLLFBD;
+    ushort OSCTUN;
+    ushort OSCTUN2;
+    ushort LFSR;
+    ushort REFOCON;
+    ushort ACLKCON;
+};
+
+typedef struct TIMER5 TIMER5, *PTIMER5;
+
+struct TIMER5 {
+    ushort TMR5HLD;
+    ushort TMR5;
+    undefined field2_0x4;
+    undefined field3_0x5;
+    ushort PR5;
+    undefined field5_0x8;
+    undefined field6_0x9;
+    ushort T5CON;
+};
+
+typedef struct INTERRUPT INTERRUPT, *PINTERRUPT;
+
+struct INTERRUPT {
+    ushort INTCON1;
+    ushort INTCON2;
+    ushort IFS0;
+    ushort IFS1;
+    ushort IFS2;
+    ushort IFS3;
+    ushort IFS4;
+    ushort IFS5;
+    ushort IFS6;
+    ushort IFS7;
+    ushort IEC0;
+    ushort IEC1;
+    ushort IEC2;
+    ushort IEC3;
+    ushort IEC4;
+    ushort IEC5;
+    ushort IEC6;
+    ushort IEC7;
+    ushort IPC0;
+    ushort IPC1;
+    ushort IPC2;
+    ushort IPC3;
+    ushort IPC4;
+    ushort IPC5;
+    ushort IPC6;
+    ushort IPC7;
+    ushort IPC8;
+    ushort IPC9;
+    undefined field28_0x38;
+    undefined field29_0x39;
+    undefined field30_0x3a;
+    undefined field31_0x3b;
+    ushort IPC12;
+    ushort IPC13;
+    ushort IPC14;
+    undefined field35_0x42;
+    undefined field36_0x43;
+    ushort IPC16;
+    ushort IPC17;
+    ushort IPC18;
+    undefined field40_0x4a;
+    undefined field41_0x4b;
+    undefined field42_0x4c;
+    undefined field43_0x4d;
+    ushort IPC21;
+    undefined field45_0x50;
+    undefined field46_0x51;
+    ushort IPC23;
+    ushort IPC24;
+    ushort IPC25;
+    ushort IPC26;
+    ushort IPC27;
+    ushort IPC28;
+    ushort IPC29;
+    ushort INTTREG;
+};
+
+typedef struct TIMER4 TIMER4, *PTIMER4;
+
+struct TIMER4 {
+    ushort TMR4;
+    undefined field1_0x2;
+    undefined field2_0x3;
+    undefined field3_0x4;
+    undefined field4_0x5;
+    ushort PR4;
+    undefined field6_0x8;
+    undefined field7_0x9;
+    ushort T4CON;
+};
+
+typedef struct TIMER3 TIMER3, *PTIMER3;
+
+struct TIMER3 {
+    ushort TMR3HLD;
+    ushort TMR3;
+    undefined field2_0x4;
+    undefined field3_0x5;
+    ushort PR3;
+    undefined field5_0x8;
+    undefined field6_0x9;
+    ushort T3CON;
+};
+
+typedef struct CMP4 CMP4, *PCMP4;
+
+struct CMP4 {
+    ushort CMPCON4;
+    ushort CMPDAC4;
+};
+
+typedef struct TIMER2 TIMER2, *PTIMER2;
+
+struct TIMER2 {
+    ushort TMR2;
+    undefined field1_0x2;
+    undefined field2_0x3;
+    undefined field3_0x4;
+    undefined field4_0x5;
+    ushort PR2;
+    undefined field6_0x8;
+    undefined field7_0x9;
+    ushort T2CON;
+};
+
+typedef struct CMP3 CMP3, *PCMP3;
+
+struct CMP3 {
+    ushort CMPCON3;
+    ushort CMPDAC3;
+};
+
+typedef struct GPIO_CN GPIO_CN, *PGPIO_CN;
+
+struct GPIO_CN {
+    ushort CNEN1;
+    ushort CNEN2;
+    undefined field2_0x4;
+    undefined field3_0x5;
+    undefined field4_0x6;
+    undefined field5_0x7;
+    ushort CNPU1;
+    ushort CNPU2;
+};
+
+typedef struct TIMER1 TIMER1, *PTIMER1;
+
+struct TIMER1 {
+    ushort TMR1;
+    ushort PR1;
+    ushort T1CON;
+};
+
+typedef struct CMP2 CMP2, *PCMP2;
+
+struct CMP2 {
+    ushort CMPCON2;
+    ushort CMPDAC2;
+};
+
+typedef struct CMP1 CMP1, *PCMP1;
+
+struct CMP1 {
+    ushort CMPCON1;
+    ushort CMPDAC1;
+};
+
+typedef struct GPIOG GPIOG, *PGPIOG;
+
+struct GPIOG {
+    ushort TRISG;
+    ushort PORTG;
+    ushort LATG;
+    ushort ODCG;
+};
+
+typedef struct IC1 IC1, *PIC1;
+
+struct IC1 {
+    ushort IC1BUF;
+    ushort IC1CON;
+};
+
+typedef struct IC3 IC3, *PIC3;
+
+struct IC3 {
+    ushort IC3BUF;
+    ushort IC3CON;
+};
+
+typedef struct GPIOD GPIOD, *PGPIOD;
+
+struct GPIOD {
+    ushort TRISD;
+    ushort PORTD;
+    ushort LATD;
+    ushort ODCD;
+};
+
+typedef struct IC2 IC2, *PIC2;
+
+struct IC2 {
+    ushort IC2BUF;
+    ushort IC2CON;
+};
+
+typedef struct GPIOC GPIOC, *PGPIOC;
+
+struct GPIOC {
+    ushort TRISC;
+    ushort PORTC;
+    ushort LATC;
+};
+
+typedef struct DMA DMA, *PDMA;
+
+struct DMA {
+    ushort DMACS0;
+    ushort DMACS1;
+    ushort DSADR;
+};
+
+typedef struct GPIOF GPIOF, *PGPIOF;
+
+struct GPIOF {
+    ushort TRISF;
+    ushort PORTF;
+    ushort LATF;
+    ushort ODCF;
+};
+
+typedef struct IC4 IC4, *PIC4;
+
+struct IC4 {
+    ushort IC4BUF;
+    ushort IC4CON;
+};
+
+typedef struct GPIOE GPIOE, *PGPIOE;
+
+struct GPIOE {
+    ushort TRISE;
+    ushort PORTE;
+    ushort LATE;
+    ushort ODCE;
+};
+
+typedef struct OC1 OC1, *POC1;
+
+struct OC1 {
+    ushort OC1RS;
+    ushort OC1R;
+    ushort OC1CON;
+};
+
+typedef struct OC3 OC3, *POC3;
+
+struct OC3 {
+    ushort OC3RS;
+    ushort OC3R;
+    ushort OC3CON;
+};
+
+typedef struct GPIOB GPIOB, *PGPIOB;
+
+struct GPIOB {
+    ushort TRISB;
+    ushort PORTB;
+    ushort LATB;
+};
+
+typedef struct OC2 OC2, *POC2;
+
+struct OC2 {
+    ushort OC2RS;
+    ushort OC2R;
+    ushort OC2CON;
+};
+
+typedef struct OC4 OC4, *POC4;
+
+struct OC4 {
+    ushort OC4RS;
+    ushort OC4R;
+    ushort OC4CON;
+};
+
+typedef struct PWM_MASTER PWM_MASTER, *PPWM_MASTER;
+
+struct PWM_MASTER {
+    ushort PTCON;
+    ushort PTCON2;
+    ushort PTPER;
+    ushort SEVTCMP;
+    undefined field4_0x8;
+    undefined field5_0x9;
+    ushort MDC;
+    undefined field7_0xc;
+    undefined field8_0xd;
+    ushort STCON;
+    ushort STCON2;
+    ushort STPER;
+    ushort SSEVTCMP;
+    undefined field13_0x16;
+    undefined field14_0x17;
+    undefined field15_0x18;
+    undefined field16_0x19;
+    ushort CHOP;
+};
+
+typedef struct PMD PMD, *PPMD;
+
+struct PMD {
+    ushort PMD1;
+    ushort PMD2;
+    ushort PMD3;
+    ushort PMD4;
+    undefined field4_0x8;
+    undefined field5_0x9;
+    ushort PMD6;
+    ushort PMD7;
+};
+
+typedef struct UART2 UART2, *PUART2;
+
+struct UART2 {
+    ushort U2MODE;
+    ushort U2STA;
+    ushort U2TXREG;
+    ushort U2RXREG;
+    ushort U2BRG;
+};
+
+typedef struct PWM3 PWM3, *PPWM3;
+
+struct PWM3 {
+    ushort PWMCON3;
+    ushort IOCON3;
+    ushort FCLCON3;
+    ushort PDC3;
+    ushort PHASE3;
+    ushort DTR3;
+    ushort ALTDTR3;
+    ushort SDC3;
+    ushort SPHASE3;
+    ushort TRIG3;
+    ushort TRGCON3;
+    ushort STRIG3;
+    ushort PWMCAP3;
+    ushort LEBCON3;
+    ushort LEBDLY3;
+    ushort AUXCON3;
+};
+
+typedef struct PWM2 PWM2, *PPWM2;
+
+struct PWM2 {
+    ushort PWMCON2;
+    ushort IOCON2;
+    ushort FCLCON2;
+    ushort PDC2;
+    ushort PHASE2;
+    ushort DTR2;
+    ushort ALTDTR2;
+    ushort SDC2;
+    ushort SPHASE2;
+    ushort TRIG2;
+    ushort TRGCON2;
+    ushort STRIG2;
+    ushort PWMCAP2;
+    ushort LEBCON2;
+    ushort LEBDLY2;
+    ushort AUXCON2;
+};
+
+typedef struct PWM5 PWM5, *PPWM5;
+
+struct PWM5 {
+    ushort PWMCON5;
+    ushort IOCON5;
+    ushort FCLCON5;
+    ushort PDC5;
+    ushort PHASE5;
+    ushort DTR5;
+    ushort ALTDTR5;
+    ushort SDC5;
+    ushort SPHASE5;
+    ushort TRIG5;
+    ushort TRGCON5;
+    ushort STRIG5;
+    ushort PWMCAP5;
+    ushort LEBCON5;
+    ushort LEBDLY5;
+    ushort AUXCON5;
+};
+
+typedef struct PWM4 PWM4, *PPWM4;
+
+struct PWM4 {
+    ushort PWMCON4;
+    ushort IOCON4;
+    ushort FCLCON4;
+    ushort PDC4;
+    ushort PHASE4;
+    ushort DTR4;
+    ushort ALTDTR4;
+    ushort SDC4;
+    ushort SPHASE4;
+    ushort TRIG4;
+    ushort TRGCON4;
+    ushort STRIG4;
+    ushort PWMCAP4;
+    ushort LEBCON4;
+    ushort LEBDLY4;
+    ushort AUXCON4;
+};
+
+typedef struct PWM1 PWM1, *PPWM1;
+
+struct PWM1 {
+    ushort PWMCON1;
+    ushort IOCON1;
+    ushort FCLCON1;
+    ushort PDC1;
+    ushort PHASE1;
+    ushort DTR1;
+    ushort ALTDTR1;
+    ushort SDC1;
+    ushort SPHASE1;
+    ushort TRIG1;
+    ushort TRGCON1;
+    ushort STRIG1;
+    ushort PWMCAP1;
+    ushort LEBCON1;
+    ushort LEBDLY1;
+    ushort AUXCON1;
+};
+
+typedef struct UART1 UART1, *PUART1;
+
+struct UART1 {
+    ushort U1MODE;
+    ushort U1STA;
+    ushort U1TXREG;
+    ushort U1RXREG;
+    ushort U1BRG;
+};
+
+typedef struct PWM6 PWM6, *PPWM6;
+
+struct PWM6 {
+    ushort PWMCON6;
+    ushort IOCON6;
+    ushort FCLCON6;
+    ushort PDC6;
+    ushort PHASE6;
+    ushort DTR6;
+    ushort ALTDTR6;
+    ushort SDC6;
+    ushort SPHASE6;
+    ushort TRIG6;
+    ushort TRGCON6;
+    ushort STRIG6;
+    ushort PWMCAP6;
+    ushort LEBCON6;
+    ushort LEBDLY6;
+    ushort AUXCON6;
+};
+
+typedef struct DMA0 DMA0, *PDMA0;
+
+struct DMA0 {
+    ushort DMA0CON;
+    ushort DMA0REQ;
+    ushort DMA0STA;
+    ushort DMA0STB;
+    ushort DMA0PAD;
+    ushort DMA0CNT;
+};
+
+typedef struct DMA1 DMA1, *PDMA1;
+
+struct DMA1 {
+    ushort DMA1CON;
+    ushort DMA1REQ;
+    ushort DMA1STA;
+    ushort DMA1STB;
+    ushort DMA1PAD;
+    ushort DMA1CNT;
+};
+
+typedef struct DMA2 DMA2, *PDMA2;
+
+struct DMA2 {
+    ushort DMA2CON;
+    ushort DMA2REQ;
+    ushort DMA2STA;
+    ushort DMA2STB;
+    ushort DMA2PAD;
+    ushort DMA2CNT;
+};
+
+typedef struct DMA3 DMA3, *PDMA3;
+
+struct DMA3 {
+    ushort DMA3CON;
+    ushort DMA3REQ;
+    ushort DMA3STA;
+    ushort DMA3STB;
+    ushort DMA3PAD;
+    ushort DMA3CNT;
+};
+
+
+
+undefined DAT_ram_085c;
+ushort PC;
+CPU_CORE SPLIM;
+ushort PSVPAG;
+ushort CORCON;
+ushort TBLPAG;
+ushort GPIOC.PORTC+1;
+ushort GPIOD.PORTD+1;
+ushort I2C2.I2C2ADD;
+ushort I2C2.I2C2CON;
+ushort INTERRUPT.IFS3;
+ushort INTERRUPT.IEC3;
+ushort INTERRUPT.IPC12;
+undefined1 DAT_ram_0852;
+ushort GPIOG.LATG;
+GPIOC GPIOC;
+GPIOD GPIOD;
+ushort GPIOD.LATD;
+GPIOF GPIOF;
+GPIOG GPIOG;
+ushort CLOCK.ACLKCON+1;
+ushort CLOCK.ACLKCON;
+ushort CLOCK.OSCCON+1;
+ushort CLOCK.OSCCON;
+ushort CLOCK.CLKDIV;
+ushort CLOCK.PLLFBD;
+ushort TIMER1.PR1;
+ushort INTERRUPT.IPC0+1;
+ushort INTERRUPT.IFS0;
+ushort INTERRUPT.IEC0;
+TIMER1 TIMER1;
+ushort TIMER1.T1CON;
+undefined LAB_rom_00091a;
+CLOCK CLOCK;
+undefined1 DAT_ram_0858;
+ushort SPLIM.SR;
+SPI2 SPI2;
+ushort SPI2.SPI2BUF;
+char DAT_ram_085a;
+byte DAT_ram_085a;
+ushort SPI2.SPI2CON1;
+ushort SPI2.SPI2CON2;
+undefined DAT_ram_27fe;
+undefined DAT_ram_27fc;
+undefined DAT_ram_27fa;
+undefined DAT_ram_27f8;
+undefined DAT_ram_27f6;
+undefined DAT_ram_27f4;
+undefined DAT_ram_27f2;
+undefined DAT_ram_27f0;
+ushort DISICNT;
+NVM NVM;
+ushort NVM.NVMKEY;
+undefined DAT_ram_1e58;
+undefined LAB_rom_000cd8;
+undefined DAT_ram_19b2;
+undefined DAT_ram_19b4;
+undefined DAT_ram_19b6;
+undefined DAT_ram_19ba;
+undefined DAT_ram_19bc;
+undefined DAT_ram_19be;
+undefined DAT_ram_19d0;
+undefined DAT_ram_19d2;
+undefined DAT_ram_19d4;
+undefined DAT_ram_19d6;
+undefined DAT_ram_19d8;
+undefined DAT_ram_19da;
+undefined DAT_ram_19dc;
+undefined DAT_ram_19de;
+undefined DAT_ram_19f0;
+undefined DAT_ram_19f2;
+undefined DAT_ram_19f4;
+undefined DAT_ram_19f6;
+undefined DAT_ram_19f8;
+undefined DAT_ram_19fa;
+undefined DAT_ram_1a10;
+undefined DAT_ram_1a12;
+undefined DAT_ram_1a14;
+undefined DAT_ram_1a16;
+undefined DAT_ram_1a18;
+undefined DAT_ram_1a1a;
+undefined DAT_ram_1a1c;
+undefined DAT_ram_1a1e;
+undefined DAT_ram_1a20;
+undefined DAT_ram_1a22;
+undefined DAT_ram_1a24;
+undefined DAT_ram_1a26;
+undefined DAT_ram_1a28;
+undefined DAT_ram_1a2a;
+undefined DAT_ram_1a30;
+undefined DAT_ram_1a32;
+undefined DAT_ram_1a34;
+undefined DAT_ram_1a36;
+undefined DAT_ram_1a38;
+undefined DAT_ram_1a3a;
+undefined DAT_ram_1a3c;
+undefined DAT_ram_1a3e;
+undefined DAT_ram_1a40;
+undefined DAT_ram_1a42;
+undefined DAT_ram_1a46;
+undefined DAT_ram_1a48;
+undefined DAT_ram_1a70;
+undefined DAT_ram_1a72;
+undefined DAT_ram_1a74;
+undefined DAT_ram_1a76;
+undefined DAT_ram_1a78;
+undefined DAT_ram_1b90;
+undefined DAT_ram_1b92;
+undefined DAT_ram_1b94;
+undefined DAT_ram_1b96;
+undefined DAT_ram_1b98;
+undefined DAT_ram_1b9c;
+undefined LAB_rom_000dfa;
+undefined DAT_ram_197c;
+undefined LAB_rom_000cd0+2;
+undefined LAB_rom_000cd0;
+undefined LAB_rom_000cce+2;
+undefined LAB_rom_000cce;
+undefined LAB_rom_000ccc;
+undefined LAB_rom_000cca+2;
+undefined LAB_rom_000cca;
+undefined LAB_rom_000de4+2;
+undefined LAB_rom_000de2+2;
+undefined LAB_rom_000dda+2;
+undefined LAB_rom_000dda;
+TIMER3 TIMER3;
+undefined LAB_rom_000cc8+2;
+undefined LAB_rom_000cc8;
+undefined LAB_rom_000cc4+2;
+undefined LAB_rom_000cc4;
+undefined LAB_rom_000cc2+2;
+undefined LAB_rom_000cc2;
+undefined LAB_rom_000cc0+2;
+undefined LAB_rom_000cbe+2;
+undefined LAB_rom_000ccc+2;
+undefined DAT_ram_194e;
+undefined DAT_ram_1948;
+undefined LAB_rom_000ca0+2;
+undefined LAB_rom_000ca2;
+undefined LAB_rom_000ca2+2;
+undefined LAB_rom_000ca4+2;
+undefined LAB_rom_000ca6;
+undefined LAB_rom_000cbc+2;
+undefined LAB_rom_000cc6;
+undefined LAB_rom_000cc6+2;
+undefined LAB_rom_000cd2;
+undefined LAB_rom_000cd2+2;
+undefined LAB_rom_000cd4;
+undefined LAB_rom_000cd4+2;
+undefined LAB_rom_000cd6;
+undefined LAB_rom_000cd6+2;
+undefined LAB_rom_000dd8+2;
+undefined LAB_rom_000ddc;
+undefined LAB_rom_000ddc+2;
+undefined LAB_rom_000dde;
+undefined LAB_rom_000de0;
+undefined LAB_rom_000de4;
+undefined FUN_rom_000de6+2;
+undefined LAB_rom_000de8;
+undefined LAB_rom_000de8+2;
+undefined LAB_rom_000dea;
+undefined LAB_rom_000dea+2;
+undefined LAB_rom_000dec;
+undefined LAB_rom_000dec+2;
+undefined LAB_rom_000dee;
+undefined LAB_rom_000dee+2;
+undefined LAB_rom_000df0+2;
+undefined LAB_rom_000df2;
+undefined LAB_rom_000df2+2;
+undefined LAB_rom_000df4;
+undefined LAB_rom_000df4+2;
+undefined LAB_rom_000df6;
+undefined LAB_rom_000df6+2;
+undefined LAB_rom_000df8+2;
+undefined DAT_ram_1e40;
+undefined1 DAT_ram_1979;
+undefined DAT_ram_1e3e;
+undefined DAT_ram_1940;
+byte DAT_ram_195a;
+undefined DAT_ram_1922;
+undefined DAT_ram_1928;
+undefined DAT_ram_160c;
+undefined DAT_ram_160a;
+undefined LAB_rom_000cac;
+byte DAT_ram_195b;
+char DAT_ram_1959;
+I2C2 I2C2;
+ushort I2C2.I2C2TRN;
+undefined DAT_ram_192c;
+undefined DAT_ram_1950;
+undefined DAT_ram_1956;
+undefined LAB_rom_000cac+1;
+undefined LAB_rom_000cac+2;
+undefined DAT_ram_1bea;
+char DAT_ram_15f6;
+undefined DAT_ram_192e;
+byte DAT_ram_1959;
+undefined LAB_rom_000b06+2;
+undefined DAT_ram_1bf4;
+char DAT_ram_195a;
+undefined DAT_ram_1bba;
+byte DAT_ram_195d;
+char DAT_ram_195e;
+undefined DAT_ram_1e1a;
+undefined DAT_ram_1bbc;
+char DAT_ram_195c;
+undefined LAB_rom_000cac+3;
+undefined DAT_ram_1608;
+undefined DAT_ram_1920;
+undefined DAT_ram_1930;
+undefined LAB_rom_000b86+2;
+undefined LAB_rom_000cae+1;
+undefined DAT_ram_1606;
+undefined DAT_ram_191e;
+undefined LAB_rom_000e80+3;
+char DAT_ram_195b;
+undefined DAT_ram_1e18;
+undefined LAB_rom_000e7c;
+undefined LAB_rom_000e7c+2;
+byte DAT_ram_15f7;
+byte DAT_ram_15f8;
+byte DAT_ram_15f9;
+byte DAT_ram_195c;
+byte DAT_ram_15fa;
+undefined1 DAT_ram_195d;
+undefined1 DAT_ram_15e6;
+undefined1 DAT_ram_195e;
+undefined1 DAT_ram_15e7;
+undefined1 DAT_ram_195f;
+undefined1 DAT_ram_15e8;
+undefined1 DAT_ram_1960;
+undefined1 DAT_ram_15e9;
+undefined1 DAT_ram_1961;
+undefined1 DAT_ram_15ea;
+undefined1 DAT_ram_1962;
+undefined1 DAT_ram_15eb;
+undefined1 DAT_ram_1963;
+undefined1 DAT_ram_15ec;
+undefined1 DAT_ram_1964;
+undefined1 DAT_ram_15ed;
+undefined1 DAT_ram_1965;
+undefined1 DAT_ram_15ee;
+undefined1 DAT_ram_1966;
+undefined1 DAT_ram_15ef;
+undefined1 DAT_ram_1967;
+undefined1 DAT_ram_15f0;
+undefined1 DAT_ram_1968;
+undefined1 DAT_ram_15f1;
+undefined1 DAT_ram_1969;
+undefined1 DAT_ram_15f2;
+undefined1 DAT_ram_196a;
+undefined1 DAT_ram_15f3;
+undefined1 DAT_ram_196b;
+undefined1 DAT_ram_15f4;
+undefined1 DAT_ram_196c;
+undefined1 DAT_ram_15f5;
+undefined DAT_ram_125a;
+undefined LAB_rom_000af0+2;
+undefined DAT_ram_1e22;
+undefined DAT_ram_1bca;
+undefined DAT_ram_1bcc;
+undefined1 DAT_ram_15f6;
+undefined DAT_ram_1e20;
+undefined DAT_ram_1bf0;
+undefined DAT_ram_1bec;
+undefined DAT_ram_1e1c;
+undefined DAT_ram_1bf2;
+undefined DAT_ram_1bb8;
+undefined DAT_ram_198e;
+undefined DAT_ram_198c;
+undefined DAT_ram_1260;
+undefined DAT_ram_1be0;
+undefined DAT_ram_125e;
+undefined DAT_ram_1d1a;
+undefined DAT_ram_1be2;
+undefined DAT_ram_1d1e;
+undefined DAT_ram_1d0e;
+undefined DAT_ram_1bde;
+undefined DAT_ram_1bbe;
+undefined DAT_ram_1bc0;
+undefined DAT_ram_199e;
+undefined DAT_ram_199c;
+undefined DAT_ram_199a;
+undefined DAT_ram_197a;
+undefined DAT_ram_1264;
+undefined DAT_ram_1e16;
+undefined DAT_ram_1bdc;
+undefined DAT_ram_1d16;
+undefined DAT_ram_1bda;
+undefined DAT_ram_1e12;
+undefined DAT_ram_1bd8;
+undefined DAT_ram_1e46;
+undefined DAT_ram_1bd6;
+undefined DAT_ram_1cc0;
+undefined DAT_ram_1998;
+IC1 IC1;
+undefined DAT_ram_1996;
+undefined DAT_ram_1994;
+undefined DAT_ram_1932;
+undefined DAT_ram_1d14;
+undefined DAT_ram_1be8;
+undefined DAT_ram_1d10;
+undefined DAT_ram_1be4;
+undefined DAT_ram_1d12;
+undefined DAT_ram_1be6;
+undefined DAT_ram_19a2;
+undefined DAT_ram_19a0;
+undefined DAT_ram_19ae;
+undefined DAT_ram_1bd4;
+undefined DAT_ram_19a6;
+undefined DAT_ram_19ac;
+undefined DAT_ram_19aa;
+undefined DAT_ram_19a8;
+OC2 OC2;
+undefined1 DAT_ram_1bf2;
+undefined DAT_ram_1934;
+undefined DAT_ram_1bc8;
+undefined DAT_ram_1bd2;
+undefined DAT_ram_1bd0;
+undefined DAT_ram_1bce;
+undefined DAT_ram_192a;
+undefined DAT_ram_1936;
+undefined DAT_ram_1938;
+undefined DAT_ram_19a4;
+undefined DAT_ram_194a;
+undefined DAT_ram_194c;
+undefined DAT_ram_193a;
+ushort GPIOG.PORTG;
+ushort I2C2.I2C2STAT;
+ushort PWM2.IOCON2+1;
+undefined DAT_ram_1262;
+undefined DAT_ram_1268;
+ushort GPIOE.LATE;
+undefined DAT_ram_1952;
+undefined DAT_ram_1bb0;
+undefined DAT_ram_1bb2;
+undefined DAT_ram_193c;
+undefined LAB_rom_000f1e;
+undefined DAT_ram_1e3c;
+undefined DAT_ram_1e54;
+undefined1 DAT_ram_1bef;
+undefined1 DAT_ram_1bee;
+undefined DAT_ram_193e;
+char DAT_ram_1946;
+char DAT_ram_1947;
+char DAT_ram_1944;
+char DAT_ram_1945;
+char DAT_ram_1942;
+undefined LAB_rom_0049dc;
+undefined DAT_ram_1d2a;
+undefined DAT_ram_1d28;
+byte DAT_ram_15e6;
+undefined DAT_ram_1d32;
+byte DAT_ram_15e9;
+undefined DAT_ram_1d30;
+byte DAT_ram_15ea;
+undefined DAT_ram_1d2e;
+byte DAT_ram_15ed;
+undefined DAT_ram_1d2c;
+undefined DAT_ram_1d26;
+byte DAT_ram_15f0;
+byte DAT_ram_15f1;
+undefined DAT_ram_1d24;
+byte DAT_ram_15f2;
+undefined DAT_ram_1e44;
+byte DAT_ram_15f4;
+undefined DAT_ram_1e42;
+undefined1 DAT_ram_15f8;
+byte DAT_ram_15e8;
+byte DAT_ram_15ec;
+char DAT_ram_15ef;
+byte DAT_ram_15ee;
+ushort PWM5.PDC5;
+undefined DAT_ram_1252;
+undefined LAB_rom_000440;
+ushort ADC.ADCBUF5;
+ushort ADC.ADCBUF4;
+undefined LAB_rom_000884+2;
+undefined DAT_ram_1210;
+undefined DAT_ram_120e;
+undefined DAT_ram_120c;
+ushort ADC.ADCBUF1;
+undefined DAT_ram_120a;
+undefined DAT_ram_1e48;
+ushort ADC.ADCBUF10;
+undefined DAT_ram_1e4c;
+undefined DAT_ram_1e4a;
+ushort ADC.ADCBUF11;
+undefined DAT_ram_1d44;
+undefined DAT_ram_1214;
+undefined DAT_ram_1d3a;
+undefined DAT_ram_1212;
+undefined DAT_ram_1d4a;
+undefined DAT_ram_1da0;
+undefined DAT_ram_1d50;
+undefined DAT_ram_1d56;
+undefined DAT_ram_1d58;
+undefined DAT_ram_1d54;
+undefined DAT_ram_1216;
+undefined DAT_ram_1218;
+undefined DAT_ram_1d36;
+undefined DAT_ram_121c;
+undefined DAT_ram_121a;
+undefined DAT_ram_1d52;
+undefined DAT_ram_1d38;
+undefined DAT_ram_121e;
+ushort GPIOD.PORTD;
+byte DAT_ram_1e1d;
+undefined DAT_ram_1d3e;
+undefined DAT_ram_1e10;
+undefined DAT_ram_1d42;
+undefined DAT_ram_1220;
+undefined DAT_ram_1bb4;
+undefined DAT_ram_1222;
+undefined DAT_ram_1da4;
+undefined DAT_ram_1d5a;
+undefined DAT_ram_1224;
+ushort GPIOF.LATF;
+undefined DAT_ram_1bb6;
+undefined DAT_ram_1d40;
+undefined DAT_ram_1d4e;
+undefined DAT_ram_126a;
+undefined DAT_ram_1228;
+undefined DAT_ram_122a;
+undefined DAT_ram_1226;
+undefined DAT_ram_122e;
+undefined DAT_ram_122c;
+undefined DAT_ram_1266;
+undefined DAT_ram_1232;
+undefined DAT_ram_1230;
+undefined DAT_ram_1234;
+undefined DAT_ram_1236;
+undefined DAT_ram_1da2;
+undefined DAT_ram_1238;
+ushort ADC.ADCBUF13;
+undefined DAT_ram_123a;
+ushort ADC.ADCBUF15;
+undefined DAT_ram_1e0e;
+ushort PWM1.IOCON1+1;
+undefined LAB_rom_00091e;
+undefined DAT_ram_1242;
+undefined DAT_ram_1240;
+undefined DAT_ram_1244;
+undefined DAT_ram_1246;
+undefined DAT_ram_1d4c;
+undefined DAT_ram_1bc6;
+undefined DAT_ram_123e;
+undefined LAB_rom_006800;
+undefined LAB_rom_000924;
+undefined DAT_ram_1926;
+undefined DAT_ram_1924;
+ushort PWM1.PWMCON1+1;
+ushort PWM1.FCLCON1;
+ushort PWM2.FCLCON2;
+ushort PWM3.FCLCON3;
+PWM1 PWM1;
+PWM2 PWM2;
+PWM3 PWM3;
+byte DAT_ram_124a;
+CMP3 CMP3;
+undefined DAT_ram_1d5c;
+undefined DAT_ram_124e;
+undefined DAT_ram_124c;
+undefined DAT_ram_126e;
+undefined DAT_ram_1270;
+undefined DAT_ram_1e1e;
+undefined DAT_ram_1d5e;
+undefined DAT_ram_1d60;
+undefined DAT_ram_1250;
+undefined DAT_ram_1d62;
+undefined DAT_ram_1d64;
+undefined DAT_ram_1d34;
+undefined DAT_ram_1d20;
+undefined DAT_ram_1e4e;
+undefined DAT_ram_1d94;
+undefined DAT_ram_1292;
+undefined DAT_ram_1394;
+undefined LAB_rom_000948+2;
+undefined LAB_rom_000a4c;
+undefined1 DAT_ram_15d0;
+undefined1 DAT_ram_1288;
+undefined1 DAT_ram_15d1;
+undefined1 DAT_ram_1289;
+undefined1 DAT_ram_15d2;
+undefined1 DAT_ram_1286;
+undefined1 DAT_ram_15d3;
+undefined1 DAT_ram_1287;
+undefined1 DAT_ram_15d4;
+undefined1 DAT_ram_1284;
+undefined1 DAT_ram_15d5;
+undefined1 DAT_ram_1285;
+undefined1 DAT_ram_15d6;
+undefined1 DAT_ram_1282;
+undefined1 DAT_ram_15d7;
+undefined1 DAT_ram_1283;
+undefined1 DAT_ram_15d8;
+undefined1 DAT_ram_1926;
+undefined1 DAT_ram_15d9;
+undefined1 DAT_ram_1927;
+undefined1 DAT_ram_15da;
+undefined1 DAT_ram_1924;
+undefined1 DAT_ram_15db;
+undefined1 DAT_ram_1925;
+undefined1 DAT_ram_15dc;
+undefined1 DAT_ram_1280;
+undefined1 DAT_ram_15dd;
+undefined1 DAT_ram_1281;
+undefined1 DAT_ram_15de;
+undefined1 DAT_ram_127e;
+undefined1 DAT_ram_15df;
+undefined1 DAT_ram_127f;
+undefined1 DAT_ram_15e0;
+undefined1 DAT_ram_127c;
+undefined1 DAT_ram_15e1;
+undefined1 DAT_ram_127d;
+undefined1 DAT_ram_15e2;
+undefined1 DAT_ram_127a;
+undefined1 DAT_ram_15e3;
+undefined1 DAT_ram_127b;
+undefined1 DAT_ram_15e4;
+undefined1 DAT_ram_1278;
+undefined1 DAT_ram_15e5;
+undefined1 DAT_ram_1279;
+undefined DAT_ram_1290;
+undefined LAB_rom_000acc;
+undefined1 DAT_ram_128a;
+undefined1 DAT_ram_1599;
+undefined1 DAT_ram_128b;
+undefined1 DAT_ram_159a;
+undefined1 DAT_ram_128c;
+byte DAT_ram_159b;
+undefined DAT_ram_1396;
+undefined LAB_rom_000af2+2;
+char DAT_ram_15e7;
+undefined DAT_ram_128e;
+char DAT_ram_160f;
+undefined1 DAT_ram_1615;
+undefined1 DAT_ram_1635;
+undefined1 DAT_ram_167d;
+undefined1 DAT_ram_1682;
+undefined1 DAT_ram_1681;
+undefined1 DAT_ram_169f;
+undefined1 DAT_ram_169e;
+undefined1 DAT_ram_16b1;
+undefined1 DAT_ram_16b0;
+undefined1 DAT_ram_16c3;
+undefined1 DAT_ram_16c2;
+undefined1 DAT_ram_16da;
+undefined1 DAT_ram_16d9;
+undefined LAB_rom_000ae8;
+undefined LAB_rom_000af2+1;
+undefined1 DAT_ram_1396;
+undefined1 DAT_ram_1498;
+undefined1 DAT_ram_1499;
+undefined1 DAT_ram_149a;
+undefined1 DAT_ram_149b;
+undefined1 DAT_ram_1bf4;
+undefined1 DAT_ram_149c;
+undefined1 DAT_ram_1bf5;
+undefined1 DAT_ram_149d;
+undefined1 DAT_ram_149e;
+undefined1 DAT_ram_1bf3;
+undefined1 DAT_ram_149f;
+undefined1 DAT_ram_14a0;
+undefined1 DAT_ram_14a1;
+undefined1 DAT_ram_1bec;
+undefined1 DAT_ram_14a2;
+undefined1 DAT_ram_1bed;
+undefined1 DAT_ram_14a3;
+undefined1 DAT_ram_14a4;
+undefined1 DAT_ram_14a5;
+undefined1 DAT_ram_14a6;
+undefined1 DAT_ram_14a7;
+undefined1 DAT_ram_14a8;
+undefined1 DAT_ram_14a9;
+undefined1 DAT_ram_1bea;
+undefined1 DAT_ram_14aa;
+undefined1 DAT_ram_1beb;
+undefined1 DAT_ram_14ab;
+undefined1 DAT_ram_14ac;
+undefined1 DAT_ram_14ad;
+undefined1 DAT_ram_14ae;
+undefined1 DAT_ram_14af;
+undefined1 DAT_ram_14b0;
+undefined1 DAT_ram_14b1;
+undefined1 DAT_ram_1bca;
+undefined1 DAT_ram_14b2;
+undefined1 DAT_ram_1bcb;
+undefined1 DAT_ram_14b3;
+undefined1 DAT_ram_1be8;
+undefined1 DAT_ram_1be9;
+undefined1 DAT_ram_1be6;
+undefined1 DAT_ram_1be7;
+undefined1 DAT_ram_1be4;
+undefined1 DAT_ram_1be5;
+undefined1 DAT_ram_1be2;
+undefined1 DAT_ram_1be3;
+undefined1 DAT_ram_1bde;
+undefined1 DAT_ram_1bdf;
+undefined1 DAT_ram_1bd2;
+undefined1 DAT_ram_1bd3;
+undefined1 DAT_ram_1bd0;
+undefined1 DAT_ram_1bd1;
+undefined1 DAT_ram_1bdc;
+undefined1 DAT_ram_1bdd;
+undefined1 DAT_ram_1bda;
+undefined1 DAT_ram_1bdb;
+undefined1 DAT_ram_1bd8;
+undefined1 DAT_ram_1bd9;
+undefined1 DAT_ram_1bd6;
+undefined1 DAT_ram_1bd7;
+undefined1 DAT_ram_1bd4;
+undefined1 DAT_ram_1bd5;
+undefined1 DAT_ram_14b4;
+undefined1 DAT_ram_1598;
+undefined1 DAT_ram_159b;
+undefined DAT_ram_1274;
+undefined DAT_ram_1276;
+undefined DAT_ram_128a;
+undefined DAT_ram_128c;
+undefined DAT_ram_1272;
+char DAT_ram_1bee;
+undefined LAB_rom_000a7c;
+undefined LAB_rom_000abc;
+undefined DAT_ram_1288;
+undefined DAT_ram_1286;
+undefined DAT_ram_1284;
+undefined DAT_ram_1282;
+undefined DAT_ram_1280;
+undefined DAT_ram_127e;
+undefined DAT_ram_127c;
+undefined DAT_ram_127a;
+undefined DAT_ram_1278;
+undefined1 DAT_ram_1923;
+undefined1 DAT_ram_1922;
+undefined1 DAT_ram_1921;
+undefined DAT_ram_138c;
+undefined DAT_ram_1388;
+undefined LAB_rom_000b02+2;
+undefined1 DAT_ram_191f;
+undefined DAT_ram_1390;
+undefined DAT_ram_1db0;
+ushort ADC.ADCBUF12;
+undefined DAT_ram_1dc4;
+undefined DAT_ram_1d68;
+undefined DAT_ram_1d46;
+undefined DAT_ram_1dc8;
+undefined DAT_ram_1d9e;
+undefined DAT_ram_1dc6;
+undefined DAT_ram_1d66;
+undefined DAT_ram_1dca;
+undefined DAT_ram_1d70;
+undefined DAT_ram_1d6e;
+undefined DAT_ram_1d6c;
+ushort PWM1.IOCON1;
+ushort PWM2.IOCON2;
+ushort PWM3.IOCON3;
+undefined DAT_ram_1dce;
+undefined DAT_ram_1d7e;
+undefined DAT_ram_1d80;
+undefined DAT_ram_1d7a;
+undefined DAT_ram_1d7c;
+undefined DAT_ram_1d76;
+undefined DAT_ram_1d78;
+undefined DAT_ram_1dcc;
+undefined DAT_ram_1cbe;
+undefined DAT_ram_1dee;
+undefined DAT_ram_1df0;
+byte DAT_ram_1bcd;
+undefined DAT_ram_1e3a;
+undefined DAT_ram_1e0a;
+undefined DAT_ram_1bee;
+undefined DAT_ram_1e38;
+undefined LAB_rom_000400+2;
+undefined DAT_ram_1df4;
+undefined DAT_ram_1df2;
+byte DAT_ram_1bcc;
+undefined LAB_rom_000e6e+2;
+undefined DAT_ram_1e14;
+undefined DAT_ram_1cc6;
+undefined DAT_ram_1cc4;
+undefined DAT_ram_126c;
+undefined DAT_ram_1dfa;
+undefined DAT_ram_1cc2;
+undefined DAT_ram_1df6;
+undefined DAT_ram_1df8;
+undefined DAT_ram_1dfc;
+undefined DAT_ram_1e08;
+undefined DAT_ram_1e0c;
+GPIOE GPIOE;
+undefined1 DAT_ram_1d08;
+undefined1 DAT_ram_1d09;
+undefined1 DAT_ram_1d0a;
+undefined1 DAT_ram_1d0b;
+undefined1 DAT_ram_1d0c;
+undefined DAT_ram_1d18;
+undefined DAT_ram_1dfe;
+undefined DAT_ram_1e00;
+undefined DAT_ram_1e02;
+undefined DAT_ram_1e06;
+undefined DAT_ram_1e04;
+ushort INTERRUPT.IFS1+1;
+ushort INTERRUPT.IFS1;
+ushort INTERRUPT.IPC14;
+ushort PWM_MASTER.PTCON2;
+ushort PWM_MASTER.PTPER;
+ushort PWM_MASTER.SEVTCMP;
+ushort PWM2.PDC2;
+ushort OC2.OC2R;
+ushort PWM2.PHASE2;
+ushort TIMER3.TMR3;
+ushort OC2.OC2CON;
+ushort PWM2.DTR2;
+ushort PWM2.ALTDTR2;
+ushort TIMER3.PR3;
+ushort TIMER3.T3CON;
+ushort PWM5.IOCON5;
+PWM_MASTER PWM_MASTER;
+ushort PWM1.PDC1;
+ushort PWM3.PDC3;
+ushort PWM1.PHASE1;
+ushort PWM3.PHASE3;
+ushort PWM5.PHASE5;
+ushort PWM1.DTR1;
+ushort PWM3.DTR3;
+PWM5 PWM5;
+ushort PWM1.ALTDTR1;
+ushort PWM3.ALTDTR3;
+OC4 OC4;
+undefined DAT_ram_1e50;
+undefined DAT_ram_1e52;
+ushort UART1.U1STA;
+UART1 UART1;
+ushort UART1.U1BRG;
+undefined DAT_ram_1cf8;
+undefined DAT_ram_1ce2;
+undefined DAT_ram_1ce0;
+undefined DAT_ram_1cca;
+undefined FUN_rom_000e64;
+undefined DAT_ram_1ccc;
+undefined DAT_ram_1cce;
+undefined DAT_ram_1cd0;
+undefined DAT_ram_1cd2;
+undefined DAT_ram_1cd4;
+undefined DAT_ram_1cd6;
+undefined DAT_ram_1cd8;
+undefined DAT_ram_1cda;
+undefined DAT_ram_1cdc;
+char DAT_ram_1cde;
+char DAT_ram_1d03;
+char DAT_ram_1d04;
+char DAT_ram_1d05;
+char DAT_ram_1d06;
+char DAT_ram_1d07;
+ushort UART1.U1RXREG;
+undefined DAT_ram_1cec;
+ushort UART1.U1STA+1;
+undefined DAT_ram_1ce8;
+undefined DAT_ram_1ce6;
+ushort UART1.U1TXREG;
+undefined LAB_rom_000e76+2;
+undefined1 DAT_ram_1cf6;
+undefined DAT_ram_1cea;
+undefined DAT_ram_1ce4;
+undefined1 DAT_ram_1cef;
+undefined1 DAT_ram_1cf0;
+undefined1 DAT_ram_1cf1;
+undefined1 DAT_ram_1cf2;
+undefined1 DAT_ram_1cf3;
+undefined1 DAT_ram_1cf4;
+undefined1 DAT_ram_1cf5;
+ushort GPIOC.LATC;
+GPIOB GPIOB;
+ushort GPIOD.ODCD;
+ushort INTERRUPT.IPC1+1;
+undefined TIMER2;
+undefined TIMER4;
+undefined TIMER3.field2_0x4;
+undefined TIMER3.field5_0x8;
+ushort INTERRUPT.IEC1;
+undefined TIMER5.field2_0x4;
+undefined TIMER5.field5_0x8;
+ADC ADC;
+ushort ADC.ADCPC3;
+ushort ADC.ADPCFG;
+ushort ADC.ADSTAT;
+ushort ADC.ADBASE;
+ushort ADC.ADCPC0;
+ushort ADC.ADCPC1;
+ushort ADC.ADCPC2;
+ushort CMP3.CMPDAC3;
+CMP4 CMP4;
+ushort CMP4.CMPDAC4;
+undefined LAB_rom_006fdc;
+
+// WARNING: This function may have set the stack pointer
+// WARNING: Removing unreachable block (rom,0x000216)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void thunk_FUN_rom_000200(void)
 
@@ -19,21 +1635,17 @@ void thunk_FUN_rom_000200(void)
   break();
   PC = 0;
   UNRECOVERED_JUMPTABLE = (code *)PC;
-                    /* WARNING: Could not recover jumptable at 0x000220. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
+                    // WARNING: Could not recover jumptable at 0x000220. Too many branches
+                    // WARNING: Treating indirect jump as call
   (*UNRECOVERED_JUMPTABLE)();
   return;
 }
 
 
 
-
-
-// Function: FUN_rom_000200
-
-/* WARNING: This function may have set the stack pointer */
-/* WARNING: Removing unreachable block (rom,0x000216) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: This function may have set the stack pointer
+// WARNING: Removing unreachable block (rom,0x000216)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_000200(void)
 
@@ -50,17 +1662,13 @@ void FUN_rom_000200(void)
   break();
   PC = 0;
   UNRECOVERED_JUMPTABLE = (code *)PC;
-                    /* WARNING: Could not recover jumptable at 0x000220. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
+                    // WARNING: Could not recover jumptable at 0x000220. Too many branches
+                    // WARNING: Treating indirect jump as call
   (*UNRECOVERED_JUMPTABLE)();
   return;
 }
 
 
-
-
-
-// Function: FUN_rom_000222
 
 undefined2 FUN_rom_000222(void)
 
@@ -76,10 +1684,6 @@ undefined2 FUN_rom_000222(void)
 }
 
 
-
-
-
-// Function: FUN_rom_000232
 
 undefined2 FUN_rom_000232(uint param_1,undefined2 param_2)
 
@@ -128,10 +1732,6 @@ undefined2 FUN_rom_000232(uint param_1,undefined2 param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_00026c
 
 void FUN_rom_00026c(int param_1,uint param_2,undefined1 *param_3,int param_4,int param_5)
 
@@ -188,10 +1788,6 @@ LAB_rom_00028a:
 
 
 
-
-
-// Function: FUN_rom_0002b8
-
 void FUN_rom_0002b8(int param_1,undefined1 param_2,int param_3)
 
 {
@@ -204,10 +1800,6 @@ void FUN_rom_0002b8(int param_1,undefined1 param_2,int param_3)
 }
 
 
-
-
-
-// Function: FUN_rom_0004ee
 
 undefined4 FUN_rom_0004ee(void)
 
@@ -230,10 +1822,6 @@ undefined4 FUN_rom_0004ee(void)
 }
 
 
-
-
-
-// Function: FUN_rom_00050c
 
 undefined1 FUN_rom_00050c(void)
 
@@ -262,10 +1850,6 @@ undefined1 FUN_rom_00050c(void)
 
 
 
-
-
-// Function: FUN_rom_00051e
-
 void FUN_rom_00051e(void)
 
 {
@@ -275,10 +1859,6 @@ void FUN_rom_00051e(void)
 }
 
 
-
-
-
-// Function: FUN_rom_000836
 
 void FUN_rom_000836(void)
 
@@ -307,10 +1887,6 @@ void FUN_rom_000836(void)
 }
 
 
-
-
-
-// Function: FUN_rom_00084a
 
 undefined8 FUN_rom_00084a(void)
 
@@ -356,10 +1932,6 @@ undefined8 FUN_rom_00084a(void)
 
 
 
-
-
-// Function: FUN_rom_00089e
-
 undefined3 FUN_rom_00089e(void)
 
 {
@@ -387,10 +1959,6 @@ undefined3 FUN_rom_00089e(void)
 
 
 
-
-
-// Function: FUN_rom_0008c4
-
 void FUN_rom_0008c4(void)
 
 {
@@ -401,10 +1969,6 @@ void FUN_rom_0008c4(void)
 }
 
 
-
-
-
-// Function: FUN_rom_0008d2
 
 undefined2 FUN_rom_0008d2(void)
 
@@ -418,10 +1982,6 @@ undefined2 FUN_rom_0008d2(void)
 }
 
 
-
-
-
-// Function: FUN_rom_0008e4
 
 undefined4 FUN_rom_0008e4(void)
 
@@ -446,10 +2006,6 @@ undefined4 FUN_rom_0008e4(void)
 }
 
 
-
-
-
-// Function: FUN_rom_00094a
 
 undefined2 FUN_rom_00094a(void)
 
@@ -484,10 +2040,6 @@ undefined2 FUN_rom_00094a(void)
 
 
 
-
-
-// Function: FUN_rom_0009a4
-
 void FUN_rom_0009a4(void)
 
 {
@@ -511,10 +2063,6 @@ void FUN_rom_0009a4(void)
 }
 
 
-
-
-
-// Function: FUN_rom_0009e8
 
 void FUN_rom_0009e8(void)
 
@@ -554,12 +2102,8 @@ LAB_rom_000a26:
 
 
 
-
-
-// Function: FUN_rom_000a36
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x000a54 */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x000a54
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_000a36(int param_1)
 
@@ -603,10 +2147,6 @@ void FUN_rom_000a36(int param_1)
 
 
 
-
-
-// Function: FUN_rom_000afe
-
 void FUN_rom_000afe(void)
 
 {
@@ -635,10 +2175,6 @@ void FUN_rom_000afe(void)
 
 
 
-
-
-// Function: FUN_rom_000b32
-
 uint FUN_rom_000b32(void)
 
 {
@@ -665,10 +2201,6 @@ uint FUN_rom_000b32(void)
 }
 
 
-
-
-
-// Function: FUN_rom_000b52
 
 byte FUN_rom_000b52(void)
 
@@ -707,10 +2239,6 @@ byte FUN_rom_000b52(void)
 }
 
 
-
-
-
-// Function: FUN_rom_000c68
 
 void FUN_rom_000c68(void)
 
@@ -785,10 +2313,6 @@ void FUN_rom_000c68(void)
 
 
 
-
-
-// Function: FUN_rom_000cea
-
 void FUN_rom_000cea(void)
 
 {
@@ -807,10 +2331,6 @@ void FUN_rom_000cea(void)
 }
 
 
-
-
-
-// Function: FUN_rom_000de6
 
 undefined2 FUN_rom_000de6(undefined3 *param_1)
 
@@ -849,10 +2369,6 @@ undefined2 FUN_rom_000de6(undefined3 *param_1)
 
 
 
-
-
-// Function: FUN_rom_000e64
-
 undefined1 * FUN_rom_000e64(undefined1 *param_1,int param_2)
 
 {
@@ -883,10 +2399,6 @@ undefined1 * FUN_rom_000e64(undefined1 *param_1,int param_2)
 
 
 
-
-
-// Function: FUN_rom_000e9c
-
 ulong FUN_rom_000e9c(undefined2 param_1,undefined2 param_2,int param_3)
 
 {
@@ -901,11 +2413,7 @@ ulong FUN_rom_000e9c(undefined2 param_1,undefined2 param_2,int param_3)
 
 
 
-
-
-// Function: FUN_rom_000eb6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_000eb6(void)
 
@@ -915,11 +2423,7 @@ undefined2 FUN_rom_000eb6(void)
 
 
 
-
-
-// Function: FUN_rom_000eba
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_000eba(undefined2 param_1)
 
@@ -930,11 +2434,7 @@ void FUN_rom_000eba(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_000ebe
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_000ebe(undefined2 param_1)
 
@@ -945,11 +2445,7 @@ void FUN_rom_000ebe(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_000ec2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_000ec2(uint param_1,uint param_2,uint param_3)
 
@@ -972,11 +2468,7 @@ void FUN_rom_000ec2(uint param_1,uint param_2,uint param_3)
 
 
 
-
-
-// Function: FUN_rom_000ef2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_000ef2(void)
 
@@ -986,11 +2478,7 @@ undefined2 FUN_rom_000ef2(void)
 
 
 
-
-
-// Function: FUN_rom_000ef6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_000ef6(undefined2 param_1)
 
@@ -1001,11 +2489,7 @@ void FUN_rom_000ef6(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_000efa
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_000efa(void)
 
@@ -1015,11 +2499,7 @@ undefined2 FUN_rom_000efa(void)
 
 
 
-
-
-// Function: FUN_rom_000efe
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_000efe(undefined2 param_1)
 
@@ -1030,11 +2510,7 @@ void FUN_rom_000efe(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_000f02
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_000f02(void)
 
@@ -1044,11 +2520,7 @@ undefined2 FUN_rom_000f02(void)
 
 
 
-
-
-// Function: FUN_rom_000f06
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_000f06(undefined2 param_1)
 
@@ -1059,11 +2531,7 @@ void FUN_rom_000f06(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_000f0a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_000f0a(void)
 
@@ -1073,11 +2541,7 @@ undefined2 FUN_rom_000f0a(void)
 
 
 
-
-
-// Function: FUN_rom_000f0e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_000f0e(undefined2 param_1)
 
@@ -1088,11 +2552,7 @@ void FUN_rom_000f0e(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_000f12
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_000f12(void)
 
@@ -1102,11 +2562,7 @@ undefined2 FUN_rom_000f12(void)
 
 
 
-
-
-// Function: FUN_rom_000f16
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_000f16(undefined2 param_1)
 
@@ -1116,10 +2572,6 @@ void FUN_rom_000f16(undefined2 param_1)
 }
 
 
-
-
-
-// Function: FUN_rom_000f36
 
 undefined2 FUN_rom_000f36(ushort param_1)
 
@@ -1140,10 +2592,6 @@ undefined2 FUN_rom_000f36(ushort param_1)
 
 
 
-
-
-// Function: FUN_rom_000f4e
-
 void FUN_rom_000f4e(undefined2 param_1,uint param_2,undefined2 param_3,undefined2 param_4)
 
 {
@@ -1160,10 +2608,6 @@ void FUN_rom_000f4e(undefined2 param_1,uint param_2,undefined2 param_3,undefined
 
 
 
-
-
-// Function: FUN_rom_000f56
-
 ulong FUN_rom_000f56(undefined2 param_1,uint param_2)
 
 {
@@ -1178,10 +2622,6 @@ ulong FUN_rom_000f56(undefined2 param_1,uint param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_000f64
 
 undefined2 FUN_rom_000f64(undefined2 param_1,uint param_2,ushort param_3)
 
@@ -1209,10 +2649,6 @@ undefined2 FUN_rom_000f64(undefined2 param_1,uint param_2,ushort param_3)
 
 
 
-
-
-// Function: FUN_rom_000f84
-
 uint FUN_rom_000f84(byte param_1,uint *param_2)
 
 {
@@ -1224,10 +2660,6 @@ uint FUN_rom_000f84(byte param_1,uint *param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_000f96
 
 void FUN_rom_000f96(int param_1,undefined2 param_2)
 
@@ -1253,13 +2685,9 @@ void FUN_rom_000f96(int param_1,undefined2 param_2)
 
 
 
-
-
-// Function: thunk_FUN_rom_001070
-
-/* WARNING: This function may have set the stack pointer */
-/* WARNING: Removing unreachable block (rom,0x001086) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: This function may have set the stack pointer
+// WARNING: Removing unreachable block (rom,0x001086)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void thunk_FUN_rom_001070(void)
 
@@ -1276,21 +2704,17 @@ void thunk_FUN_rom_001070(void)
   break();
   PC = 0;
   UNRECOVERED_JUMPTABLE = (code *)PC;
-                    /* WARNING: Could not recover jumptable at 0x001090. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
+                    // WARNING: Could not recover jumptable at 0x001090. Too many branches
+                    // WARNING: Treating indirect jump as call
   (*UNRECOVERED_JUMPTABLE)();
   return;
 }
 
 
 
-
-
-// Function: FUN_rom_001070
-
-/* WARNING: This function may have set the stack pointer */
-/* WARNING: Removing unreachable block (rom,0x001086) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: This function may have set the stack pointer
+// WARNING: Removing unreachable block (rom,0x001086)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_001070(void)
 
@@ -1307,17 +2731,13 @@ void FUN_rom_001070(void)
   break();
   PC = 0;
   UNRECOVERED_JUMPTABLE = (code *)PC;
-                    /* WARNING: Could not recover jumptable at 0x001090. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
+                    // WARNING: Could not recover jumptable at 0x001090. Too many branches
+                    // WARNING: Treating indirect jump as call
   (*UNRECOVERED_JUMPTABLE)();
   return;
 }
 
 
-
-
-
-// Function: FUN_rom_001092
 
 undefined2 FUN_rom_001092(void)
 
@@ -1333,10 +2753,6 @@ undefined2 FUN_rom_001092(void)
 }
 
 
-
-
-
-// Function: FUN_rom_0010a2
 
 undefined2 FUN_rom_0010a2(uint param_1,undefined2 param_2)
 
@@ -1385,10 +2801,6 @@ undefined2 FUN_rom_0010a2(uint param_1,undefined2 param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_0010dc
 
 void FUN_rom_0010dc(int param_1,uint param_2,undefined1 *param_3,int param_4,int param_5)
 
@@ -1445,10 +2857,6 @@ LAB_rom_0010fa:
 
 
 
-
-
-// Function: FUN_rom_001100
-
 undefined4 FUN_rom_001100(uint param_1,int param_2)
 
 {
@@ -1461,10 +2869,6 @@ undefined4 FUN_rom_001100(uint param_1,int param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_00110c
 
 undefined4 FUN_rom_00110c(int param_1,uint param_2,int param_3,uint param_4)
 
@@ -1492,10 +2896,6 @@ undefined4 FUN_rom_00110c(int param_1,uint param_2,int param_3,uint param_4)
 }
 
 
-
-
-
-// Function: FUN_rom_00112a
 
 void FUN_rom_00112a(uint param_1,uint param_2,uint param_3,uint param_4)
 
@@ -1533,11 +2933,7 @@ void FUN_rom_00112a(uint param_1,uint param_2,uint param_3,uint param_4)
 
 
 
-
-
-// Function: FUN_rom_0013c2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0013c2(void)
 
@@ -1638,10 +3034,6 @@ undefined4 FUN_rom_0013c2(void)
 
 
 
-
-
-// Function: FUN_rom_00150c
-
 undefined3 FUN_rom_00150c(void)
 
 {
@@ -1663,11 +3055,7 @@ undefined3 FUN_rom_00150c(void)
 
 
 
-
-
-// Function: FUN_rom_001526
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_001526(void)
 
@@ -1753,10 +3141,6 @@ LAB_rom_00156a:
 
 
 
-
-
-// Function: FUN_rom_0015ea
-
 bool FUN_rom_0015ea(int param_1,int param_2)
 
 {
@@ -1773,10 +3157,6 @@ bool FUN_rom_0015ea(int param_1,int param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_001616
 
 undefined2 FUN_rom_001616(uint param_1)
 
@@ -1812,11 +3192,7 @@ undefined2 FUN_rom_001616(uint param_1)
 
 
 
-
-
-// Function: FUN_rom_001652
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ulong FUN_rom_001652(void)
 
@@ -1865,10 +3241,6 @@ ulong FUN_rom_001652(void)
 
 
 
-
-
-// Function: FUN_rom_0016bc
-
 undefined4 FUN_rom_0016bc(uint param_1)
 
 {
@@ -1882,8 +3254,8 @@ undefined4 FUN_rom_0016bc(uint param_1)
   uVar1 = uVar2 - 5;
   uVar3 = -(uint)(uVar2 < 5);
   if (uVar3 < (uVar1 < 0x38) || uVar2 == 0x3d && -(uint)(uVar1 < 0x38) == (uint)(uVar2 < 5)) {
-                    /* WARNING: Could not emulate address calculation at 0x0016ce */
-                    /* WARNING: Treating indirect jump as call */
+                    // WARNING: Could not emulate address calculation at 0x0016ce
+                    // WARNING: Treating indirect jump as call
     uVar4 = (*(code *)((int3)(int)uVar1 * 2 + 0x16e2))
                       (uVar1,uVar3,
                        (uint)(byte)(&DAT_ram_1959)[param_1] +
@@ -1895,11 +3267,7 @@ undefined4 FUN_rom_0016bc(uint param_1)
 
 
 
-
-
-// Function: FUN_rom_00184a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined8 FUN_rom_00184a(uint param_1)
 
@@ -2001,12 +3369,8 @@ LAB_rom_00194a:
 
 
 
-
-
-// Function: FUN_rom_001982
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 ulong FUN_rom_001982(void)
 
@@ -2063,11 +3427,7 @@ LAB_rom_0019c2:
 
 
 
-
-
-// Function: FUN_rom_001a12
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_001a12(void)
 
@@ -2118,11 +3478,7 @@ ushort FUN_rom_001a12(void)
 
 
 
-
-
-// Function: FUN_rom_001a92
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_001a92(void)
 
@@ -2183,11 +3539,7 @@ LAB_rom_001b0e:
 
 
 
-
-
-// Function: FUN_rom_001b2a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_001b2a(void)
 
@@ -2223,11 +3575,7 @@ undefined2 FUN_rom_001b2a(void)
 
 
 
-
-
-// Function: FUN_rom_001b6a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_001b6a(void)
 
@@ -2310,12 +3658,8 @@ LAB_rom_001c3e:
 
 
 
-
-
-// Function: FUN_rom_001c48
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 ulong FUN_rom_001c48(void)
 
@@ -2351,11 +3695,7 @@ LAB_rom_001c66:
 
 
 
-
-
-// Function: FUN_rom_001c94
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_001c94(void)
 
@@ -2390,11 +3730,7 @@ void FUN_rom_001c94(void)
 
 
 
-
-
-// Function: FUN_rom_001cd4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_001cd4(void)
 
@@ -2425,11 +3761,7 @@ LAB_rom_001ce8:
 
 
 
-
-
-// Function: FUN_rom_001d12
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_001d12(void)
 
@@ -2470,11 +3802,7 @@ LAB_rom_001d50:
 
 
 
-
-
-// Function: FUN_rom_001d5e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_001d5e(void)
 
@@ -2522,11 +3850,7 @@ ushort FUN_rom_001d5e(void)
 
 
 
-
-
-// Function: FUN_rom_001dc8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_001dc8(void)
 
@@ -2592,11 +3916,7 @@ ushort FUN_rom_001dc8(void)
 
 
 
-
-
-// Function: FUN_rom_001e8a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_001e8a(void)
 
@@ -2623,11 +3943,7 @@ ushort FUN_rom_001e8a(void)
 
 
 
-
-
-// Function: FUN_rom_001eb0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_001eb0(void)
 
@@ -2658,11 +3974,7 @@ LAB_rom_001ec8:
 
 
 
-
-
-// Function: FUN_rom_001eee
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_001eee(void)
 
@@ -2689,11 +4001,7 @@ ushort FUN_rom_001eee(void)
 
 
 
-
-
-// Function: FUN_rom_001f18
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_001f18(void)
 
@@ -2727,11 +4035,7 @@ LAB_rom_001f36:
 
 
 
-
-
-// Function: FUN_rom_001f54
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_001f54(void)
 
@@ -2763,11 +4067,7 @@ LAB_rom_001f7a:
 
 
 
-
-
-// Function: FUN_rom_001f90
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_001f90(void)
 
@@ -2805,11 +4105,7 @@ LAB_rom_001fae:
 
 
 
-
-
-// Function: FUN_rom_001fd6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_001fd6(void)
 
@@ -2851,13 +4147,9 @@ LAB_rom_002010:
 
 
 
-
-
-// Function: FUN_rom_002042
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x00209a */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x00209a
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 ulonglong FUN_rom_002042(void)
 
@@ -2944,11 +4236,7 @@ LAB_rom_002146:
 
 
 
-
-
-// Function: FUN_rom_00215a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00215a(void)
 
@@ -3025,11 +4313,7 @@ void FUN_rom_00215a(void)
 
 
 
-
-
-// Function: FUN_rom_0021fe
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0021fe(void)
 
@@ -3057,11 +4341,7 @@ undefined4 FUN_rom_0021fe(void)
 
 
 
-
-
-// Function: FUN_rom_002224
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_002224(void)
 
@@ -3149,11 +4429,7 @@ LAB_rom_0022ca:
 
 
 
-
-
-// Function: FUN_rom_00230c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00230c(void)
 
@@ -3210,11 +4486,7 @@ undefined4 FUN_rom_00230c(void)
 
 
 
-
-
-// Function: FUN_rom_002398
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_002398(void)
 
@@ -3294,11 +4566,7 @@ LAB_rom_00244e:
 
 
 
-
-
-// Function: FUN_rom_002452
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_002452(void)
 
@@ -3319,11 +4587,7 @@ void FUN_rom_002452(void)
 
 
 
-
-
-// Function: FUN_rom_002464
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_002464(undefined2 param_1,uint param_2)
 
@@ -3350,11 +4614,7 @@ undefined4 FUN_rom_002464(undefined2 param_1,uint param_2)
 
 
 
-
-
-// Function: FUN_rom_002486
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_002486(undefined2 param_1,uint param_2)
 
@@ -3377,11 +4637,7 @@ undefined4 FUN_rom_002486(undefined2 param_1,uint param_2)
 
 
 
-
-
-// Function: FUN_rom_00249c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00249c(undefined2 param_1,uint param_2)
 
@@ -3404,11 +4660,7 @@ undefined4 FUN_rom_00249c(undefined2 param_1,uint param_2)
 
 
 
-
-
-// Function: FUN_rom_0024b2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined8 FUN_rom_0024b2(uint param_1,uint param_2,uint param_3,uint param_4)
 
@@ -3466,11 +4718,7 @@ undefined8 FUN_rom_0024b2(uint param_1,uint param_2,uint param_3,uint param_4)
 
 
 
-
-
-// Function: FUN_rom_002506
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_002506(void)
 
@@ -3530,11 +4778,7 @@ LAB_rom_002536:
 
 
 
-
-
-// Function: FUN_rom_00255a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00255a(void)
 
@@ -3556,11 +4800,7 @@ undefined4 FUN_rom_00255a(void)
 
 
 
-
-
-// Function: FUN_rom_00257e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 int FUN_rom_00257e(void)
 
@@ -3582,11 +4822,7 @@ int FUN_rom_00257e(void)
 
 
 
-
-
-// Function: FUN_rom_002594
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_002594(void)
 
@@ -3634,11 +4870,7 @@ LAB_rom_0025f4:
 
 
 
-
-
-// Function: FUN_rom_0025fc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0025fc(void)
 
@@ -3713,11 +4945,7 @@ LAB_rom_00268c:
 
 
 
-
-
-// Function: FUN_rom_0026a0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0026a0(undefined2 param_1,undefined2 param_2)
 
@@ -3747,11 +4975,7 @@ undefined4 FUN_rom_0026a0(undefined2 param_1,undefined2 param_2)
 
 
 
-
-
-// Function: FUN_rom_0026d6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0026d6(void)
 
@@ -3812,11 +5036,7 @@ LAB_rom_00270a:
 
 
 
-
-
-// Function: FUN_rom_002746
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_002746(void)
 
@@ -3854,11 +5074,7 @@ void FUN_rom_002746(void)
 
 
 
-
-
-// Function: FUN_rom_0027ce
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_0027ce(void)
 
@@ -3947,11 +5163,7 @@ LAB_rom_00282a:
 
 
 
-
-
-// Function: FUN_rom_00289a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00289a(void)
 
@@ -3989,11 +5201,7 @@ void FUN_rom_00289a(void)
 
 
 
-
-
-// Function: FUN_rom_0028d6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_0028d6(void)
 
@@ -4108,11 +5316,7 @@ LAB_rom_0029aa:
 
 
 
-
-
-// Function: FUN_rom_0029fa
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_0029fa(void)
 
@@ -4150,12 +5354,8 @@ undefined2 FUN_rom_0029fa(void)
 
 
 
-
-
-// Function: FUN_rom_002a30
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_002a30(void)
 
@@ -4188,16 +5388,12 @@ void FUN_rom_002a30(void)
 
 
 
-
-
-// Function: FUN_rom_002afc
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x002b20 */
-/* WARNING: Removing unreachable block (rom,0x002b18) */
-/* WARNING: Removing unreachable block (rom,0x002b42) */
-/* WARNING: Removing unreachable block (rom,0x002b48) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x002b20
+// WARNING: Removing unreachable block (rom,0x002b18)
+// WARNING: Removing unreachable block (rom,0x002b42)
+// WARNING: Removing unreachable block (rom,0x002b48)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_002afc(void)
 
@@ -4212,22 +5408,18 @@ void FUN_rom_002afc(void)
 
 
 
-
-
-// Function: FUN_rom_002b70
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x002bac */
-/* WARNING: Removing unreachable block (rom,0x002b96) */
-/* WARNING: Removing unreachable block (rom,0x002bc2) */
-/* WARNING: Removing unreachable block (rom,0x002bbe) */
-/* WARNING: Removing unreachable block (rom,0x002bc4) */
-/* WARNING: Removing unreachable block (rom,0x002be0) */
-/* WARNING: Removing unreachable block (rom,0x002bdc) */
-/* WARNING: Removing unreachable block (rom,0x002be2) */
-/* WARNING: Removing unreachable block (rom,0x002c1c) */
-/* WARNING: Removing unreachable block (rom,0x002c1e) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x002bac
+// WARNING: Removing unreachable block (rom,0x002b96)
+// WARNING: Removing unreachable block (rom,0x002bc2)
+// WARNING: Removing unreachable block (rom,0x002bbe)
+// WARNING: Removing unreachable block (rom,0x002bc4)
+// WARNING: Removing unreachable block (rom,0x002be0)
+// WARNING: Removing unreachable block (rom,0x002bdc)
+// WARNING: Removing unreachable block (rom,0x002be2)
+// WARNING: Removing unreachable block (rom,0x002c1c)
+// WARNING: Removing unreachable block (rom,0x002c1e)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_002b70(void)
 
@@ -4242,11 +5434,7 @@ void FUN_rom_002b70(void)
 
 
 
-
-
-// Function: FUN_rom_002c32
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_002c32(void)
 
@@ -4278,13 +5466,9 @@ void FUN_rom_002c32(void)
 
 
 
-
-
-// Function: FUN_rom_002c78
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x002c92 */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x002c92
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_002c78(void)
 
@@ -4323,13 +5507,9 @@ LAB_rom_002cbc:
 
 
 
-
-
-// Function: FUN_rom_002cd6
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x002d1a */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x002d1a
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_002cd6(void)
 
@@ -4407,11 +5587,7 @@ void FUN_rom_002cd6(void)
 
 
 
-
-
-// Function: FUN_rom_002dc6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_002dc6(void)
 
@@ -4442,11 +5618,7 @@ undefined4 FUN_rom_002dc6(void)
 
 
 
-
-
-// Function: FUN_rom_002df6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_002df6(void)
 
@@ -4473,11 +5645,7 @@ void FUN_rom_002df6(void)
 
 
 
-
-
-// Function: FUN_rom_002e2c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_002e2c(void)
 
@@ -4490,11 +5658,7 @@ void FUN_rom_002e2c(void)
 
 
 
-
-
-// Function: FUN_rom_002e3c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ulong FUN_rom_002e3c(undefined2 param_1,uint param_2)
 
@@ -4537,11 +5701,7 @@ LAB_rom_002e74:
 
 
 
-
-
-// Function: FUN_rom_002e76
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_002e76(undefined2 param_1,uint param_2)
 
@@ -4579,11 +5739,7 @@ LAB_rom_002eaa:
 
 
 
-
-
-// Function: FUN_rom_002eac
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 int FUN_rom_002eac(void)
 
@@ -4649,11 +5805,7 @@ LAB_rom_002f08:
 
 
 
-
-
-// Function: FUN_rom_002f20
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_002f20(void)
 
@@ -4675,11 +5827,7 @@ uint FUN_rom_002f20(void)
 
 
 
-
-
-// Function: FUN_rom_002f48
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_002f48(void)
 
@@ -4729,11 +5877,7 @@ void FUN_rom_002f48(void)
 
 
 
-
-
-// Function: FUN_rom_002fa6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 long FUN_rom_002fa6(undefined2 param_1,uint param_2)
 
@@ -4825,11 +5969,7 @@ LAB_rom_003050:
 
 
 
-
-
-// Function: FUN_rom_003052
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_003052(void)
 
@@ -4881,11 +6021,7 @@ LAB_rom_00308c:
 
 
 
-
-
-// Function: FUN_rom_0030aa
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0030aa(undefined2 param_1,undefined2 param_2)
 
@@ -4918,10 +6054,6 @@ undefined4 FUN_rom_0030aa(undefined2 param_1,undefined2 param_2)
 
 
 
-
-
-// Function: FUN_rom_0030e2
-
 undefined1 FUN_rom_0030e2(uint param_1,uint param_2,uint param_3,undefined1 param_4)
 
 {
@@ -4938,11 +6070,7 @@ undefined1 FUN_rom_0030e2(uint param_1,uint param_2,uint param_3,undefined1 para
 
 
 
-
-
-// Function: FUN_rom_0030f8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 int FUN_rom_0030f8(void)
 
@@ -4997,11 +6125,7 @@ int FUN_rom_0030f8(void)
 
 
 
-
-
-// Function: FUN_rom_00316e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00316e(void)
 
@@ -5041,10 +6165,6 @@ LAB_rom_003196:
 
 
 
-
-
-// Function: FUN_rom_0031b2
-
 uint FUN_rom_0031b2(uint param_1,uint param_2,uint *param_3,uint param_4)
 
 {
@@ -5066,11 +6186,7 @@ uint FUN_rom_0031b2(uint param_1,uint param_2,uint *param_3,uint param_4)
 
 
 
-
-
-// Function: FUN_rom_0031cc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0031cc(void)
 
@@ -5110,10 +6226,6 @@ void FUN_rom_0031cc(void)
 
 
 
-
-
-// Function: FUN_rom_003242
-
 int FUN_rom_003242(int param_1,int param_2)
 
 {
@@ -5133,11 +6245,7 @@ int FUN_rom_003242(int param_1,int param_2)
 
 
 
-
-
-// Function: FUN_rom_003254
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_003254(void)
 
@@ -5184,11 +6292,7 @@ LAB_rom_0032b6:
 
 
 
-
-
-// Function: FUN_rom_0032e0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 int FUN_rom_0032e0(void)
 
@@ -5224,11 +6328,7 @@ int FUN_rom_0032e0(void)
 
 
 
-
-
-// Function: FUN_rom_003322
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_003322(void)
 
@@ -5272,11 +6372,7 @@ void FUN_rom_003322(void)
 
 
 
-
-
-// Function: FUN_rom_003386
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_003386(void)
 
@@ -5323,11 +6419,7 @@ uint FUN_rom_003386(void)
 
 
 
-
-
-// Function: FUN_rom_0033f4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 byte FUN_rom_0033f4(void)
 
@@ -5427,11 +6519,7 @@ byte FUN_rom_0033f4(void)
 
 
 
-
-
-// Function: FUN_rom_0034ee
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0034ee(int param_1)
 
@@ -5485,11 +6573,7 @@ undefined4 FUN_rom_0034ee(int param_1)
 
 
 
-
-
-// Function: FUN_rom_003558
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_003558(void)
 
@@ -5547,11 +6631,7 @@ LAB_rom_003598:
 
 
 
-
-
-// Function: FUN_rom_0035d4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0035d4(void)
 
@@ -5608,11 +6688,7 @@ void FUN_rom_0035d4(void)
 
 
 
-
-
-// Function: FUN_rom_003666
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_003666(void)
 
@@ -5678,11 +6754,7 @@ void FUN_rom_003666(void)
 
 
 
-
-
-// Function: FUN_rom_00371a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_00371a(void)
 
@@ -5744,11 +6816,7 @@ uint FUN_rom_00371a(void)
 
 
 
-
-
-// Function: FUN_rom_00378a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00378a(void)
 
@@ -5767,11 +6835,7 @@ void FUN_rom_00378a(void)
 
 
 
-
-
-// Function: FUN_rom_0037aa
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0037aa(void)
 
@@ -5794,11 +6858,7 @@ void FUN_rom_0037aa(void)
 
 
 
-
-
-// Function: FUN_rom_0037ca
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0037ca(void)
 
@@ -5831,11 +6891,7 @@ undefined4 FUN_rom_0037ca(void)
 
 
 
-
-
-// Function: FUN_rom_0038a6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0038a6(void)
 
@@ -5853,11 +6909,7 @@ undefined4 FUN_rom_0038a6(void)
 
 
 
-
-
-// Function: FUN_rom_0038b6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0038b6(ushort *param_1)
 
@@ -5887,11 +6939,7 @@ undefined4 FUN_rom_0038b6(ushort *param_1)
 
 
 
-
-
-// Function: FUN_rom_0038dc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 byte FUN_rom_0038dc(void)
 
@@ -5931,11 +6979,7 @@ byte FUN_rom_0038dc(void)
 
 
 
-
-
-// Function: FUN_rom_003922
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_003922(uint param_1)
 
@@ -5975,11 +7019,7 @@ void FUN_rom_003922(uint param_1)
 
 
 
-
-
-// Function: FUN_rom_00396e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_00396e(int param_1,uint param_2)
 
@@ -6031,11 +7071,7 @@ ushort FUN_rom_00396e(int param_1,uint param_2)
 
 
 
-
-
-// Function: FUN_rom_0039d0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0039d0(uint param_1)
 
@@ -6075,11 +7111,7 @@ void FUN_rom_0039d0(uint param_1)
 
 
 
-
-
-// Function: FUN_rom_003a1c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_003a1c(int param_1,uint param_2)
 
@@ -6150,10 +7182,6 @@ void FUN_rom_003a1c(int param_1,uint param_2)
 
 
 
-
-
-// Function: FUN_rom_003aba
-
 void FUN_rom_003aba(void)
 
 {
@@ -6179,10 +7207,6 @@ void FUN_rom_003aba(void)
 }
 
 
-
-
-
-// Function: FUN_rom_003ae0
 
 undefined1 FUN_rom_003ae0(void)
 
@@ -6214,10 +7238,6 @@ undefined1 FUN_rom_003ae0(void)
 
 
 
-
-
-// Function: FUN_rom_003b3a
-
 bool FUN_rom_003b3a(int param_1,uint param_2,uint param_3,char param_4)
 
 {
@@ -6236,11 +7256,7 @@ bool FUN_rom_003b3a(int param_1,uint param_2,uint param_3,char param_4)
 
 
 
-
-
-// Function: FUN_rom_003b5e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_003b5e(void)
 
@@ -6383,11 +7399,7 @@ void FUN_rom_003b5e(void)
 
 
 
-
-
-// Function: FUN_rom_003d60
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined1 FUN_rom_003d60(void)
 
@@ -6425,11 +7437,7 @@ undefined1 FUN_rom_003d60(void)
 
 
 
-
-
-// Function: FUN_rom_003dd2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined1 FUN_rom_003dd2(void)
 
@@ -6467,10 +7475,6 @@ undefined1 FUN_rom_003dd2(void)
 }
 
 
-
-
-
-// Function: FUN_rom_003e48
 
 undefined2 FUN_rom_003e48(void)
 
@@ -6513,10 +7517,6 @@ undefined2 FUN_rom_003e48(void)
 
 
 
-
-
-// Function: FUN_rom_003eac
-
 void FUN_rom_003eac(void)
 
 {
@@ -6529,11 +7529,7 @@ void FUN_rom_003eac(void)
 
 
 
-
-
-// Function: FUN_rom_003ebc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 byte FUN_rom_003ebc(byte param_1)
 
@@ -6577,11 +7573,7 @@ byte FUN_rom_003ebc(byte param_1)
 
 
 
-
-
-// Function: FUN_rom_003f0e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_003f0e(void)
 
@@ -6694,10 +7686,6 @@ void FUN_rom_003f0e(void)
 
 
 
-
-
-// Function: FUN_rom_004068
-
 undefined1 FUN_rom_004068(void)
 
 {
@@ -6728,11 +7716,7 @@ undefined1 FUN_rom_004068(void)
 
 
 
-
-
-// Function: FUN_rom_0040c2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_0040c2(void)
 
@@ -6832,11 +7816,7 @@ uint FUN_rom_0040c2(void)
 
 
 
-
-
-// Function: FUN_rom_0041a2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0041a2(void)
 
@@ -6854,11 +7834,7 @@ void FUN_rom_0041a2(void)
 
 
 
-
-
-// Function: FUN_rom_0041be
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0041be(void)
 
@@ -6882,12 +7858,8 @@ void FUN_rom_0041be(void)
 
 
 
-
-
-// Function: FUN_rom_0041e0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 undefined2 FUN_rom_0041e0(undefined2 param_1)
 
@@ -6936,12 +7908,8 @@ undefined2 FUN_rom_0041e0(undefined2 param_1)
 
 
 
-
-
-// Function: thunk_FUN_rom_0041e0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 undefined2 thunk_FUN_rom_0041e0(undefined2 param_1)
 
@@ -6990,11 +7958,7 @@ undefined2 thunk_FUN_rom_0041e0(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_004260
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_004260(void)
 
@@ -7018,11 +7982,7 @@ void FUN_rom_004260(void)
 
 
 
-
-
-// Function: FUN_rom_00427e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00427e(void)
 
@@ -7046,11 +8006,7 @@ void FUN_rom_00427e(void)
 
 
 
-
-
-// Function: FUN_rom_00429c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00429c(void)
 
@@ -7068,10 +8024,6 @@ void FUN_rom_00429c(void)
 
 
 
-
-
-// Function: FUN_rom_0042b0
-
 undefined4 FUN_rom_0042b0(int param_1)
 
 {
@@ -7079,10 +8031,6 @@ undefined4 FUN_rom_0042b0(int param_1)
 }
 
 
-
-
-
-// Function: FUN_rom_0042b8
 
 undefined4 FUN_rom_0042b8(int param_1)
 
@@ -7092,10 +8040,6 @@ undefined4 FUN_rom_0042b8(int param_1)
 
 
 
-
-
-// Function: FUN_rom_0042c0
-
 undefined4 FUN_rom_0042c0(int param_1)
 
 {
@@ -7104,11 +8048,7 @@ undefined4 FUN_rom_0042c0(int param_1)
 
 
 
-
-
-// Function: FUN_rom_0042c8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0042c8(void)
 
@@ -7153,10 +8093,6 @@ void FUN_rom_0042c8(void)
 
 
 
-
-
-// Function: FUN_rom_00430c
-
 uint FUN_rom_00430c(uint param_1,uint param_2,uint *param_3,uint param_4)
 
 {
@@ -7178,10 +8114,6 @@ uint FUN_rom_00430c(uint param_1,uint param_2,uint *param_3,uint param_4)
 
 
 
-
-
-// Function: FUN_rom_004326
-
 undefined1 FUN_rom_004326(uint param_1,uint param_2,uint param_3,undefined1 param_4)
 
 {
@@ -7198,11 +8130,7 @@ undefined1 FUN_rom_004326(uint param_1,uint param_2,uint param_3,undefined1 para
 
 
 
-
-
-// Function: FUN_rom_00433c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00433c(void)
 
@@ -7278,11 +8206,7 @@ LAB_rom_0043c6:
 
 
 
-
-
-// Function: FUN_rom_0043d4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined8 FUN_rom_0043d4(void)
 
@@ -7309,11 +8233,7 @@ undefined8 FUN_rom_0043d4(void)
 
 
 
-
-
-// Function: FUN_rom_004400
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_004400(void)
 
@@ -7352,13 +8272,9 @@ uint FUN_rom_004400(void)
 
 
 
-
-
-// Function: FUN_rom_00444c
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x00445a */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x00445a
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_00444c(void)
 
@@ -7421,10 +8337,6 @@ void FUN_rom_00444c(void)
 
 
 
-
-
-// Function: FUN_rom_0044dc
-
 void FUN_rom_0044dc(void)
 
 {
@@ -7447,11 +8359,7 @@ void FUN_rom_0044dc(void)
 
 
 
-
-
-// Function: FUN_rom_004508
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 long FUN_rom_004508(void)
 
@@ -7496,10 +8404,6 @@ LAB_rom_004548:
 
 
 
-
-
-// Function: FUN_rom_004b50
-
 void FUN_rom_004b50(void)
 
 {
@@ -7522,11 +8426,7 @@ void FUN_rom_004b50(void)
 
 
 
-
-
-// Function: FUN_rom_004b7c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 int FUN_rom_004b7c(void)
 
@@ -7561,11 +8461,7 @@ int FUN_rom_004b7c(void)
 
 
 
-
-
-// Function: FUN_rom_004bd4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_004bd4(void)
 
@@ -7597,11 +8493,7 @@ undefined2 FUN_rom_004bd4(void)
 
 
 
-
-
-// Function: FUN_rom_004c04
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_004c04(void)
 
@@ -7650,11 +8542,7 @@ void FUN_rom_004c04(void)
 
 
 
-
-
-// Function: FUN_rom_004c72
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_004c72(void)
 
@@ -7682,11 +8570,7 @@ undefined2 FUN_rom_004c72(void)
 
 
 
-
-
-// Function: FUN_rom_004ca6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_004ca6(void)
 
@@ -7754,11 +8638,7 @@ LAB_rom_004ce4:
 
 
 
-
-
-// Function: FUN_rom_004d3a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_004d3a(void)
 
@@ -7801,11 +8681,7 @@ uint FUN_rom_004d3a(void)
 
 
 
-
-
-// Function: FUN_rom_004d86
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 byte FUN_rom_004d86(void)
 
@@ -7823,11 +8699,7 @@ byte FUN_rom_004d86(void)
 
 
 
-
-
-// Function: FUN_rom_004d94
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_004d94(void)
 
@@ -7846,11 +8718,7 @@ void FUN_rom_004d94(void)
 
 
 
-
-
-// Function: FUN_rom_004dbc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_004dbc(undefined2 param_1,undefined2 param_2)
 
@@ -7876,13 +8744,9 @@ undefined4 FUN_rom_004dbc(undefined2 param_1,undefined2 param_2)
 
 
 
-
-
-// Function: FUN_rom_004dea
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x004ebe */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x004ebe
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_004dea(void)
 
@@ -7969,11 +8833,7 @@ void FUN_rom_004dea(void)
 
 
 
-
-
-// Function: FUN_rom_004efc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ulong FUN_rom_004efc(int param_1,uint param_2)
 
@@ -8051,11 +8911,7 @@ LAB_rom_004f90:
 
 
 
-
-
-// Function: FUN_rom_004f92
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_004f92(undefined2 param_1,uint param_2)
 
@@ -8091,11 +8947,7 @@ LAB_rom_004fba:
 
 
 
-
-
-// Function: FUN_rom_004fbc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_004fbc(void)
 
@@ -8119,11 +8971,7 @@ undefined4 FUN_rom_004fbc(void)
 
 
 
-
-
-// Function: FUN_rom_004fee
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_004fee(void)
 
@@ -8206,11 +9054,7 @@ LAB_rom_005080:
 
 
 
-
-
-// Function: FUN_rom_00508e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00508e(void)
 
@@ -8235,11 +9079,7 @@ undefined2 FUN_rom_00508e(void)
 
 
 
-
-
-// Function: FUN_rom_0050c2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0050c2(void)
 
@@ -8258,11 +9098,7 @@ void FUN_rom_0050c2(void)
 
 
 
-
-
-// Function: FUN_rom_0050d4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0050d4(undefined2 param_1,undefined2 param_2)
 
@@ -8296,11 +9132,7 @@ undefined4 FUN_rom_0050d4(undefined2 param_1,undefined2 param_2)
 
 
 
-
-
-// Function: FUN_rom_005108
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_005108(void)
 
@@ -8336,11 +9168,7 @@ undefined4 FUN_rom_005108(void)
 
 
 
-
-
-// Function: FUN_rom_00512c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00512c(void)
 
@@ -8366,11 +9194,7 @@ undefined4 FUN_rom_00512c(void)
 
 
 
-
-
-// Function: FUN_rom_00514a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00514a(void)
 
@@ -8425,11 +9249,7 @@ undefined4 FUN_rom_00514a(void)
 
 
 
-
-
-// Function: FUN_rom_00518c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00518c(void)
 
@@ -8489,11 +9309,7 @@ LAB_rom_0051b8:
 
 
 
-
-
-// Function: FUN_rom_0051fe
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0051fe(void)
 
@@ -8549,10 +9365,6 @@ void FUN_rom_0051fe(void)
 }
 
 
-
-
-
-// Function: FUN_rom_005288
 
 void FUN_rom_005288(void)
 
@@ -8611,11 +9423,7 @@ void FUN_rom_005288(void)
 
 
 
-
-
-// Function: FUN_rom_005312
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined8 FUN_rom_005312(uint *param_1,undefined2 param_2,undefined2 param_3,undefined2 param_4)
 
@@ -8656,11 +9464,7 @@ LAB_rom_005348:
 
 
 
-
-
-// Function: FUN_rom_00534a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00534a(void)
 
@@ -8675,10 +9479,6 @@ undefined4 FUN_rom_00534a(void)
 }
 
 
-
-
-
-// Function: FUN_rom_005364
 
 undefined2 FUN_rom_005364(int param_1,int param_2)
 
@@ -8709,11 +9509,7 @@ undefined2 FUN_rom_005364(int param_1,int param_2)
 
 
 
-
-
-// Function: FUN_rom_005398
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_005398(int *param_1,int param_2,int param_3,int param_4)
 
@@ -8753,13 +9549,9 @@ LAB_rom_0053ca:
 
 
 
-
-
-// Function: FUN_rom_0053d2
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x0053e4 */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x0053e4
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 undefined4 FUN_rom_0053d2(void)
 
@@ -8781,11 +9573,7 @@ undefined4 FUN_rom_0053d2(void)
 
 
 
-
-
-// Function: FUN_rom_00540a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined8 FUN_rom_00540a(void)
 
@@ -8830,11 +9618,7 @@ LAB_rom_005454:
 
 
 
-
-
-// Function: FUN_rom_00546c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00546c(undefined2 param_1)
 
@@ -8894,11 +9678,7 @@ LAB_rom_0054aa:
 
 
 
-
-
-// Function: FUN_rom_0054c2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0054c2(void)
 
@@ -8948,11 +9728,7 @@ undefined4 FUN_rom_0054c2(void)
 
 
 
-
-
-// Function: FUN_rom_005522
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ulong FUN_rom_005522(void)
 
@@ -8997,10 +9773,6 @@ ulong FUN_rom_005522(void)
 
 
 
-
-
-// Function: FUN_rom_00556a
-
 undefined2 FUN_rom_00556a(void)
 
 {
@@ -9026,11 +9798,7 @@ undefined2 FUN_rom_00556a(void)
 
 
 
-
-
-// Function: FUN_rom_005582
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_005582(void)
 
@@ -9179,11 +9947,7 @@ LAB_rom_0056f0:
 
 
 
-
-
-// Function: FUN_rom_00571e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00571e(void)
 
@@ -9310,11 +10074,7 @@ void FUN_rom_00571e(void)
 
 
 
-
-
-// Function: thunk_FUN_rom_005582
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void thunk_FUN_rom_005582(void)
 
@@ -9325,10 +10085,12 @@ void thunk_FUN_rom_005582(void)
 }
 
 
+/*
+Unable to decompile 'FUN_rom_00586f'
+Cause: 
+Low-level Error: Could not find op at target address: (unique,0x00026b00)
+*/
 
-
-
-// Function: FUN_rom_0059a2
 
 undefined4 FUN_rom_0059a2(void)
 
@@ -9352,10 +10114,6 @@ undefined4 FUN_rom_0059a2(void)
 }
 
 
-
-
-
-// Function: FUN_rom_0059ce
 
 void FUN_rom_0059ce(void)
 
@@ -9391,11 +10149,7 @@ void FUN_rom_0059ce(void)
 
 
 
-
-
-// Function: FUN_rom_005a1c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_005a1c(void)
 
@@ -9438,11 +10192,7 @@ void FUN_rom_005a1c(void)
 
 
 
-
-
-// Function: FUN_rom_005a88
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_005a88(uint param_1,uint param_2,uint param_3)
 
@@ -9465,11 +10215,7 @@ void FUN_rom_005a88(uint param_1,uint param_2,uint param_3)
 
 
 
-
-
-// Function: FUN_rom_005ab8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_005ab8(void)
 
@@ -9479,11 +10225,7 @@ undefined2 FUN_rom_005ab8(void)
 
 
 
-
-
-// Function: FUN_rom_005ac0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_005ac0(void)
 
@@ -9493,11 +10235,7 @@ undefined2 FUN_rom_005ac0(void)
 
 
 
-
-
-// Function: FUN_rom_005ac8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_005ac8(void)
 
@@ -9507,11 +10245,7 @@ undefined2 FUN_rom_005ac8(void)
 
 
 
-
-
-// Function: FUN_rom_005acc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_005acc(undefined2 param_1)
 
@@ -9522,11 +10256,7 @@ void FUN_rom_005acc(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_005ad0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_005ad0(void)
 
@@ -9536,11 +10266,7 @@ undefined2 FUN_rom_005ad0(void)
 
 
 
-
-
-// Function: FUN_rom_005ad4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_005ad4(undefined2 param_1)
 
@@ -9551,11 +10277,7 @@ void FUN_rom_005ad4(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_005ad8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_005ad8(void)
 
@@ -9565,11 +10287,7 @@ undefined2 FUN_rom_005ad8(void)
 
 
 
-
-
-// Function: FUN_rom_005ae0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_005ae0(void)
 
@@ -9579,11 +10297,7 @@ undefined2 FUN_rom_005ae0(void)
 
 
 
-
-
-// Function: FUN_rom_005ae4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_005ae4(void)
 
@@ -9595,19 +10309,15 @@ void FUN_rom_005ae4(void)
   FUN_rom_005a88(1,0xff,0);
   PC = 0;
   UNRECOVERED_JUMPTABLE = (code *)PC;
-                    /* WARNING: Could not recover jumptable at 0x005af2. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
+                    // WARNING: Could not recover jumptable at 0x005af2. Too many branches
+                    // WARNING: Treating indirect jump as call
   (*UNRECOVERED_JUMPTABLE)();
   return;
 }
 
 
 
-
-
-// Function: FUN_rom_005af6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_005af6(void)
 
@@ -9653,10 +10363,6 @@ undefined4 FUN_rom_005af6(void)
 
 
 
-
-
-// Function: FUN_rom_005b74
-
 uint FUN_rom_005b74(byte param_1,uint *param_2)
 
 {
@@ -9668,10 +10374,6 @@ uint FUN_rom_005b74(byte param_1,uint *param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_005b86
 
 void FUN_rom_005b86(int param_1,undefined2 param_2)
 
@@ -9697,10 +10399,6 @@ void FUN_rom_005b86(int param_1,undefined2 param_2)
 
 
 
-
-
-// Function: FUN_rom_005bae
-
 undefined4 FUN_rom_005bae(void)
 
 {
@@ -9721,10 +10419,6 @@ undefined4 FUN_rom_005bae(void)
 
 
 
-
-
-// Function: FUN_rom_005bcc
-
 undefined2 FUN_rom_005bcc(void)
 
 {
@@ -9738,10 +10432,6 @@ undefined2 FUN_rom_005bcc(void)
 }
 
 
-
-
-
-// Function: FUN_rom_005bd8
 
 undefined2 FUN_rom_005bd8(void)
 
@@ -9757,13 +10447,9 @@ undefined2 FUN_rom_005bd8(void)
 
 
 
-
-
-// Function: thunk_FUN_rom_005c70
-
-/* WARNING: This function may have set the stack pointer */
-/* WARNING: Removing unreachable block (rom,0x005c86) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: This function may have set the stack pointer
+// WARNING: Removing unreachable block (rom,0x005c86)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void thunk_FUN_rom_005c70(void)
 
@@ -9780,21 +10466,17 @@ void thunk_FUN_rom_005c70(void)
   break();
   PC = 0;
   UNRECOVERED_JUMPTABLE = (code *)PC;
-                    /* WARNING: Could not recover jumptable at 0x005c90. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
+                    // WARNING: Could not recover jumptable at 0x005c90. Too many branches
+                    // WARNING: Treating indirect jump as call
   (*UNRECOVERED_JUMPTABLE)();
   return;
 }
 
 
 
-
-
-// Function: FUN_rom_005c70
-
-/* WARNING: This function may have set the stack pointer */
-/* WARNING: Removing unreachable block (rom,0x005c86) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: This function may have set the stack pointer
+// WARNING: Removing unreachable block (rom,0x005c86)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_005c70(void)
 
@@ -9811,17 +10493,13 @@ void FUN_rom_005c70(void)
   break();
   PC = 0;
   UNRECOVERED_JUMPTABLE = (code *)PC;
-                    /* WARNING: Could not recover jumptable at 0x005c90. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
+                    // WARNING: Could not recover jumptable at 0x005c90. Too many branches
+                    // WARNING: Treating indirect jump as call
   (*UNRECOVERED_JUMPTABLE)();
   return;
 }
 
 
-
-
-
-// Function: FUN_rom_005c92
 
 undefined2 FUN_rom_005c92(void)
 
@@ -9837,10 +10515,6 @@ undefined2 FUN_rom_005c92(void)
 }
 
 
-
-
-
-// Function: FUN_rom_005ca2
 
 undefined2 FUN_rom_005ca2(uint param_1,undefined2 param_2)
 
@@ -9889,10 +10563,6 @@ undefined2 FUN_rom_005ca2(uint param_1,undefined2 param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_005cdc
 
 void FUN_rom_005cdc(int param_1,uint param_2,undefined1 *param_3,int param_4,int param_5)
 
@@ -9949,10 +10619,6 @@ LAB_rom_005cfa:
 
 
 
-
-
-// Function: FUN_rom_005d00
-
 undefined4 FUN_rom_005d00(uint param_1,int param_2)
 
 {
@@ -9965,10 +10631,6 @@ undefined4 FUN_rom_005d00(uint param_1,int param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_005d0c
 
 undefined4 FUN_rom_005d0c(int param_1,uint param_2,int param_3,uint param_4)
 
@@ -9996,10 +10658,6 @@ undefined4 FUN_rom_005d0c(int param_1,uint param_2,int param_3,uint param_4)
 }
 
 
-
-
-
-// Function: FUN_rom_005d2a
 
 void FUN_rom_005d2a(uint param_1,uint param_2,uint param_3,uint param_4)
 
@@ -10037,11 +10695,7 @@ void FUN_rom_005d2a(uint param_1,uint param_2,uint param_3,uint param_4)
 
 
 
-
-
-// Function: FUN_rom_005fc2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_005fc2(void)
 
@@ -10142,10 +10796,6 @@ undefined4 FUN_rom_005fc2(void)
 
 
 
-
-
-// Function: FUN_rom_00610c
-
 undefined3 FUN_rom_00610c(void)
 
 {
@@ -10167,11 +10817,7 @@ undefined3 FUN_rom_00610c(void)
 
 
 
-
-
-// Function: FUN_rom_006126
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_006126(void)
 
@@ -10257,10 +10903,6 @@ LAB_rom_00616a:
 
 
 
-
-
-// Function: FUN_rom_0061ea
-
 bool FUN_rom_0061ea(int param_1,int param_2)
 
 {
@@ -10277,10 +10919,6 @@ bool FUN_rom_0061ea(int param_1,int param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_006216
 
 undefined2 FUN_rom_006216(uint param_1)
 
@@ -10316,11 +10954,7 @@ undefined2 FUN_rom_006216(uint param_1)
 
 
 
-
-
-// Function: FUN_rom_006252
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ulong FUN_rom_006252(void)
 
@@ -10369,10 +11003,6 @@ ulong FUN_rom_006252(void)
 
 
 
-
-
-// Function: FUN_rom_0062bc
-
 undefined4 FUN_rom_0062bc(uint param_1)
 
 {
@@ -10386,8 +11016,8 @@ undefined4 FUN_rom_0062bc(uint param_1)
   uVar1 = uVar2 - 5;
   uVar3 = -(uint)(uVar2 < 5);
   if (uVar3 < (uVar1 < 0x38) || uVar2 == 0x3d && -(uint)(uVar1 < 0x38) == (uint)(uVar2 < 5)) {
-                    /* WARNING: Could not emulate address calculation at 0x0062ce */
-                    /* WARNING: Treating indirect jump as call */
+                    // WARNING: Could not emulate address calculation at 0x0062ce
+                    // WARNING: Treating indirect jump as call
     uVar4 = (*(code *)((int3)(int)uVar1 * 2 + 0x62e2))
                       (uVar1,uVar3,
                        (uint)(byte)(&DAT_ram_1959)[param_1] +
@@ -10399,11 +11029,7 @@ undefined4 FUN_rom_0062bc(uint param_1)
 
 
 
-
-
-// Function: FUN_rom_00644a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined8 FUN_rom_00644a(uint param_1)
 
@@ -10505,12 +11131,8 @@ LAB_rom_00654a:
 
 
 
-
-
-// Function: FUN_rom_006582
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 ulong FUN_rom_006582(void)
 
@@ -10567,11 +11189,7 @@ LAB_rom_0065c2:
 
 
 
-
-
-// Function: FUN_rom_006612
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_006612(void)
 
@@ -10622,11 +11240,7 @@ ushort FUN_rom_006612(void)
 
 
 
-
-
-// Function: FUN_rom_006692
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_006692(void)
 
@@ -10687,11 +11301,7 @@ LAB_rom_00670e:
 
 
 
-
-
-// Function: FUN_rom_00672a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00672a(void)
 
@@ -10727,11 +11337,7 @@ undefined2 FUN_rom_00672a(void)
 
 
 
-
-
-// Function: FUN_rom_00676a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_00676a(void)
 
@@ -10814,12 +11420,8 @@ LAB_rom_00683e:
 
 
 
-
-
-// Function: FUN_rom_006848
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 ulong FUN_rom_006848(void)
 
@@ -10855,11 +11457,7 @@ LAB_rom_006866:
 
 
 
-
-
-// Function: FUN_rom_006894
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_006894(void)
 
@@ -10894,11 +11492,7 @@ void FUN_rom_006894(void)
 
 
 
-
-
-// Function: FUN_rom_0068d4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0068d4(void)
 
@@ -10929,11 +11523,7 @@ LAB_rom_0068e8:
 
 
 
-
-
-// Function: FUN_rom_006912
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_006912(void)
 
@@ -10974,11 +11564,7 @@ LAB_rom_006950:
 
 
 
-
-
-// Function: FUN_rom_00695e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_00695e(void)
 
@@ -11026,11 +11612,7 @@ ushort FUN_rom_00695e(void)
 
 
 
-
-
-// Function: FUN_rom_0069c8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_0069c8(void)
 
@@ -11096,11 +11678,7 @@ ushort FUN_rom_0069c8(void)
 
 
 
-
-
-// Function: FUN_rom_006b18
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_006b18(void)
 
@@ -11134,11 +11712,7 @@ LAB_rom_006b36:
 
 
 
-
-
-// Function: FUN_rom_006b54
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_006b54(void)
 
@@ -11170,11 +11744,7 @@ LAB_rom_006b7a:
 
 
 
-
-
-// Function: FUN_rom_006b90
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_006b90(void)
 
@@ -11212,11 +11782,7 @@ LAB_rom_006bae:
 
 
 
-
-
-// Function: FUN_rom_006bd6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_006bd6(void)
 
@@ -11258,13 +11824,9 @@ LAB_rom_006c10:
 
 
 
-
-
-// Function: FUN_rom_006c42
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x006c9a */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x006c9a
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 ulonglong FUN_rom_006c42(void)
 
@@ -11351,11 +11913,7 @@ LAB_rom_006d46:
 
 
 
-
-
-// Function: FUN_rom_006d5a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_006d5a(void)
 
@@ -11432,11 +11990,7 @@ void FUN_rom_006d5a(void)
 
 
 
-
-
-// Function: FUN_rom_006dfe
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_006dfe(void)
 
@@ -11464,11 +12018,7 @@ undefined4 FUN_rom_006dfe(void)
 
 
 
-
-
-// Function: FUN_rom_006e24
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_006e24(void)
 
@@ -11556,11 +12106,7 @@ LAB_rom_006eca:
 
 
 
-
-
-// Function: FUN_rom_006f0c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_006f0c(void)
 
@@ -11617,11 +12163,7 @@ undefined4 FUN_rom_006f0c(void)
 
 
 
-
-
-// Function: FUN_rom_006f98
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_006f98(void)
 
@@ -11701,11 +12243,7 @@ LAB_rom_00704e:
 
 
 
-
-
-// Function: FUN_rom_007052
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_007052(void)
 
@@ -11726,11 +12264,7 @@ void FUN_rom_007052(void)
 
 
 
-
-
-// Function: FUN_rom_007064
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_007064(undefined2 param_1,uint param_2)
 
@@ -11757,11 +12291,7 @@ undefined4 FUN_rom_007064(undefined2 param_1,uint param_2)
 
 
 
-
-
-// Function: FUN_rom_007086
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_007086(undefined2 param_1,uint param_2)
 
@@ -11784,11 +12314,7 @@ undefined4 FUN_rom_007086(undefined2 param_1,uint param_2)
 
 
 
-
-
-// Function: FUN_rom_00709c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00709c(undefined2 param_1,uint param_2)
 
@@ -11811,11 +12337,7 @@ undefined4 FUN_rom_00709c(undefined2 param_1,uint param_2)
 
 
 
-
-
-// Function: FUN_rom_0070b2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined8 FUN_rom_0070b2(uint param_1,uint param_2,uint param_3,uint param_4)
 
@@ -11873,11 +12395,7 @@ undefined8 FUN_rom_0070b2(uint param_1,uint param_2,uint param_3,uint param_4)
 
 
 
-
-
-// Function: FUN_rom_007106
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_007106(void)
 
@@ -11937,11 +12455,7 @@ LAB_rom_007136:
 
 
 
-
-
-// Function: FUN_rom_00715a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00715a(void)
 
@@ -11963,11 +12477,7 @@ undefined4 FUN_rom_00715a(void)
 
 
 
-
-
-// Function: FUN_rom_00717e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 int FUN_rom_00717e(void)
 
@@ -11989,11 +12499,7 @@ int FUN_rom_00717e(void)
 
 
 
-
-
-// Function: FUN_rom_007194
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_007194(void)
 
@@ -12041,11 +12547,7 @@ LAB_rom_0071f4:
 
 
 
-
-
-// Function: FUN_rom_0071fc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0071fc(void)
 
@@ -12120,11 +12622,7 @@ LAB_rom_00728c:
 
 
 
-
-
-// Function: FUN_rom_0072a0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0072a0(undefined2 param_1,undefined2 param_2)
 
@@ -12154,11 +12652,7 @@ undefined4 FUN_rom_0072a0(undefined2 param_1,undefined2 param_2)
 
 
 
-
-
-// Function: FUN_rom_0072d6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0072d6(void)
 
@@ -12219,11 +12713,7 @@ LAB_rom_00730a:
 
 
 
-
-
-// Function: FUN_rom_007346
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_007346(void)
 
@@ -12261,11 +12751,7 @@ void FUN_rom_007346(void)
 
 
 
-
-
-// Function: FUN_rom_0073ce
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_0073ce(void)
 
@@ -12354,12 +12840,8 @@ LAB_rom_00742a:
 
 
 
-
-
-// Function: FUN_rom_00749a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 ushort FUN_rom_00749a(void)
 
@@ -12442,11 +12924,7 @@ LAB_rom_006ac8:
 
 
 
-
-
-// Function: FUN_rom_0074d6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_0074d6(void)
 
@@ -12561,11 +13039,7 @@ LAB_rom_0075aa:
 
 
 
-
-
-// Function: FUN_rom_0075fa
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_0075fa(void)
 
@@ -12603,12 +13077,8 @@ undefined2 FUN_rom_0075fa(void)
 
 
 
-
-
-// Function: FUN_rom_007630
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_007630(void)
 
@@ -12641,16 +13111,12 @@ void FUN_rom_007630(void)
 
 
 
-
-
-// Function: FUN_rom_0076fc
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x007720 */
-/* WARNING: Removing unreachable block (rom,0x007718) */
-/* WARNING: Removing unreachable block (rom,0x007742) */
-/* WARNING: Removing unreachable block (rom,0x007748) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x007720
+// WARNING: Removing unreachable block (rom,0x007718)
+// WARNING: Removing unreachable block (rom,0x007742)
+// WARNING: Removing unreachable block (rom,0x007748)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_0076fc(void)
 
@@ -12665,22 +13131,18 @@ void FUN_rom_0076fc(void)
 
 
 
-
-
-// Function: FUN_rom_007770
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x0077ac */
-/* WARNING: Removing unreachable block (rom,0x007796) */
-/* WARNING: Removing unreachable block (rom,0x0077c2) */
-/* WARNING: Removing unreachable block (rom,0x0077be) */
-/* WARNING: Removing unreachable block (rom,0x0077c4) */
-/* WARNING: Removing unreachable block (rom,0x0077e0) */
-/* WARNING: Removing unreachable block (rom,0x0077dc) */
-/* WARNING: Removing unreachable block (rom,0x0077e2) */
-/* WARNING: Removing unreachable block (rom,0x00781c) */
-/* WARNING: Removing unreachable block (rom,0x00781e) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x0077ac
+// WARNING: Removing unreachable block (rom,0x007796)
+// WARNING: Removing unreachable block (rom,0x0077c2)
+// WARNING: Removing unreachable block (rom,0x0077be)
+// WARNING: Removing unreachable block (rom,0x0077c4)
+// WARNING: Removing unreachable block (rom,0x0077e0)
+// WARNING: Removing unreachable block (rom,0x0077dc)
+// WARNING: Removing unreachable block (rom,0x0077e2)
+// WARNING: Removing unreachable block (rom,0x00781c)
+// WARNING: Removing unreachable block (rom,0x00781e)
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_007770(void)
 
@@ -12695,11 +13157,7 @@ void FUN_rom_007770(void)
 
 
 
-
-
-// Function: FUN_rom_007832
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_007832(void)
 
@@ -12731,13 +13189,9 @@ void FUN_rom_007832(void)
 
 
 
-
-
-// Function: FUN_rom_007878
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x007892 */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x007892
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_007878(void)
 
@@ -12776,13 +13230,9 @@ LAB_rom_0078bc:
 
 
 
-
-
-// Function: FUN_rom_0078d6
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x00791a */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x00791a
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_0078d6(void)
 
@@ -12860,11 +13310,7 @@ void FUN_rom_0078d6(void)
 
 
 
-
-
-// Function: FUN_rom_0079c6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0079c6(void)
 
@@ -12895,11 +13341,7 @@ undefined4 FUN_rom_0079c6(void)
 
 
 
-
-
-// Function: FUN_rom_0079f6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0079f6(void)
 
@@ -12926,11 +13368,7 @@ void FUN_rom_0079f6(void)
 
 
 
-
-
-// Function: FUN_rom_007a2c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_007a2c(void)
 
@@ -12943,11 +13381,7 @@ void FUN_rom_007a2c(void)
 
 
 
-
-
-// Function: FUN_rom_007a3c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ulong FUN_rom_007a3c(undefined2 param_1,uint param_2)
 
@@ -12990,11 +13424,7 @@ LAB_rom_007a74:
 
 
 
-
-
-// Function: FUN_rom_007a76
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_007a76(undefined2 param_1,uint param_2)
 
@@ -13032,11 +13462,7 @@ LAB_rom_007aaa:
 
 
 
-
-
-// Function: FUN_rom_007aac
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 int FUN_rom_007aac(void)
 
@@ -13102,11 +13528,7 @@ LAB_rom_007b08:
 
 
 
-
-
-// Function: FUN_rom_007b20
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_007b20(void)
 
@@ -13128,11 +13550,7 @@ uint FUN_rom_007b20(void)
 
 
 
-
-
-// Function: FUN_rom_007b48
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_007b48(void)
 
@@ -13182,11 +13600,7 @@ void FUN_rom_007b48(void)
 
 
 
-
-
-// Function: FUN_rom_007ba6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 long FUN_rom_007ba6(undefined2 param_1,uint param_2)
 
@@ -13278,11 +13692,7 @@ LAB_rom_007c50:
 
 
 
-
-
-// Function: FUN_rom_007c52
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_007c52(void)
 
@@ -13334,11 +13744,7 @@ LAB_rom_007c8c:
 
 
 
-
-
-// Function: FUN_rom_007caa
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_007caa(undefined2 param_1,undefined2 param_2)
 
@@ -13371,10 +13777,6 @@ undefined4 FUN_rom_007caa(undefined2 param_1,undefined2 param_2)
 
 
 
-
-
-// Function: FUN_rom_007ce2
-
 undefined1 FUN_rom_007ce2(uint param_1,uint param_2,uint param_3,undefined1 param_4)
 
 {
@@ -13391,11 +13793,7 @@ undefined1 FUN_rom_007ce2(uint param_1,uint param_2,uint param_3,undefined1 para
 
 
 
-
-
-// Function: FUN_rom_007cf8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 int FUN_rom_007cf8(void)
 
@@ -13450,11 +13848,7 @@ int FUN_rom_007cf8(void)
 
 
 
-
-
-// Function: FUN_rom_007d6e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_007d6e(void)
 
@@ -13494,10 +13888,6 @@ LAB_rom_007d96:
 
 
 
-
-
-// Function: FUN_rom_007db2
-
 uint FUN_rom_007db2(uint param_1,uint param_2,uint *param_3,uint param_4)
 
 {
@@ -13519,11 +13909,7 @@ uint FUN_rom_007db2(uint param_1,uint param_2,uint *param_3,uint param_4)
 
 
 
-
-
-// Function: FUN_rom_007dcc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_007dcc(void)
 
@@ -13563,10 +13949,6 @@ void FUN_rom_007dcc(void)
 
 
 
-
-
-// Function: FUN_rom_007e42
-
 int FUN_rom_007e42(int param_1,int param_2)
 
 {
@@ -13586,11 +13968,7 @@ int FUN_rom_007e42(int param_1,int param_2)
 
 
 
-
-
-// Function: FUN_rom_007e54
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_007e54(void)
 
@@ -13637,11 +14015,7 @@ LAB_rom_007eb6:
 
 
 
-
-
-// Function: FUN_rom_007ee0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 int FUN_rom_007ee0(void)
 
@@ -13677,11 +14051,7 @@ int FUN_rom_007ee0(void)
 
 
 
-
-
-// Function: FUN_rom_007f22
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_007f22(void)
 
@@ -13725,11 +14095,7 @@ void FUN_rom_007f22(void)
 
 
 
-
-
-// Function: FUN_rom_007f86
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_007f86(void)
 
@@ -13776,11 +14142,7 @@ uint FUN_rom_007f86(void)
 
 
 
-
-
-// Function: FUN_rom_007ff4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 byte FUN_rom_007ff4(void)
 
@@ -13880,11 +14242,7 @@ byte FUN_rom_007ff4(void)
 
 
 
-
-
-// Function: FUN_rom_0080ee
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0080ee(int param_1)
 
@@ -13938,11 +14296,7 @@ undefined4 FUN_rom_0080ee(int param_1)
 
 
 
-
-
-// Function: FUN_rom_008158
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_008158(void)
 
@@ -14000,11 +14354,7 @@ LAB_rom_008198:
 
 
 
-
-
-// Function: FUN_rom_0081d4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0081d4(void)
 
@@ -14061,11 +14411,7 @@ void FUN_rom_0081d4(void)
 
 
 
-
-
-// Function: FUN_rom_008266
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_008266(void)
 
@@ -14131,11 +14477,7 @@ void FUN_rom_008266(void)
 
 
 
-
-
-// Function: FUN_rom_00831a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_00831a(void)
 
@@ -14197,11 +14539,7 @@ uint FUN_rom_00831a(void)
 
 
 
-
-
-// Function: FUN_rom_00838a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00838a(void)
 
@@ -14220,11 +14558,7 @@ void FUN_rom_00838a(void)
 
 
 
-
-
-// Function: FUN_rom_0083aa
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0083aa(void)
 
@@ -14247,11 +14581,7 @@ void FUN_rom_0083aa(void)
 
 
 
-
-
-// Function: FUN_rom_0083ca
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0083ca(void)
 
@@ -14284,11 +14614,7 @@ undefined4 FUN_rom_0083ca(void)
 
 
 
-
-
-// Function: FUN_rom_0084a6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0084a6(void)
 
@@ -14306,11 +14632,7 @@ undefined4 FUN_rom_0084a6(void)
 
 
 
-
-
-// Function: FUN_rom_0084b6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0084b6(ushort *param_1)
 
@@ -14340,11 +14662,7 @@ undefined4 FUN_rom_0084b6(ushort *param_1)
 
 
 
-
-
-// Function: FUN_rom_0084dc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 byte FUN_rom_0084dc(void)
 
@@ -14384,11 +14702,7 @@ byte FUN_rom_0084dc(void)
 
 
 
-
-
-// Function: FUN_rom_008522
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_008522(uint param_1)
 
@@ -14428,11 +14742,7 @@ void FUN_rom_008522(uint param_1)
 
 
 
-
-
-// Function: FUN_rom_00856e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ushort FUN_rom_00856e(int param_1,uint param_2)
 
@@ -14484,11 +14794,7 @@ ushort FUN_rom_00856e(int param_1,uint param_2)
 
 
 
-
-
-// Function: FUN_rom_0085d0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_0085d0(uint param_1)
 
@@ -14528,11 +14834,7 @@ void FUN_rom_0085d0(uint param_1)
 
 
 
-
-
-// Function: FUN_rom_00861c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00861c(int param_1,uint param_2)
 
@@ -14603,10 +14905,6 @@ void FUN_rom_00861c(int param_1,uint param_2)
 
 
 
-
-
-// Function: FUN_rom_0086ba
-
 void FUN_rom_0086ba(void)
 
 {
@@ -14632,10 +14930,6 @@ void FUN_rom_0086ba(void)
 }
 
 
-
-
-
-// Function: FUN_rom_0086e0
 
 undefined1 FUN_rom_0086e0(void)
 
@@ -14667,10 +14961,6 @@ undefined1 FUN_rom_0086e0(void)
 
 
 
-
-
-// Function: FUN_rom_00873a
-
 bool FUN_rom_00873a(int param_1,uint param_2,uint param_3,char param_4)
 
 {
@@ -14689,11 +14979,7 @@ bool FUN_rom_00873a(int param_1,uint param_2,uint param_3,char param_4)
 
 
 
-
-
-// Function: FUN_rom_00875e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00875e(void)
 
@@ -14836,11 +15122,7 @@ void FUN_rom_00875e(void)
 
 
 
-
-
-// Function: FUN_rom_008960
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined1 FUN_rom_008960(void)
 
@@ -14878,11 +15160,7 @@ undefined1 FUN_rom_008960(void)
 
 
 
-
-
-// Function: FUN_rom_0089d2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined1 FUN_rom_0089d2(void)
 
@@ -14920,10 +15198,6 @@ undefined1 FUN_rom_0089d2(void)
 }
 
 
-
-
-
-// Function: FUN_rom_008a48
 
 undefined2 FUN_rom_008a48(void)
 
@@ -14966,10 +15240,6 @@ undefined2 FUN_rom_008a48(void)
 
 
 
-
-
-// Function: FUN_rom_008aac
-
 void FUN_rom_008aac(void)
 
 {
@@ -14982,11 +15252,7 @@ void FUN_rom_008aac(void)
 
 
 
-
-
-// Function: FUN_rom_008abc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 byte FUN_rom_008abc(byte param_1)
 
@@ -15030,11 +15296,7 @@ byte FUN_rom_008abc(byte param_1)
 
 
 
-
-
-// Function: FUN_rom_008b0e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_008b0e(void)
 
@@ -15147,10 +15409,6 @@ void FUN_rom_008b0e(void)
 
 
 
-
-
-// Function: FUN_rom_008c68
-
 undefined1 FUN_rom_008c68(void)
 
 {
@@ -15181,11 +15439,7 @@ undefined1 FUN_rom_008c68(void)
 
 
 
-
-
-// Function: FUN_rom_008cc2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_008cc2(void)
 
@@ -15285,11 +15539,7 @@ uint FUN_rom_008cc2(void)
 
 
 
-
-
-// Function: FUN_rom_008da2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_008da2(void)
 
@@ -15307,11 +15557,7 @@ void FUN_rom_008da2(void)
 
 
 
-
-
-// Function: FUN_rom_008dbe
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_008dbe(void)
 
@@ -15335,12 +15581,8 @@ void FUN_rom_008dbe(void)
 
 
 
-
-
-// Function: FUN_rom_008de0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 undefined2 FUN_rom_008de0(undefined2 param_1)
 
@@ -15389,12 +15631,8 @@ undefined2 FUN_rom_008de0(undefined2 param_1)
 
 
 
-
-
-// Function: thunk_FUN_rom_008de0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 undefined2 thunk_FUN_rom_008de0(undefined2 param_1)
 
@@ -15443,11 +15681,7 @@ undefined2 thunk_FUN_rom_008de0(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_008e60
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_008e60(void)
 
@@ -15471,11 +15705,7 @@ void FUN_rom_008e60(void)
 
 
 
-
-
-// Function: FUN_rom_008e7e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_008e7e(void)
 
@@ -15499,11 +15729,7 @@ void FUN_rom_008e7e(void)
 
 
 
-
-
-// Function: FUN_rom_008e9c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_008e9c(void)
 
@@ -15521,10 +15747,6 @@ void FUN_rom_008e9c(void)
 
 
 
-
-
-// Function: FUN_rom_008eb0
-
 undefined4 FUN_rom_008eb0(int param_1)
 
 {
@@ -15532,10 +15754,6 @@ undefined4 FUN_rom_008eb0(int param_1)
 }
 
 
-
-
-
-// Function: FUN_rom_008eb8
 
 undefined4 FUN_rom_008eb8(int param_1)
 
@@ -15545,10 +15763,6 @@ undefined4 FUN_rom_008eb8(int param_1)
 
 
 
-
-
-// Function: FUN_rom_008ec0
-
 undefined4 FUN_rom_008ec0(int param_1)
 
 {
@@ -15557,11 +15771,7 @@ undefined4 FUN_rom_008ec0(int param_1)
 
 
 
-
-
-// Function: FUN_rom_008ec8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_008ec8(void)
 
@@ -15606,10 +15816,6 @@ void FUN_rom_008ec8(void)
 
 
 
-
-
-// Function: FUN_rom_008f0c
-
 uint FUN_rom_008f0c(uint param_1,uint param_2,uint *param_3,uint param_4)
 
 {
@@ -15631,10 +15837,6 @@ uint FUN_rom_008f0c(uint param_1,uint param_2,uint *param_3,uint param_4)
 
 
 
-
-
-// Function: FUN_rom_008f26
-
 undefined1 FUN_rom_008f26(uint param_1,uint param_2,uint param_3,undefined1 param_4)
 
 {
@@ -15651,11 +15853,7 @@ undefined1 FUN_rom_008f26(uint param_1,uint param_2,uint param_3,undefined1 para
 
 
 
-
-
-// Function: FUN_rom_008f3c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_008f3c(void)
 
@@ -15731,11 +15929,7 @@ LAB_rom_008fc6:
 
 
 
-
-
-// Function: FUN_rom_008fd4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined8 FUN_rom_008fd4(void)
 
@@ -15762,11 +15956,7 @@ undefined8 FUN_rom_008fd4(void)
 
 
 
-
-
-// Function: FUN_rom_009000
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_009000(void)
 
@@ -15805,13 +15995,9 @@ uint FUN_rom_009000(void)
 
 
 
-
-
-// Function: FUN_rom_00904c
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x00905a */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x00905a
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_00904c(void)
 
@@ -15874,10 +16060,6 @@ void FUN_rom_00904c(void)
 
 
 
-
-
-// Function: FUN_rom_0090dc
-
 void FUN_rom_0090dc(void)
 
 {
@@ -15900,11 +16082,7 @@ void FUN_rom_0090dc(void)
 
 
 
-
-
-// Function: FUN_rom_009108
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 long FUN_rom_009108(void)
 
@@ -15949,10 +16127,6 @@ LAB_rom_009148:
 
 
 
-
-
-// Function: FUN_rom_009750
-
 void FUN_rom_009750(void)
 
 {
@@ -15975,11 +16149,7 @@ void FUN_rom_009750(void)
 
 
 
-
-
-// Function: FUN_rom_00977c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 int FUN_rom_00977c(void)
 
@@ -16014,11 +16184,7 @@ int FUN_rom_00977c(void)
 
 
 
-
-
-// Function: FUN_rom_0097d4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_0097d4(void)
 
@@ -16050,11 +16216,7 @@ undefined2 FUN_rom_0097d4(void)
 
 
 
-
-
-// Function: FUN_rom_009804
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_009804(void)
 
@@ -16103,11 +16265,7 @@ void FUN_rom_009804(void)
 
 
 
-
-
-// Function: FUN_rom_009872
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_009872(void)
 
@@ -16135,11 +16293,7 @@ undefined2 FUN_rom_009872(void)
 
 
 
-
-
-// Function: FUN_rom_0098a6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0098a6(void)
 
@@ -16207,11 +16361,7 @@ LAB_rom_0098e4:
 
 
 
-
-
-// Function: FUN_rom_00993a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 uint FUN_rom_00993a(void)
 
@@ -16254,11 +16404,7 @@ uint FUN_rom_00993a(void)
 
 
 
-
-
-// Function: FUN_rom_009986
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 byte FUN_rom_009986(void)
 
@@ -16276,11 +16422,7 @@ byte FUN_rom_009986(void)
 
 
 
-
-
-// Function: FUN_rom_009994
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_009994(void)
 
@@ -16299,11 +16441,7 @@ void FUN_rom_009994(void)
 
 
 
-
-
-// Function: FUN_rom_0099bc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_0099bc(undefined2 param_1,undefined2 param_2)
 
@@ -16329,13 +16467,9 @@ undefined4 FUN_rom_0099bc(undefined2 param_1,undefined2 param_2)
 
 
 
-
-
-// Function: FUN_rom_0099ea
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x009abe */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x009abe
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 void FUN_rom_0099ea(void)
 
@@ -16422,11 +16556,7 @@ void FUN_rom_0099ea(void)
 
 
 
-
-
-// Function: FUN_rom_009afc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ulong FUN_rom_009afc(int param_1,uint param_2)
 
@@ -16504,11 +16634,7 @@ LAB_rom_009b90:
 
 
 
-
-
-// Function: FUN_rom_009b92
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_009b92(undefined2 param_1,uint param_2)
 
@@ -16544,11 +16670,7 @@ LAB_rom_009bba:
 
 
 
-
-
-// Function: FUN_rom_009bbc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_009bbc(void)
 
@@ -16572,11 +16694,7 @@ undefined4 FUN_rom_009bbc(void)
 
 
 
-
-
-// Function: FUN_rom_009bee
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_009bee(void)
 
@@ -16659,11 +16777,7 @@ LAB_rom_009c80:
 
 
 
-
-
-// Function: FUN_rom_009c8e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_009c8e(void)
 
@@ -16688,11 +16802,7 @@ undefined2 FUN_rom_009c8e(void)
 
 
 
-
-
-// Function: FUN_rom_009cc2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_009cc2(void)
 
@@ -16711,11 +16821,7 @@ void FUN_rom_009cc2(void)
 
 
 
-
-
-// Function: FUN_rom_009cd4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_009cd4(undefined2 param_1,undefined2 param_2)
 
@@ -16749,11 +16855,7 @@ undefined4 FUN_rom_009cd4(undefined2 param_1,undefined2 param_2)
 
 
 
-
-
-// Function: FUN_rom_009d08
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_009d08(void)
 
@@ -16789,11 +16891,7 @@ undefined4 FUN_rom_009d08(void)
 
 
 
-
-
-// Function: FUN_rom_009d2c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_009d2c(void)
 
@@ -16819,11 +16917,7 @@ undefined4 FUN_rom_009d2c(void)
 
 
 
-
-
-// Function: FUN_rom_009d4a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_009d4a(void)
 
@@ -16878,11 +16972,7 @@ undefined4 FUN_rom_009d4a(void)
 
 
 
-
-
-// Function: FUN_rom_009d8c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_009d8c(void)
 
@@ -16942,11 +17032,7 @@ LAB_rom_009db8:
 
 
 
-
-
-// Function: FUN_rom_009dfe
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_009dfe(void)
 
@@ -17002,10 +17088,6 @@ void FUN_rom_009dfe(void)
 }
 
 
-
-
-
-// Function: FUN_rom_009e88
 
 void FUN_rom_009e88(void)
 
@@ -17064,11 +17146,7 @@ void FUN_rom_009e88(void)
 
 
 
-
-
-// Function: FUN_rom_009f12
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined8 FUN_rom_009f12(uint *param_1,undefined2 param_2,undefined2 param_3,undefined2 param_4)
 
@@ -17109,11 +17187,7 @@ LAB_rom_009f48:
 
 
 
-
-
-// Function: FUN_rom_009f4a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_009f4a(void)
 
@@ -17128,10 +17202,6 @@ undefined4 FUN_rom_009f4a(void)
 }
 
 
-
-
-
-// Function: FUN_rom_009f64
 
 undefined2 FUN_rom_009f64(int param_1,int param_2)
 
@@ -17162,11 +17232,7 @@ undefined2 FUN_rom_009f64(int param_1,int param_2)
 
 
 
-
-
-// Function: FUN_rom_009f98
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_009f98(int *param_1,int param_2,int param_3,int param_4)
 
@@ -17206,13 +17272,9 @@ LAB_rom_009fca:
 
 
 
-
-
-// Function: FUN_rom_009fd2
-
-/* WARNING: Heritage AFTER dead removal. Example location: W1 : 0x009fe4 */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: ram */
+// WARNING: Heritage AFTER dead removal. Example location: W1 : 0x009fe4
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
+// WARNING: Restarted to delay deadcode elimination for space: ram
 
 undefined4 FUN_rom_009fd2(void)
 
@@ -17234,11 +17296,7 @@ undefined4 FUN_rom_009fd2(void)
 
 
 
-
-
-// Function: FUN_rom_00a00a
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined8 FUN_rom_00a00a(void)
 
@@ -17283,11 +17341,7 @@ LAB_rom_00a054:
 
 
 
-
-
-// Function: FUN_rom_00a06c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00a06c(undefined2 param_1)
 
@@ -17347,11 +17401,7 @@ LAB_rom_00a0aa:
 
 
 
-
-
-// Function: FUN_rom_00a0c2
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00a0c2(void)
 
@@ -17401,11 +17451,7 @@ undefined4 FUN_rom_00a0c2(void)
 
 
 
-
-
-// Function: FUN_rom_00a122
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 ulong FUN_rom_00a122(void)
 
@@ -17450,10 +17496,6 @@ ulong FUN_rom_00a122(void)
 
 
 
-
-
-// Function: FUN_rom_00a16a
-
 undefined2 FUN_rom_00a16a(void)
 
 {
@@ -17479,11 +17521,7 @@ undefined2 FUN_rom_00a16a(void)
 
 
 
-
-
-// Function: FUN_rom_00a182
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00a182(void)
 
@@ -17632,11 +17670,7 @@ LAB_rom_00a2f0:
 
 
 
-
-
-// Function: FUN_rom_00a31e
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00a31e(void)
 
@@ -17763,11 +17797,7 @@ void FUN_rom_00a31e(void)
 
 
 
-
-
-// Function: thunk_FUN_rom_00a182
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void thunk_FUN_rom_00a182(void)
 
@@ -17778,10 +17808,12 @@ void thunk_FUN_rom_00a182(void)
 }
 
 
+/*
+Unable to decompile 'FUN_rom_00a46f'
+Cause: 
+Low-level Error: Could not find op at target address: (unique,0x00026b00)
+*/
 
-
-
-// Function: FUN_rom_00a5a2
 
 undefined4 FUN_rom_00a5a2(void)
 
@@ -17805,10 +17837,6 @@ undefined4 FUN_rom_00a5a2(void)
 }
 
 
-
-
-
-// Function: FUN_rom_00a5ce
 
 void FUN_rom_00a5ce(void)
 
@@ -17844,11 +17872,7 @@ void FUN_rom_00a5ce(void)
 
 
 
-
-
-// Function: FUN_rom_00a61c
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00a61c(void)
 
@@ -17891,11 +17915,7 @@ void FUN_rom_00a61c(void)
 
 
 
-
-
-// Function: FUN_rom_00a688
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00a688(uint param_1,uint param_2,uint param_3)
 
@@ -17918,11 +17938,7 @@ void FUN_rom_00a688(uint param_1,uint param_2,uint param_3)
 
 
 
-
-
-// Function: FUN_rom_00a6b8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00a6b8(void)
 
@@ -17932,11 +17948,7 @@ undefined2 FUN_rom_00a6b8(void)
 
 
 
-
-
-// Function: FUN_rom_00a6c0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00a6c0(void)
 
@@ -17946,11 +17958,7 @@ undefined2 FUN_rom_00a6c0(void)
 
 
 
-
-
-// Function: FUN_rom_00a6c8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00a6c8(void)
 
@@ -17960,11 +17968,7 @@ undefined2 FUN_rom_00a6c8(void)
 
 
 
-
-
-// Function: FUN_rom_00a6cc
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00a6cc(undefined2 param_1)
 
@@ -17975,11 +17979,7 @@ void FUN_rom_00a6cc(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_00a6d0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00a6d0(void)
 
@@ -17989,11 +17989,7 @@ undefined2 FUN_rom_00a6d0(void)
 
 
 
-
-
-// Function: FUN_rom_00a6d4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00a6d4(undefined2 param_1)
 
@@ -18004,11 +18000,7 @@ void FUN_rom_00a6d4(undefined2 param_1)
 
 
 
-
-
-// Function: FUN_rom_00a6d8
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00a6d8(void)
 
@@ -18018,11 +18010,7 @@ undefined2 FUN_rom_00a6d8(void)
 
 
 
-
-
-// Function: FUN_rom_00a6e0
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined2 FUN_rom_00a6e0(void)
 
@@ -18032,11 +18020,7 @@ undefined2 FUN_rom_00a6e0(void)
 
 
 
-
-
-// Function: FUN_rom_00a6e4
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 void FUN_rom_00a6e4(void)
 
@@ -18048,19 +18032,15 @@ void FUN_rom_00a6e4(void)
   FUN_rom_00a688(1,0xff,0);
   PC = 0;
   UNRECOVERED_JUMPTABLE = (code *)PC;
-                    /* WARNING: Could not recover jumptable at 0x00a6f2. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
+                    // WARNING: Could not recover jumptable at 0x00a6f2. Too many branches
+                    // WARNING: Treating indirect jump as call
   (*UNRECOVERED_JUMPTABLE)();
   return;
 }
 
 
 
-
-
-// Function: FUN_rom_00a6f6
-
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+// WARNING: Globals starting with '_' overlap smaller symbols at the same address
 
 undefined4 FUN_rom_00a6f6(void)
 
@@ -18106,10 +18086,6 @@ undefined4 FUN_rom_00a6f6(void)
 
 
 
-
-
-// Function: FUN_rom_00a774
-
 uint FUN_rom_00a774(byte param_1,uint *param_2)
 
 {
@@ -18121,10 +18097,6 @@ uint FUN_rom_00a774(byte param_1,uint *param_2)
 }
 
 
-
-
-
-// Function: FUN_rom_00a786
 
 void FUN_rom_00a786(int param_1,undefined2 param_2)
 
@@ -18150,10 +18122,6 @@ void FUN_rom_00a786(int param_1,undefined2 param_2)
 
 
 
-
-
-// Function: FUN_rom_00a7ae
-
 undefined4 FUN_rom_00a7ae(void)
 
 {
@@ -18174,10 +18142,6 @@ undefined4 FUN_rom_00a7ae(void)
 
 
 
-
-
-// Function: FUN_rom_00a7cc
-
 undefined2 FUN_rom_00a7cc(void)
 
 {
@@ -18192,10 +18156,6 @@ undefined2 FUN_rom_00a7cc(void)
 
 
 
-
-
-// Function: FUN_rom_00a7d8
-
 undefined2 FUN_rom_00a7d8(void)
 
 {
@@ -18207,8 +18167,5 @@ undefined2 FUN_rom_00a7d8(void)
   Peripherals::CMP4.CMPCON4 = uVar1 | 0x8000;
   return 0x101;
 }
-
-
-
 
 

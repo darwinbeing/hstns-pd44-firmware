@@ -11,8 +11,8 @@
  *   0x2C00 - 0x8000  Optional program memory mapped space
  * ============================================================================ */
 
-#ifndef RAM_MAP_H
-#define RAM_MAP_H
+#ifndef VARIABLES_H
+#define VARIABLES_H
 
 #include <stdint.h>
 
@@ -111,7 +111,7 @@ extern volatile int16_t prev_vout_a;         /* 0x1D9A */
 extern volatile int16_t prev_vout_b;         /* 0x1D96 */
 extern volatile int16_t vout_sum;            /* 0x1DA0 = 2*AN0 + 2*AN2 */
 extern volatile int16_t vout_avg_sum;        /* 0x1D9E - 4-point average sum */
-extern volatile int16_t voutReference;            /* 0x1DA4 - LLC frequency target */
+extern volatile int16_t llcPeriodCmd;             /* 0x1DA4 - LLC switching-period command from the voltage loop */
 extern volatile int16_t voutSetpoint;         /* 0x1D4C - voltage setpoint */
 extern volatile int16_t voutCalibrated;            /* 0x1D66 - AN5 calibrated voltage */
 extern volatile int16_t outputVoltage;            /* 0x1BD4 - output voltage ADC */
@@ -144,10 +144,10 @@ extern volatile int16_t cal_var_1E42;       /* 0x1E42 - auxiliary calibration */
 extern volatile int16_t voltageError;       /* 0x1DE0 - e[n] */
 extern volatile int16_t prevError;          /* 0x1DDE - e[n-1] */
 extern volatile int16_t prevPrevError;     /* 0x1DDC - e[n-2] */
-extern volatile int16_t var_1D4E;            /* 0x1D4E */
+extern volatile int16_t compSlewTarget;      /* 0x1D4E - compensator slew-rate target */
 extern volatile uint16_t steadyCount;       /* 0x1DD2 - steady-state counter */
 extern volatile int16_t droopPeriod;        /* 0x1DD6 */
-extern volatile int16_t var_1D36;            /* 0x1D36 */
+extern volatile int16_t freqRampTarget;      /* 0x1D36 - frequency ramp target */
 
 /* Q15 fixed-point format */
 #define Q15_SHIFT   15
@@ -228,7 +228,7 @@ extern volatile uint16_t stableCount;      /* 0x122C - stable period accumulator
 extern volatile uint16_t sampleCount;      /* 0x122E - measurement window sample count */
 extern volatile int16_t vrefOcpAdj;        /* 0x1D38 - OCP adjustment to Vref */
 extern volatile int16_t vref_ls;             /* 0x1D3A - droop compensation */
-extern volatile int16_t var_1D4A;            /* 0x1D4A */
+extern volatile int16_t voutRefTarget;   /* 0x1D4A - 2P2Z Vref target (pre-calibration, 0xC4D ≈ 12.25V) */
 extern volatile uint16_t voutLoThresh;     /* 0x1D5A - Vout lower threshold for OE hysteresis */
 
 /* ============================================================================
@@ -239,7 +239,7 @@ extern volatile int16_t pdc3;                /* 0x1D6C - PDC3 shadow */
 extern volatile int16_t pdc2;                /* 0x1D6E - PDC2 shadow */
 extern volatile int16_t pdc1;                /* 0x1D70 - PDC1 shadow */
 extern volatile int16_t ptper;               /* 0x1D72 - used for PHASE3 clamp comparison */
-extern volatile int16_t ptper_computed;      /* 0x1D74 - PTPER shadow (written to PTPER register) */
+extern volatile int16_t ptperCommand;        /* 0x1D74 - final PWM period command written to PTPER */
 extern volatile int16_t phase3_target;       /* 0x1E56 - PHASE3 target with ramp-down clamp */
 
 /* ============================================================================
@@ -582,4 +582,4 @@ extern uint8_t tempLimitLut[198];
 /* Library functions */
 extern int32_t __mulsi3(int32_t a, int32_t b);
 
-#endif /* RAM_MAP_H */
+#endif /* VARIABLES_H */

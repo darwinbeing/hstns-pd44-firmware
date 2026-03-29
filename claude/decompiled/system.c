@@ -39,8 +39,8 @@ extern void droopMode0Watchdog(void);                /* 0x3666 – droop mode 0 
 extern void droopMode3Watchdog(void);                /* 0x371A – droop mode 3 watchdog */
 extern void runNormalMode(void);                /* 0x378A – normal mode watchdog */
 extern void fanUpdateSpeed(void);              /* 0x3EAC – apply new fan speed */
-extern uint16_t thresholdCompare(int16_t, int16_t, int16_t, int16_t);   /* 0x30E2 */
-extern uint16_t debounceCounter(int16_t, int16_t, volatile int16_t *, int16_t); /* 0x31B2 */
+extern uint16_t thresholdCompare(int16_t, int16_t, int16_t, int16_t);   /* 0x30E2: value, low, high, prev */
+extern uint16_t debounceCounter(int16_t, int16_t, volatile int16_t *, int16_t); /* 0x31B2: new, limit, counter, prev */
 
 /* ============================================================================
  * 1.  modeCheck  (0x32E0 – 0x3320)
@@ -51,7 +51,7 @@ extern uint16_t debounceCounter(int16_t, int16_t, volatile int16_t *, int16_t); 
  * Logic summary:
  *   - If systemState != 2  → skip (not in normal run)
  *   - If auxFlags bit11 set → skip (hardware inhibit active)
- *   - droopMode must be in range [0..3]; if out of range → fault
+ *   - droopMode must be in {3,4}; if out of range → fault
  *   - If running (statusFlags bit4 set):
  *       clear run flag, call shutdownPwm(), reset marginThreshold = 0x9C4,
  *       clear systemState
@@ -75,17 +75,20 @@ void modeCheck(void)   /* 0x32E0 – 0x3320 */
     /* --- Preload voutTargetCode with sentinel value 0xFFB0 --- */
     voutTargetCode = (int16_t)0xFFB0;             /* MOV #0xFFB0,W0 / MOV W0,0x1D4E */
 
-    /* --- Validate droopMode is 0..3 (droopMode - 3 must be <= 0 unsigned) --- */
+    /* --- Validate droopMode against assembly:
+     * 32F4..32F8 does unsigned (droopMode - 3) > 1 check.
+     * Passing values are exactly droopMode == 3 or 4.
+     */
     mode = droopMode;                      /* MOV 0x1268, W0 */
     mode -= 3;                              /* SUB W0,#3,W0 */
-    if (mode > 0) {                         /* SUB W0,#1,[W15] / BRA GTU */
-        /* droopMode > 3  → enter fault state (systemState = 3) */
+    if (mode > 1) {                         /* SUB W0,#1,[W15] / BRA GTU */
+        /* droopMode not in {3,4} → enter fault state */
         systemState = ST_FAULT;                       /* MOV #3,W0 / MOV W0,0x1E22 */
         shutdownPwm();                     /* CALL 0x4B50 */
         goto check_running;
     }
 
-    /* droopMode is 0..3 → set run flag */
+    /* droopMode is 3 or 4 → set run flag */
     statusFlags |= (1u << 4);               /* BSET 0x125A, #4 */
     faultResetTimer = flags_ic;                    /* MOV W1, 0x1E0E – save auxFlags copy */
     goto done;
@@ -95,8 +98,8 @@ check_running:
     if (!(statusFlags & (1u << 4)))          /* BTST 0x125A,#4 / BRA Z */
         goto done;
 
-    /* Stop condition 1: bit3 of startupFlags is clear */
-    if (!(startupFlags & (1u << 3))) {        /* BTST 0x1E1D,#3 / BRA NZ */
+    /* Stop condition 1: high-byte alias bit3 of 0x1E1D == auxFlags bit11 */
+    if (!(auxFlags & (1u << 11))) {        /* BTST 0x1E1D,#3 / BRA NZ */
         /* Stop condition 2: systemFlags bit1 is also clear → keep running */
         if (!(systemFlags & (1u << 1)))      /* BTST 0x1E1A,#1 / BRA Z */
             goto done;
@@ -158,12 +161,12 @@ void statusUpdate(void)   /* 0x3322 – 0x3384 */
     /* Arguments: W2 = hi threshold 0x17F, W1 = lo threshold 0x15F,
                   W3 = OT bit, ADCBUF5 in W0 */
     /* RCALL 0x30E2: thresholdCompare with OVP/UVP thresholds */
-    if (thresholdCompare((int16_t)adc5, (int16_t)ot_bit, 0x15F, 0x17F) != 0)
+    if (thresholdCompare((int16_t)adc5, 0x15F, 0x17F, (int16_t)ot_bit) != 0)
         ovp_result = 1;
 
     /* RCALL 0x31B2: debounce counter for OVP latch */
-    new_cl = debounceCounter((int16_t)ovp_result, (int16_t)cl_bit,
-                              (volatile int16_t *)&ovpUvpLatchTarget, 5) & 1;
+    new_cl = debounceCounter((int16_t)ovp_result, 5,
+                              (volatile int16_t *)&ovpUvpLatchTarget, (int16_t)cl_bit) & 1;
 
     /* --- Store new current-limit flag back into currentLimitFlags bit12 --- */
     new_cl <<= 12;                          /* SL W0,#12,W0 */
@@ -514,8 +517,8 @@ void watchdogService(void)   /* 0x37AA – 0x37C8 */
     if (state != 2)                         /* SUB W0,#2,[W15] / BRA NZ */
         return;
 
-    /* Guard: startupFlags bit3 must be set (startup-complete flag) */
-    if (!(startupFlags & (1u << 3)))          /* BTST 0x1E1D,#3 / BRA Z */
+    /* Guard: byte alias 0x1E1D bit3 corresponds to auxFlags bit11 */
+    if (!(auxFlags & (1u << 11)))          /* BTST 0x1E1D,#3 / BRA Z */
         return;
 
     mode = droopMode;                      /* MOV 0x1268, W0 */

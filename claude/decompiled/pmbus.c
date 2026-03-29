@@ -1339,23 +1339,23 @@ static void startupResetEventTracking(void)
  * ============================================================================ */
 
 /* Forward declarations for sub-functions referenced by the dispatch */
-extern void pmbusDispatcherTable1(void);   /* command dispatch helper 1 */
-extern void sub_27CE(void);   /* this dispatcher */
-extern void sub_1F54(void);
-extern void sub_1F90(void);
-extern void sub_289A(void);
-extern void sub_1F18(void);
-extern void pmbusDispatcherTable2(void);   /* command dispatch helper 2 */
-extern void sub_1A12(void);
-extern void sub_1D12(void);
-extern void sub_1B6A(void);
-extern void sub_1C48(void);
-extern void sub_1B2A(void);
-extern void sub_1C94(void);
-extern void sub_1CD4(void);
-extern void sub_1D5E(void);
-extern void sub_1DC8(void);
-extern void sub_1A92(void);
+extern void pmbusDispatcherTable1(void);    /* command dispatch helper 1 */
+extern void pmbusCommandRouter(void);       /* 0x27CE - command router */
+extern void pmbusReadVout(void);            /* 0x1F54 - READ_VOUT handler */
+extern void pmbusReadIout(void);            /* 0x1F90 - READ_IOUT handler */
+extern void pmbusBlockWrite(void);          /* 0x289A - block write handler */
+extern void pmbusReadConfig(void);          /* 0x1F18 - read config handler */
+extern void pmbusDispatcherTable2(void);    /* command dispatch helper 2 */
+extern void pmbusCmdSetVout(void);          /* 0x1A12 - VOUT_COMMAND handler */
+extern void pmbusCmdSetIout(void);          /* 0x1D12 - IOUT limit handler */
+extern void pmbusCmdMarginHi(void);         /* 0x1B6A - VOUT_MARGIN_HIGH */
+extern void pmbusCmdMarginLo(void);         /* 0x1C48 - VOUT_MARGIN_LOW */
+extern void pmbusCmdOvFault(void);          /* 0x1B2A - VOUT_OV_FAULT_LIMIT */
+extern void pmbusCmdOvWarn(void);           /* 0x1C94 - VOUT_OV_WARN_LIMIT */
+extern void pmbusCmdUvWarn(void);           /* 0x1CD4 - VOUT_UV_WARN_LIMIT */
+extern void pmbusCmdUvFault(void);          /* 0x1D5E - VOUT_UV_FAULT_LIMIT */
+extern void pmbusCmdFanConfig(void);        /* 0x1DC8 - FAN_CONFIG handler */
+extern void pmbusCmdOperation(void);        /* 0x1A92 - OPERATION handler */
 
 static void pmbusCommandDispatcher(void)
 {
@@ -1454,21 +1454,21 @@ static void pmbusCommandDispatcher(void)
 
         /* Per-command Tx handlers */
 cmd_01:       pmbusUnsupportedCommand(); goto tx_exit;
-cmd_11:       sub_27CE(); goto tx_exit;
-cmd_12:       sub_1F54(); goto tx_exit;
-cmd_20:       sub_1F90(); goto tx_exit;
-cmd_21:       sub_289A(); goto tx_exit;
-cmd_22:       sub_1F18(); goto tx_exit;
+cmd_11:       pmbusCommandRouter(); goto tx_exit;
+cmd_12:       pmbusReadVout(); goto tx_exit;
+cmd_20:       pmbusReadIout(); goto tx_exit;
+cmd_21:       pmbusBlockWrite(); goto tx_exit;
+cmd_22:       pmbusReadConfig(); goto tx_exit;
 cmd_23:       pmbusUnsupportedCommand(); goto tx_exit;
-cmd_24:       sub_1A12(); goto tx_exit;
-cmd_3B:       sub_1D12(); goto tx_exit;
-cmd_3C:       sub_1B6A(); goto tx_exit;
-cmd_3D:       sub_1C48(); goto tx_exit;
-cmd_3E:       sub_1B2A(); goto tx_exit;
-cmd_E0:       sub_1C94(); goto tx_exit;
-cmd_E3:       sub_1CD4(); goto tx_exit;
-cmd_E4:       sub_1D5E(); goto tx_exit;
-cmd_01_alt:   sub_1A92(); goto tx_exit;
+cmd_24:       pmbusCmdSetVout(); goto tx_exit;
+cmd_3B:       pmbusCmdSetIout(); goto tx_exit;
+cmd_3C:       pmbusCmdMarginHi(); goto tx_exit;
+cmd_3D:       pmbusCmdMarginLo(); goto tx_exit;
+cmd_3E:       pmbusCmdOvFault(); goto tx_exit;
+cmd_E0:       pmbusCmdOvWarn(); goto tx_exit;
+cmd_E3:       pmbusCmdUvWarn(); goto tx_exit;
+cmd_E4:       pmbusCmdUvFault(); goto tx_exit;
+cmd_01_alt:   pmbusCmdOperation(); goto tx_exit;
     }
 
 tx_main:
@@ -1676,32 +1676,32 @@ void __attribute__((interrupt, no_auto_psv)) _SI2C2Interrupt(void)
  * ============================================================================ */
 
 /* Forward-declare sub-functions called by t1IsrI2cBody */
-extern void voutUpdateReadPath(void);      /* 0x2452: Vout update / READ_VOUT */
-extern void sub_230C(void);
-extern void sub_25FC(void);
-extern void sub_26A0(void);
-extern void monitorStartupResetLatch(void); /* 0x2746: monitor startup latch */
-extern void sub_1FD6(void);
-extern void tempFanHandler(void);           /* 0x2398: temperature / fan handling */
-extern void uartCmdSubroutine2(void);       /* UART cmd sub 2 */
-extern void uartCmdSubroutine3(void);       /* UART cmd sub 3 */
-extern void sub_215A(void);
-extern void sub_21FE(void);
-extern void uartCmdSubroutine6(void);       /* UART cmd sub 6 */
-extern void uartCmdSubroutine7(void);       /* UART cmd sub 7 */
-extern void sub_249C(void);
-extern void sub_255A(void);
-extern void unknownSubroutine2594(void);    /* 0x2594: unknown */
+extern void voutUpdateReadPath(void);         /* 0x2452 - Vout update / READ_VOUT */
+extern void i2cIoutUpdatePath(void);          /* 0x230C - Iout update path */
+extern void i2cTargetPeriodUpdate(void);      /* 0x25FC - ioutVoutTarget period update */
+extern void i2cOvThresholdCheck(void);        /* 0x26A0 - OV threshold check */
+extern void monitorStartupResetLatch(void);   /* 0x2746 - monitor startup latch */
+extern void setFaultState(void);              /* 0x1FD6 - fault state entry */
+extern void tempFanHandler(void);             /* 0x2398 - temperature / fan handling */
+extern void uartCmdSubroutine2(void);         /* 0x2042 - power telemetry calc */
+extern void uartCmdSubroutine3(void);         /* 0x2224 - efficiency ratio calc */
+extern void i2cThresholdMonitor(void);        /* 0x215A - threshold comparison */
+extern void i2cFlagUpdate(void);              /* 0x21FE - flag state update */
+extern void uartCmdSubroutine6(void);         /* 0x2464 - peak tracker A */
+extern void uartCmdSubroutine7(void);         /* 0x2486 - peak tracker B */
+extern void i2cStatusByteUpdate(void);        /* 0x249C - status byte update */
+extern void i2cStatusFlagSync(void);          /* 0x255A - status flag sync */
+extern void unknownSubroutine2594(void);      /* 0x2594 - power enable control */
 
 void t1IsrI2cBody(void)
 {
     /* Step 1-6: call sub-functions for Vout/Iout/PMBus updates */
-    voutUpdateReadPath();          /* 0x2452: Vout update / READ_VOUT path      */
-    sub_230C();                    /* 0x230C: Iout update path                  */
-    monitorStartupResetLatch();    /* 0x2746: monitor startupResetLatch changes  */
-    sub_25FC();                    /* 0x25FC: ioutVoutTarget period update       */
-    sub_26A0();                    /* 0x26A0: OV threshold check                */
-    tempFanHandler();              /* 0x2398: temperature / fan handling        */
+    voutUpdateReadPath();              /* 0x2452 */
+    i2cIoutUpdatePath();               /* 0x230C */
+    monitorStartupResetLatch();        /* 0x2746 */
+    i2cTargetPeriodUpdate();           /* 0x25FC */
+    i2cOvThresholdCheck();             /* 0x26A0 */
+    tempFanHandler();                  /* 0x2398 */
 
     /* Step 7: clamp ioutVoutTarget to [0x5DC] based on i2cPeriodCnt */
     {
@@ -1713,17 +1713,17 @@ void t1IsrI2cBody(void)
         }
     }
 
-    /* Step 8: run UART command handlers only if bit0 of flashCmdFlags clear */
+    /* Step 8: run command handlers only if bit0 of flashCmdFlags clear */
     if (!(flashCmdFlags & (1u << 0))) {
-        sub_1FD6();                /* UART cmd sub 1 */
-        uartCmdSubroutine2();      /* UART cmd sub 2 */
-        uartCmdSubroutine3();      /* UART cmd sub 3 */
-        sub_215A();                /* UART cmd sub 4 */
-        sub_21FE();                /* UART cmd sub 5 */
-        uartCmdSubroutine6();      /* UART cmd sub 6 */
-        uartCmdSubroutine7();      /* UART cmd sub 7 */
-        sub_249C();                /* UART cmd sub 8 */
-        sub_255A();                /* status byte update (0x255A) */
-        unknownSubroutine2594();   /* 0x2594: unknown  */
+        setFaultState();               /* 0x1FD6 */
+        uartCmdSubroutine2();          /* 0x2042 */
+        uartCmdSubroutine3();          /* 0x2224 */
+        i2cThresholdMonitor();         /* 0x215A */
+        i2cFlagUpdate();               /* 0x21FE */
+        uartCmdSubroutine6();          /* 0x2464 */
+        uartCmdSubroutine7();          /* 0x2486 */
+        i2cStatusByteUpdate();         /* 0x249C */
+        i2cStatusFlagSync();           /* 0x255A */
+        unknownSubroutine2594();       /* 0x2594 */
     }
 }

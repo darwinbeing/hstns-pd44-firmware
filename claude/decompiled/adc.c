@@ -100,6 +100,22 @@ void adcMiscSample(void)
  * ============================================================================ */
 void adcVoltageSample(void)
 {
+#ifdef SIMULATION_MODE
+    int16_t cal_a_result;
+    int16_t cal_b_result;
+
+    vbuf_a[0] = ADCBUF5;
+    vbuf_b[0] = ADCBUF3;
+    vraw_sum_b = (int16_t)(ADCBUF3 << 6);
+
+    cal_a_result = (int16_t)((__mulsi3((int32_t)ADCBUF5, (int32_t)cal_va2) >> 13) + ofs_va2);
+    cal_b_result = (int16_t)((__mulsi3((int32_t)ADCBUF3, (int32_t)cal_vb) >> 13) + ofs_vb);
+
+    vcal_a = cal_a_result;
+    vcal_b = cal_b_result;
+    vcal_diff = cal_a_result - cal_b_result;
+    return;
+#else
     uint16_t idx = (uint16_t)tick_counter;  /* 0x1252:0x1254 (only low 6 bits used) */
 
     /* --- Channel A: ADCBUF5 --- */
@@ -139,6 +155,7 @@ void adcVoltageSample(void)
 
     /* Difference */
     vcal_diff = cal_a_result - cal_b_result;             /* 0x126C */
+#endif
 }
 
 /* ============================================================================
@@ -161,6 +178,26 @@ void adcVoltageSample(void)
  * ============================================================================ */
 void adcCurrentSample(void)
 {
+#ifdef SIMULATION_MODE
+    int16_t adc_val = ADCBUF4;
+    int16_t cal_result;
+
+    iout_4buf[0] = (int32_t)adc_val;
+    ioutSum64 = adc_val;
+    iout_64avg = adc_val;
+
+    cal_result = (int16_t)((__mulsi3((int32_t)cal_a_gain, (int32_t)adc_val) >> 13) + cal_a_offset);
+    Imeas_cal_a = (cal_result >= 0) ? cal_result : 0;
+    iout_cal_raw = Imeas_cal_a;
+    Imeas = Imeas_cal_a;
+    Imeas_scaled = (int16_t)(((int32_t)Imeas * (int32_t)0x1E80) >> 10);
+    Imeas_longavg = Imeas_cal_a;
+    iout_avg = adc_val;
+    iout_ring[0] = Imeas_cal_a;
+    iout_accum = Imeas_cal_a;
+    iout_ring_idx = 0;
+    return;
+#else
     int16_t adc_val = ADCBUF4;
     uint16_t idx = (uint16_t)tick_counter;
 
@@ -215,6 +252,7 @@ void adcCurrentSample(void)
     /* Subtract oldest sample from accumulator */
     int16_t oldest = iout_ring[iout_ring_idx];
     iout_accum -= (int32_t)oldest;
+#endif
 }
 
 /* ============================================================================

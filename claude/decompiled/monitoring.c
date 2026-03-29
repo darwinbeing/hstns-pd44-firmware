@@ -28,19 +28,19 @@
 /* --------------------------------------------------------------------------
  * External / forward declarations for functions outside this file
  * -------------------------------------------------------------------------- */
-extern void  pwmDisable(void);              /* 0x4B50 – disable all PWM channels */
+extern void  pwmOverrideEnable(void);       /* 0x4B50 – enable PWM override (force outputs low) */
 extern uint16_t checkCurrentLimit(void);   /* 0x4BD4 – returns non-zero when current
                                                           limiting is active */
-extern void  call_1FD6(void);                /* 0x1FD6 – stop PWM / disable power stage */
-extern void  call_571E(void);                /* 0x571E – I2C / PMBus handler */
-extern void  call_29FA(void);                /* 0x29FA – UART command handler */
-extern void  call_546C(void);                /* 0x546C – ADC calibration / droop update */
-extern void  call_4D94(void);                /* 0x4D94 – LATF output driver */
-extern void  call_3B5E(void);                /* 0x3B5E – LLC control loop */
-extern void  call_40C2(void);                /* 0x40C2 – secondary housekeeping */
-extern void  call_3F0E(void);                /* 0x3F0E – PFC / primary control */
-extern void  call_42C8(void);                /* 0x42C8 – auxiliary loop */
-extern void  call_5AE4(void);                /* 0x5AE4 – I2C2 receive handler */
+extern void  setFaultState(void);             /* 0x1FD6 - stop PWM / disable power stage */
+extern void  updateStatusLeds(void);         /* 0x571E - UART status LED update */
+extern void  t1IsrI2cBody(void);             /* 0x29FA - T1 ISR I2C body */
+extern void  updatePmbusStatus(void);        /* 0x546C - PMBus status / droop update */
+extern void  checkOtp(void);                 /* 0x4D94 - over-temperature LED control */
+extern void  flashCalibrationLoad(void);     /* 0x3B5E - flash calibration loader */
+extern void  voltageErrorTracking(void);     /* 0x40C2 - peak voltage/current tracking */
+extern void  currentRegulation(void);        /* 0x3F0E - flash sector / telemetry */
+extern void  flashReadbackHandler(void);     /* 0x42C8 - flash readback/erase handler */
+extern void  i2cProcessCommand(void);        /* 0x5AE4 - I2C2 command processor */
 extern void  eepromCfgUpdate(uint8_t mode, uint8_t status, uint8_t enable);
 extern uint16_t eepromCfgRead(void);
 
@@ -56,31 +56,25 @@ extern uint16_t eepromCfgRead(void);
  * -------------------------------------------------------------------------- */
 
 /* --------------------------------------------------------------------------
- * Helper: pwmDisable (0x4B50)
+ * Inline copy of pwmOverrideEnable (0x4B50)
  *
- * Sets the software-stop bits on all three PWM generators so that all
- * half-bridge outputs are forced low, then returns.  Three NOP delay
+ * Enables PWM override on all three channels (OVRENH/OVRENL), forcing
+ * half-bridge outputs to their override state (low).  Three NOP delay
  * slots follow each bit-set for synchronisation with the PWM hardware.
  * -------------------------------------------------------------------------- */
-static inline void pwmDisableInline(void)
+static inline void pwmOverrideEnableInline(void)
 {
-    /* IOCON1 high byte bit1 = OVRENH (override enable high-side, channel 1) */
-    IOCON1bits.OVRENH = 1;
-    __asm__("nop"); __asm__("nop"); __asm__("nop");
-    /* IOCON1 high byte bit0 = OVRENL */
-    IOCON1bits.OVRENL = 1;
-    __asm__("nop"); __asm__("nop"); __asm__("nop");
-    /* IOCON2 high byte bit1 = OVRENH (channel 2) */
-    IOCON2bits.OVRENH = 1;
-    __asm__("nop"); __asm__("nop"); __asm__("nop");
-    /* IOCON2 high byte bit0 = OVRENL */
-    IOCON2bits.OVRENL = 1;
-    __asm__("nop"); __asm__("nop"); __asm__("nop");
-    /* IOCON3 high byte bit1 = OVRENH (channel 3) */
-    IOCON3bits.OVRENH = 1;
-    __asm__("nop"); __asm__("nop"); __asm__("nop");
-    /* IOCON3 high byte bit0 = OVRENL */
-    IOCON3bits.OVRENL = 1;
+    IOCON1bits.OVRENH = 1;   /* 0x423 bit1 */
+    Nop(); Nop(); Nop();
+    IOCON1bits.OVRENL = 1;   /* 0x423 bit0 */
+    Nop(); Nop(); Nop();
+    IOCON2bits.OVRENH = 1;   /* 0x443 bit1 */
+    Nop(); Nop(); Nop();
+    IOCON2bits.OVRENL = 1;   /* 0x443 bit0 */
+    Nop(); Nop(); Nop();
+    IOCON3bits.OVRENH = 1;   /* 0x463 bit1 */
+    Nop(); Nop(); Nop();
+    IOCON3bits.OVRENL = 1;   /* 0x463 bit0 */
 }
 
 /* ============================================================================
@@ -93,7 +87,7 @@ static inline void pwmDisableInline(void)
  * to transition to STARTUP (state 1).
  *
  * Transition to state 1 occurs when ALL of the following are true:
- *   - marginThreshold (0x1E10) is non-zero
+ *   - marginThreshold (0x1E10) has counted down to zero
  *   - auxFlags bit11 is set  (supply good indicator)
  *   - flags_1BF2  bit3 is set  (Vin present)
  *   - auxFlags  bit1 is set  (enable active)
@@ -102,7 +96,7 @@ static inline void pwmDisableInline(void)
 void state0Idle(void)
 {
     /* Disable PWM outputs */
-    pwmDisable();   /* RCALL 0x4B50 */
+    pwmOverrideEnable();   /* RCALL 0x4B50 */
 
     /* Clear main control and mode flags */
     statusFlags = 0;              /* 0x125A */
@@ -114,9 +108,9 @@ void state0Idle(void)
 
     /* IOCON2 PENH – gate drive enable signal (high-side output enable) */
     IOCON2bits.PENH = 1;
-    __asm__("nop");
-    __asm__("nop");
-    __asm__("nop");
+    Nop();
+    Nop();
+    Nop();
     /* IOCON2 PENL – low-side output enable */
     IOCON2bits.PENL = 1;
 
@@ -136,7 +130,7 @@ void state0Idle(void)
 
     /* Vout reference initial values */
     voutRefInitial = 0x2710;           /* 10000 */
-    voutReference = 0x5DC0;           /* 24000 – LLC frequency target */
+    llcPeriodCmd = 0x5DC0;            /* 24000 – LLC period command */
 
     /* OVP / UVP thresholds */
     compY_out = 0x5DC0;           /* 24000 */
@@ -148,8 +142,8 @@ void state0Idle(void)
 
     /* ---------- Evaluate transition to STARTUP ---------- */
 
-    /* Require marginThreshold != 0 */
-    if (marginThreshold == 0)
+    /* Stay in IDLE until marginThreshold counts down to zero. */
+    if (marginThreshold != 0)
         goto done;
 
     {
@@ -223,7 +217,7 @@ void state1Startup(void)
     pwmRunRequest = 0;
     startupResetLatch = 0;
 
-    /* Select Vref target based on droop mode */
+    /* Select watchdog target based on droop mode */
     {
         uint16_t vref;
 
@@ -238,7 +232,7 @@ void state1Startup(void)
                 vref = 0x06B3;
             }
         }
-        vrefModeSelect = (int16_t)vref;
+        voutRefTarget = (int16_t)vref;
     }
 
     /* Advance to ACTIVE */
@@ -302,8 +296,8 @@ void state3Fault(void)
         faultFlags = 0;
         pwmRunRequest   |= (1u << 0);    /* set PWM run request */
         pwmRunning   &= ~(1u << 0);   /* clear PWM running flag */
-        call_1FD6();                 /* stop power stage */
-        __asm__("nop");
+        setFaultState();                 /* stop power stage */
+        Nop();
         pmbusAlertFlags |= (1u << 0);       /* PMBus alert */
     }
 
@@ -336,7 +330,7 @@ after_droop:
     droopMode = 0;
     ovpDebounceFlags &= ~(1u << 6);
 
-    pwmDisable();   /* RCALL 0x4B50 */
+    pwmOverrideEnable();   /* RCALL 0x4B50 */
 
     /* Reinitialise integrator lower-bound */
     voutTargetCode = (int16_t)0xFFB0;   /* -80 */
@@ -1442,11 +1436,11 @@ do_fault:
     faultFlags = 0;
     pwmRunRequest  |= (1u << 0);    /* PWM run request */
     pwmRunning  &= ~(1u << 0);   /* clear PWM running */
-    call_1FD6();
-    __asm__("nop");
+    setFaultState();
+    Nop();
     pmbusAlertFlags |= (1u << 0);     /* PMBus alert */
 
-    pwmDisable();              /* RCALL 0x4B50 */
+    pwmOverrideEnable();              /* RCALL 0x4B50 */
     systemState = ST_FAULT;               /* → FAULT */
 
 no_fault:
@@ -1462,10 +1456,10 @@ no_fault:
             /* If auxFlags bit1 is clear → transition to state 5 */
             if (!(auxFlags & (1u << 1))) {
                 pwmRunning  &= ~(1u << 0);
-                call_1FD6();
-                __asm__("nop");
+                setFaultState();
+                Nop();
                 pmbusAlertFlags  |= (1u << 0);
-                pwmDisable();     /* RCALL 0x4B50 */
+                pwmOverrideEnable();     /* RCALL 0x4B50 */
                 systemState = ST_HOLDOFF;      /* → STATE5 */
                 protStatusByte &= ~(1u << 4);
             }
@@ -1475,10 +1469,9 @@ no_fault:
         }
     }
 
-    /* --- Step 3: check output relay (LATF bit1) --- */
-    if (!LATFbits.LATF1) {
-        /* Relay off → transition to state 6 */
-        pwmDisable();
+    /* --- Step 3: LATF bit1 asserted forces transition to state 6 --- */
+    if (LATFbits.LATF1) {
+        pwmOverrideEnable();
         systemState = ST_RELAY;   /* → STATE6 */
     }
 

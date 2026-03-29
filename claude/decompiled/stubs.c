@@ -11,6 +11,64 @@
 #include <xc.h>
 #include "variables.h"
 
+extern void pwmDisable(void); /* 0x4B7C */
+
+static volatile uint16_t *const droopDeltaLo_1D5E = (volatile uint16_t *)0x1D5E;
+static volatile uint16_t *const droopDeltaHi_1D60 = (volatile uint16_t *)0x1D60;
+static volatile uint16_t *const droopDelta2Lo_1D62 = (volatile uint16_t *)0x1D62;
+static volatile uint16_t *const droopDelta2Hi_1D64 = (volatile uint16_t *)0x1D64;
+static volatile uint16_t *const droopRampCounter_1250 = (volatile uint16_t *)0x1250;
+
+/* ============================================================================
+ * softStartTargetRamp  (0x34EE – 0x3556)
+ *
+ * Slews softStartPwmLimit toward the requested voltage target and returns the
+ * current slewed limit.  This helper is shared by the normal-mode watchdog.
+ * ============================================================================ */
+static int16_t softStartTargetRamp(int16_t target)
+{
+    if (softStartPwmLimit == (uint16_t)0xFFB0) {
+        softStartRampCnt = 0;
+        softStartDwellCnt = 0;
+    }
+
+    if (softStartRampCnt <= 0x012C) {
+        uint16_t next_ramp = (uint16_t)(softStartRampCnt + 1u);
+        uint16_t next_limit = (uint16_t)(next_ramp * 28u + 0x50u);
+
+        softStartRampCnt = next_ramp;
+        softStartPwmLimit = next_limit;
+
+        if ((int16_t)target <= (int16_t)next_limit) {
+            softStartPwmLimit = (uint16_t)target;
+            statusFlags |= (1u << 5);
+
+            if (target == 0x06B3) {
+                LATD |= (1u << 4);
+                softStartDwellCnt++;
+                if (softStartDwellCnt >= 0x004A) {
+                    softStartRampCnt = 0;
+                    statusFlags2 &= ~(1u << 5);
+                    softStartDwellCnt = 0;
+                    droopMode = 3;
+                    droopWorkA = 0x8000;
+                    droopWorkB = 0x0166;
+                    statusFlags2 |= 1u;
+                }
+            } else if (target == 0x0C4D) {
+                softStartRampCnt = 0;
+                statusFlags2 &= ~(1u << 5);
+                droopMode = 3;
+                LATD &= ~(1u << 4);
+                droopWorkA = 0;
+                droopWorkB = 0;
+            }
+        }
+    }
+
+    return (int16_t)softStartPwmLimit;
+}
+
 /* ============================================================================
  * voutUpdateReadPath  (0x2452 – 0x2470)
  *
@@ -265,7 +323,7 @@ void unknownSubroutine2594(void)
  *      compute initFreq from Imeas (different scale), clamp to [0x125C, 0x13EC],
  *      set faultResetTimer=5, toggle statusFlags bits.
  *
- * Also clears statusFlags2 bit5 and sets var_1D4A = 0x6B3.
+ * Also clears statusFlags2 bit5 and sets voutRefTarget = 0x6B3 (Vref).
  * ============================================================================ */
 void droopMode0Watchdog(void)
 {
@@ -324,24 +382,24 @@ void droopMode0Watchdog(void)
     }
 
     statusFlags2 &= ~0x0020;   /* clear bit5 */
-    var_1D4A = 0x06B3;         /* reload watchdog */
+    voutRefTarget = 0x06B3;         /* set Vref setpoint */
 }
 
 /* ============================================================================
- * droopMode3Watchdog  (0x371A – 0x37A8)
+ * droopMode3Watchdog  (0x371A – 0x3788)
  *
  * Droop compensation mode-3 watchdog.  More complex than mode-0; manages
  * GPIO LATD bit4, calls sub_3558 / sub_35D4 for frequency computation,
  * and monitors current threshold crossings.
  *
- * Sets var_1D4A = 0xC4D (watchdog reload).
+ * Sets voutRefTarget = 0xC4D (~12.25V scaled Vref).
  *
  * TODO: requires sub_3558() and sub_35D4() helpers for full implementation.
  *       Stub preserves watchdog reload and basic flag management.
  * ============================================================================ */
 void droopMode3Watchdog(void)
 {
-    var_1D4A = 0x0C4D;  /* reload watchdog */
+    voutRefTarget = 0x0C4D;  /* ~12.25V scaled Vref */
 
     uint16_t clFlags = currentLimitFlags & 0x0800;
 
@@ -380,14 +438,49 @@ void droopMode3Watchdog(void)
         else {
             uint8_t ld = (uint8_t)LATD;
             if ((ld & 0x10) == 0) {
-                var_1D4A = 0x0C4D;
+                voutRefTarget = 0x0C4D;
                 return;
             }
             if (Imeas > 0x00D2) {
-                var_1D4A = 0x0C4D;
+                voutRefTarget = 0x0C4D;
                 return;
             }
             /* TODO: call sub_35D4() */
         }
     }
+}
+
+/* ============================================================================
+ * runNormalMode  (0x378A – 0x37A8)
+ *
+ * Normal LLC watchdog path.  Detects 12V-present, advances the PWM enable
+ * sequence, then slews voutTargetCode toward voutRefTarget using the shared
+ * soft-start helper above.
+ * ============================================================================ */
+void runNormalMode(void)
+{
+    if (!(statusFlags2 & (1u << 5))) {
+        if ((vout_sum > 0x02FF) && !(statusFlags & (1u << 7))) {
+            statusFlags |= (1u << 7);
+        } else {
+            pwmDisable();
+        }
+    }
+
+    voutTargetCode = softStartTargetRamp(voutRefTarget);
+}
+
+/* --------------------------------------------------------------------------
+ * initI2cPointerTables (0x13C2 – 0x150A)
+ *
+ * Initialises I2C2 PMBus pointer/dispatch tables (ptrTable19B0, ptrTable19BA,
+ * ptrTable19D0, ptrTable19F0, ptrTable1A10, ptrTable1A70, ptrTable1B90)
+ * with RAM addresses of PMBus data/config registers.
+ *
+ * 165 instructions, all MOV #imm, W0 / MOV W0, addr pairs.
+ * TODO: decompile full table initialization from Ghidra.
+ * -------------------------------------------------------------------------- */
+void initI2cPointerTables(void)
+{
+    /* stub — pointer tables left uninitialized */
 }

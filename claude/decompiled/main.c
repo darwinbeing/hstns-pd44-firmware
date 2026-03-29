@@ -5,6 +5,7 @@
  * ============================================================================ */
 #include <xc.h>
 #include "variables.h"
+#include "simulator.h"
 
 /* ---- Function declarations ---- */
 extern void initClock(void);        /* 0x59CE */
@@ -118,6 +119,13 @@ int main(void)
     statusFlags = 0;            /* CLR 0x125A */
 
     /* ---- Peripheral initialization sequence (while interrupts disabled) ---- */
+#ifdef SIM_MAIN_CHAIN_ONLY
+    /* Main-chain simulation only needs the algorithm/state RAM defaults.
+     * Skipping unrelated peripheral bring-up keeps the MPLAB simulator fast
+     * enough to reach T1/T2/T4/mainStateDispatch deterministically.
+     */
+    initVars();                /* 0x508E */
+#else
     initClock();               /* 0x59CE: PLL Fosc=100MHz, APLL ~120MHz */
     initCMP4();                /* 0x5BD8: CMPCON4=0x101, CMPDAC4=0 */
     initCMP3();                /* 0x5BCC: CMPCON3=0x81, CMPDAC3=0x1A3 */
@@ -129,6 +137,11 @@ int main(void)
     initUART1();               /* 0x556A: 9N1 4800baud */
     initSPI2();                /* 0x38A6: Master ~1.56MHz */
     initVars();                /* 0x508E: RAM variable initialization */
+#endif
+
+#ifdef SIMULATION_MODE
+    simInit();
+#endif
 
     /* Enable interrupts (IPL=0) */
     SRbits.IPL = 0;
@@ -136,6 +149,9 @@ int main(void)
     /* ---- Main loop ---- */
     while (1) {
         ClrWdt();                      /* 0x5A54 */
+#ifdef SIMULATION_MODE
+        simRunStep();
+#else
         i2cService();                 /* 0x50C2: check I2C2 status */
         startupControl();                /* 0x5522: startup/soft-start control */
         mainStateDispatch();          /* 0x51FE: T1-driven main state machine */
@@ -145,5 +161,6 @@ int main(void)
         flashReadPage6();               /* 0x4260: Read Flash page 6 (config) */
         flashReadPage7();               /* 0x427E: Read Flash page 7 (calibration) */
         flashProgramRead32();           /* 0x429C: Flash program + read 32B */
+#endif
     }
 }

@@ -18,10 +18,10 @@
 void pwmOverrideEnable(void);
 
 /* Helpers declared in t1_sub_prot.c */
-extern uint16_t thresholdCompare(int16_t adc_val, int16_t prev_state,
-                                  int16_t lo_thresh, int16_t hi_thresh);
-extern uint16_t debounceCounter(int16_t new_val, int16_t prev_val,
-                                 volatile int16_t *cnt, int16_t limit);
+extern uint16_t thresholdCompare(int16_t adc_val, int16_t lo_thresh,
+                                  int16_t hi_thresh, int16_t prev_state);
+extern uint16_t debounceCounter(int16_t new_val, int16_t limit,
+                                 volatile int16_t *cnt, int16_t prev_val);
 
 /* ============================================================================
  * adcBuf12OvercurrentLatch() — 0x433C-0x43D2
@@ -43,13 +43,13 @@ void adcBuf12OvercurrentLatch(void)
 
     /* Threshold compare: ADCBUF12 vs [0x136, 0x26C] with hysteresis */
     int16_t flags_w3 = (thermalFlags >> 1) & 1;
-    uint16_t cmp = thresholdCompare(adc12, flags_w3, 0x136, 0x26C);
+    uint16_t cmp = thresholdCompare(adc12, 0x136, 0x26C, flags_w3);
     if (cmp == 0)
         new_state = 1;
 
     /* Debounce with counter at debounceAdc12, limit 3 */
-    uint16_t result = debounceCounter(new_state, prev_bit,
-                                       &debounceAdc12, 3);
+    uint16_t result = debounceCounter(new_state, 3,
+                                       &debounceAdc12, prev_bit);
 
     /* Update bit3 of pwmRunning */
     int16_t f1bf2 = pwmRunning;
@@ -93,11 +93,16 @@ void adcBuf12OvercurrentLatch(void)
         statusFlags &= ~(1u << 13);
         ocRampCounter = 0;
 
-        if (oc_flag == 0 && systemState != 0) {
-            /* Force PWM enable and reset to IDLE */
+        if (oc_flag != 0) {
+            return;
+        }
+
+        if (systemState != 0) {
+            /* Clear run request / assert alert before forcing IDLE. */
             pwmRunning &= ~(1u << 0);
             pmbusAlertFlags |= (1u << 0);
         }
+
         pwmOverrideEnable();                       /* 0x4B50 */
         systemState = ST_IDLE;                                /* -> IDLE */
         marginThreshold = 0x9C4;                    /* 2500 */
@@ -203,7 +208,7 @@ void portdEdgeFaultDetect(void)
  *   2) OVP threshold depends on droopMode: 0x1DF (mode 4) or 0x36F (others)
  *   3) If controlStatus bit4 set: progressive OVP counter at 0x1DCA
  *      On timeout -> fault (systemState=3) with PWM override
- *   4) If voutCalibrated > threshold AND voutReference > 0x1F3F AND bit4 set:
+ *   4) If voutCalibrated > threshold AND llcPeriodCmd > 0x1F3F AND bit4 set:
  *      immediate OVP: set all PTPER/PDC to 0, arm PWM, set systemState=3
  * ============================================================================ */
 void voutCalibrationAndOvpDetect(void)
@@ -251,17 +256,23 @@ void voutCalibrationAndOvpDetect(void)
                 pwmOverrideEnable();
                 systemState = ST_FAULT;                        /* -> FAULT */
             }
+        } else {
+            ovpCounter = 0;
         }
-    } else if (vavg_div4 >= ovp_thresh) {
-        /* Over voltage detected: check if voutReference > 0x1F3F and running */
-        if (voutReference > 0x1F3F && (statusFlags & (1u << 4))) {
-            /* Immediate OVP: set all outputs to match, arm OVP */
+    } else if (vavg_div4 > ovp_thresh) {
+        /* 0x44B6..0x44D4:
+         *   trigger when vout is above threshold and
+         *   (llcPeriodCmd >= 0x1F3F OR statusFlags bit4 is set).
+         */
+        if (llcPeriodCmd >= 0x1F3F || (statusFlags & (1u << 4))) {
             pdc1 = 0;
             pdc2 = 0;
             pdc3 = 0;
-            controlStatus |= (1u << 4);              /* arm OVP */
+            controlStatus |= (1u << 4);
             ovpCounter = 0;
-            faultResetTimer = 0xC8;      /* 200 tick cooldown */
+            faultResetTimer = 0xC8;
+        } else {
+            ovpCounter = 0;
         }
     } else {
         ovpCounter = 0;
@@ -277,15 +288,15 @@ void voutCalibrationAndOvpDetect(void)
 void pwmDisableAll(void)
 {
     IOCON1bits.PENH = 0;   /* 0x423 bit1 */
-    asm("nop"); asm("nop"); asm("nop");
+    Nop(); Nop(); Nop();
     IOCON1bits.PENL = 0;   /* 0x423 bit0 */
-    asm("nop"); asm("nop"); asm("nop");
+    Nop(); Nop(); Nop();
     IOCON2bits.PENH = 0;   /* 0x443 bit1 */
-    asm("nop"); asm("nop"); asm("nop");
+    Nop(); Nop(); Nop();
     IOCON2bits.PENL = 0;   /* 0x443 bit0 */
-    asm("nop"); asm("nop"); asm("nop");
+    Nop(); Nop(); Nop();
     IOCON3bits.PENH = 0;   /* 0x463 bit1 */
-    asm("nop"); asm("nop"); asm("nop");
+    Nop(); Nop(); Nop();
     IOCON3bits.PENL = 0;   /* 0x463 bit0 */
 }
 
@@ -295,8 +306,8 @@ void pwmDisableAll(void)
  * Frequency/period limiting logic:
  *   1) If faultFlags bits 4+5 both set (0x30):
  *      - Set 0x1DCE=1 (limit active flag)
- *      - If voutReference > 0x206C: clamp all y[n] states to 0x206C, enable PWM
- *      - If voutReference <= 0x1FA3: call pwmDisableAll
+ *      - If llcPeriodCmd > 0x206C: clamp all y[n] states to 0x206C, enable PWM
+ *      - If llcPeriodCmd <= 0x1FA3: call pwmDisableAll
  *   2) If 0x1DCE was set: clear faultFlags bit5, clear 0x1DCE, disable PWM
  *   3) faultFlags bit10: secondary PWM3 PENH enable/disable toggle
  * ============================================================================ */
@@ -306,16 +317,16 @@ void frequencyLimitControl(void)
         /* Both bits 4+5 set: frequency limit active */
         freqLimitActive = 1;
 
-        if (voutReference > 0x206C) {                     /* > 8300 */
+        if (llcPeriodCmd > 0x206C) {                     /* > 8300 */
             /* Clamp all 2P2Z state to 0x206C */
             compY_out = 0x206C;
             compY_n1 = 0x206C;
             compY_n2 = 0x206C;
             pwmOverrideEnable();                   /* 0x4B50 */
-        } else if (voutReference <= 0x1FA3) {             /* <= 8099 */
+        } else if (llcPeriodCmd <= 0x1FA3) {             /* <= 8099 */
             pwmDisableAll();                       /* 0x44DC */
         }
-        /* else: voutReference in (0x1FA3, 0x206C] — do nothing */
+        /* else: llcPeriodCmd in (0x1FA3, 0x206C] — do nothing */
     } else {
         if (freqLimitActive != 0) {
             faultFlags &= ~(1u << 5);
@@ -328,12 +339,12 @@ void frequencyLimitControl(void)
     if (faultFlags & 0x400) {
         pwm3PenhFlag = 1;
         IOCON3bits.PENH = 1;                         /* 0x463 bit1 */
-        asm("nop"); asm("nop"); asm("nop");
+        Nop(); Nop(); Nop();
     } else {
         if (pwm3PenhFlag != 0) {
             pwm3PenhFlag = 0;
             IOCON3bits.PENH = 0;
-            asm("nop"); asm("nop"); asm("nop");
+            Nop(); Nop(); Nop();
         }
     }
 }
@@ -341,21 +352,22 @@ void frequencyLimitControl(void)
 /* ============================================================================
  * pwmOverrideEnable() — 0x4B50-0x4B6C
  *
- * Enables PWM1 and PWM2 outputs by setting PENH/PENL bits on IOCON1 and
- * IOCON2 with 3-NOP synchronization delays.
- * (PWM3 is NOT enabled here — it's controlled separately by )
+ * Enables PWM override on all three channels by setting OVRENH/OVRENL bits
+ * on IOCON1/2/3 with 3-NOP synchronization delays.
+ * This forces PWM outputs to their override values (typically low),
+ * effectively disabling normal PWM switching.
  * ============================================================================ */
 void pwmOverrideEnable(void)
 {
-    IOCON1bits.PENH = 1;   /* 0x423 bit1 */
-    asm("nop"); asm("nop"); asm("nop");
-    IOCON1bits.PENL = 1;   /* 0x423 bit0 */
-    asm("nop"); asm("nop"); asm("nop");
-    IOCON2bits.PENH = 1;   /* 0x443 bit1 */
-    asm("nop"); asm("nop"); asm("nop");
-    IOCON2bits.PENL = 1;   /* 0x443 bit0 */
-    asm("nop"); asm("nop"); asm("nop");
-    IOCON3bits.PENH = 1;   /* 0x463 bit1 */
-    asm("nop"); asm("nop"); asm("nop");
-    IOCON3bits.PENL = 1;   /* 0x463 bit0 */
+    IOCON1bits.OVRENH = 1;   /* 0x423 bit1 */
+    Nop(); Nop(); Nop();
+    IOCON1bits.OVRENL = 1;   /* 0x423 bit0 */
+    Nop(); Nop(); Nop();
+    IOCON2bits.OVRENH = 1;   /* 0x443 bit1 */
+    Nop(); Nop(); Nop();
+    IOCON2bits.OVRENL = 1;   /* 0x443 bit0 */
+    Nop(); Nop(); Nop();
+    IOCON3bits.OVRENH = 1;   /* 0x463 bit1 */
+    Nop(); Nop(); Nop();
+    IOCON3bits.OVRENL = 1;   /* 0x463 bit0 */
 }

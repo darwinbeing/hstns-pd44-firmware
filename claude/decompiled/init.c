@@ -13,18 +13,18 @@
  *     name is used for clarity
  * ============================================================================ */
 
-#include "variables.h"
 #include <xc.h>
 #include <libpic30.h>  /* __delay32, Nop */
+#include "variables.h"
 #define NOP() __builtin_nop()
 
 /* ============================================================================
  * initClock  (firmware address 0x59CE)
  *
  * Configures the primary oscillator PLL and auxiliary clock:
- *   - FRC + PLL mode
- *   - PLLFBD = 0x30 (48) -> M = 50 (N1=2, N2=2 -> Fosc = 7.37MHz * 50 / 4 = ~92 MHz, Fcy ~46 MHz)
- *   - CLKDIV: PLLPRE=0 (N1=2), PLLPOST=0 (N2=2), DOZE disabled
+ *   - External 16 MHz crystal + PLL mode
+ *   - PLLFBD = 0x30 (48) -> M = 50 (N1=2, N2=4 -> Fosc = 16MHz * 50 / 8 = 100 MHz, Fcy = 50 MHz)
+ *   - CLKDIV: PLLPRE=0 (N1=2), PLLPOST=1 (N2=4), DOZE disabled
  *   - Oscillator switch sequence to FRC+PLL via OSCCON unlock
  *   - Waits for PLL lock (LOCK bit in OSCCON)
  *   - ACLKCON = 0x2740: auxiliary clock from primary PLL, divide-by-1
@@ -32,51 +32,45 @@
  * ============================================================================ */
 void initClock(void)
 {
-    /* ---- PLL feedback divider ---- */
-    PLLFBD = 0x0030;            /* M = PLLFBD + 2 = 50; sets PLL multiplier  */
+    /* ---- PLL configuration ----
+     * Fosc = Fin * M / (N1 * N2) = 16 MHz * 50 / (2 * 4) = 100 MHz
+     * Fcy = Fosc / 2 = 50 MHz                                             */
+    PLLFBD = 48;                        /* M = PLLFBD + 2 = 50               */
+    CLKDIVbits.PLLPOST = 0;            /* N1 = 2                            */
+    CLKDIVbits.PLLPRE  = 2;            /* N2 = PLLPRE + 2 = 4              */
 
-    /* ---- CLKDIV: set PLLPRE, PLLPOST, keep existing DOZE field ----
-     * Read-modify-write: preserve upper 3 bits (DOZE), force PLLPRE=0 (N1=2),
-     * then clear PLLPOST bits [5:4] so N2=2.
-     * Net: Fosc = Fin * M / (N1 * N2) = 7.37 MHz * 50 / 4 = 92.125 MHz
-     * Fcy = Fosc / 2 = ~46 MHz                                            */
-    CLKDIV = (CLKDIV & 0xE0) | 0x02;   /* keep DOZE[7:5], PLLPRE=0, set bit1 */
-    CLKDIV = CLKDIV & 0x3F;            /* clear PLLPOST[7:6] -> N2 = 2       */
-
-    /* ---- Oscillator switch sequence to FRC+PLL ----
-     * OSCCON unlock: write 0x78 then 0x9A then 0x03 to OSCCONH (0x743)
-     * This unlocks the NOSC field for clock source change.                 */
-    __builtin_write_OSCCONH(0x03);      /* NOSC = 011 = FRC with PLL           */
+    /* ---- Oscillator switch to External Crystal + PLL ----              */
+    __builtin_write_OSCCONH(0x03);      /* NOSC = 011 = External w/ PLL      */
 
     /* ---- OSCTUN / OSCCONL unlock: write 0x46 then 0x57 then 0x01 to 0x742
      * Sets OSWEN=1 in OSCCONL to initiate the clock switch.               */
     __builtin_write_OSCCONL(0x01);      /* OSWEN = 1 -> start oscillator switch */
 
+#ifndef SIMULATION_MODE
     /* ---- Wait for oscillator switch to complete ----
      * Poll OSCCON[6:4] (COSC field) until it matches NOSC (0x03 << 4 = 0x30)
      * Bits [6:4] of OSCCONL are the COSC field.                           */
-    while ((OSCCON & 0x70) != 0x30);    /* wait until COSC == 011 (FRC+PLL)    */
+    while (OSCCONbits.COSC != 0b011);   /* wait until External Crystal w/ PLL  */
 
     /* ---- Wait for PLL to lock ----
      * LOCK = bit 5 of OSCCON (OSCCONL).                                   */
     while (!OSCCONbits.LOCK);           /* wait for PLL lock                   */
 
-    /* ---- Auxiliary clock configuration ----
-     * ACLKCON = 0x2740
-     *   bit 15   = 0  (AOSCMD: auxiliary oscillator disabled)
-     *   bits[9:8]= 01 (ASRCSEL: primary oscillator as aux clock source)
-     *   bits[5:0]= 0x40 -> APLLPOST divider
-     * Note: bit 15 of ACLKCON register (0x751) is set separately.        */
-    ACLKCON = 0x2740;
+    /* ---- Auxiliary clock: FRC * 16 / 1 ≈ 120 MHz for PWM & ADC ---- */
+    ACLKCONbits.ASRCSEL  = 0;          /* External Oscillator for APLL       */
+    ACLKCONbits.FRCSEL   = 1;          /* FRC clock for auxiliary PLL         */
+    ACLKCONbits.SELACLK  = 1;          /* Aux oscillator provides PWM/ADC clk*/
+    ACLKCONbits.APSTSCLR = 7;          /* Divide auxiliary clock by 1         */
+    ACLKCONbits.ENAPLL   = 1;          /* Enable auxiliary PLL                */
 
-    /* ---- Enable auxiliary clock (bit 7 of address 0x751 = ACLKCON high byte)
-     * This is the ENAPLL bit in ACLKCON to start the auxiliary PLL.      */
-    /* BSET 0x751, #7 -> sets ACLKCON bit 15 (AOSCMD enable / ENAPLL)     */
-    ACLKCON |= 0x8000;
-
-    /* ---- Wait for auxiliary clock ready ----
-     * Poll bit 6 of address 0x751 (ACLKCON bit 14 = ALVCO / aux PLL lock) */
-    while (!(ACLKCON & 0x4000));        /* wait for auxiliary clock lock       */
+    while (!ACLKCONbits.APLLCK);       /* wait for auxiliary PLL lock         */
+#else
+    ACLKCONbits.ASRCSEL  = 0;
+    ACLKCONbits.FRCSEL   = 1;
+    ACLKCONbits.SELACLK  = 1;
+    ACLKCONbits.APSTSCLR = 7;
+    ACLKCONbits.ENAPLL   = 1;
+#endif
 }
 
 /* ============================================================================
@@ -578,4 +572,34 @@ void initSPI2(void)
 
     /* ---- Reset AT45DB flash status cache ---- */
     at45db_status = 0x0000; /* clear cached flash status register              */
+}
+
+/* ============================================================================
+ * initI2C2 (0x150C – 0x1524)
+ *
+ * Initialises I2C2 as a PMBus slave at address 0x58.
+ *
+ * Assembly:
+ *   150C  RCALL 0x13C2          ; initI2cPointerTables (pointer table init)
+ *   150E  MOV #0x9040, W0       ; I2C2CON = 0x9040
+ *   1510  MOV W0, I2C2CON       ;   I2CEN=1, SCLREL=1, STREN=1
+ *   1512  MOV #0x58, W0         ; I2C2ADD = 0x58 (slave address)
+ *   1514  MOV W0, I2C2ADD
+ *   1516-151E                    ; IPC12bits.SI2C2IP = 3 (priority)
+ *   1520  CLR IFS3              ; clear all IFS3 interrupt flags
+ *   1522  BSET IEC3, #1         ; IEC3bits.SI2C2IE = 1 (enable interrupt)
+ *   1524  RETURN
+ * ============================================================================ */
+extern void initI2cPointerTables(void);   /* 0x13C2 - I2C pointer table setup */
+
+void initI2C2(void) {
+    initI2cPointerTables();               /* RCALL 0x13C2 */
+
+    I2C2CON = 0x9040;                     /* I2CEN=1, SCLREL=1, STREN=1 */
+    I2C2ADD = 0x0058;                     /* slave address 0x58 */
+
+    IPC12bits.SI2C2IP = 3;                /* I2C2 slave interrupt priority = 3 */
+
+    IFS3 = 0;                             /* clear all pending IFS3 flags */
+    IEC3bits.SI2C2IE = 1;                 /* enable I2C2 slave interrupt */
 }

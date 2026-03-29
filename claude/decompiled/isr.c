@@ -121,7 +121,7 @@ extern void si2c2HandlerSeg1(void);       /* 0x29B0 */
  *   5B4C  BRA   0x5B52            ; skip clamp
  *   5B4E  MOV   W1, PHASE3        ; PHASE3 = ptper (clamped)
  *   5B50  MOV   W1, 0x1E56        ; phase3_target = ptper
- *   5B52  MOV   0x1D74, W0        ; ptper_computed
+ *   5B52  MOV   0x1D74, W0        ; ptperCommand
  *   5B54  MOV   W0, PTPER         ; write PTPER
  *   5B56  MOV   0x1D70, W0        ; pdc1
  *   5B58  MOV   W0, PDC1          ; write PDC1
@@ -158,7 +158,7 @@ void __attribute__((interrupt, no_auto_psv)) _PWMSpEventMatchInterrupt(void)
     }
 
     /* ---- Update remaining PWM hardware from shadow registers ---- */
-    PTPER   = ptper_computed;   /* 0x1D74 -> PTPER */
+    PTPER   = ptperCommand;   /* 0x1D74 -> PTPER */
     PDC1    = pdc1;             /* 0x1D70 -> PDC1 */
     PDC2    = pdc2;             /* 0x1D6E -> PDC2 */
     PDC3    = pdc3;             /* 0x1D6C -> PDC3 */

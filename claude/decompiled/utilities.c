@@ -6,6 +6,8 @@
  * ============================================================================ */
 #include <xc.h>
 #include <string.h>
+#define FCY 50000000UL
+#include <libpic30.h>
 #include "variables.h"
 
 
@@ -107,12 +109,6 @@ static void flashEraseAndRewrite(void)
     }
 }
 
-/* ---- I2C2 init (0x150C) ---- */
-void initI2C2(void) {
-    I2C2ADD = 0x0058;
-    I2C2BRG = 0x0027;
-    I2C2CONbits.I2CEN = 1;
-}
 
 /* ============================================================================
  * computeFaultBit() — 0x4DA4
@@ -182,9 +178,9 @@ void i2cProcessCommand(void) {
 /* ============================================================================
  * shutdownPwm (0x4B50) — Alias for pwmOverrideEnable() in t2_subroutines.c
  *
- * The assembly at 0x4B50 sets PENH/PENL on IOCON1/2/3 via BSET on high bytes
- * (0x423/0x443/0x463). This is the same function as pwmOverrideEnable().
- * Called from fault handlers to re-enable PWM pin control after override.
+ * The assembly at 0x4B50 sets OVRENH/OVRENL on IOCON1/2/3 via BSET on high bytes
+ * (0x423/0x443/0x463 bit1/bit0). This is the same function as pwmOverrideEnable().
+ * Called from fault handlers to force PWM outputs low via override.
  * ============================================================================ */
 extern void pwmOverrideEnable(void);
 void shutdownPwm(void) { pwmOverrideEnable(); }
@@ -255,14 +251,12 @@ static void setFaultStateImpl(void) {
 }
 
 void setFaultState(void) { setFaultStateImpl(); }
-void call_1FD6(void)       { setFaultStateImpl(); }
-void sub_1FD6(void)        { setFaultStateImpl(); }
 
 /* ============================================================================
  * periodWrite (0x37CA) — Check conditions, toggle LATF bit6
  * ============================================================================ */
 void periodWrite(void) {
-    int16_t vref = (int16_t)voutReference;
+    int16_t vref = (int16_t)llcPeriodCmd;
     if (vref > 0x1F3F) {
         if (!(faultFlags & (1u << 5)))
             goto set_bit;
@@ -934,9 +928,9 @@ void flashReadbackHandler(void) {
 }
 
 /* ============================================================================
- * runNormalMode (0x5522) — LLC normal run: compute OC2RS, write HW register
+ * runNormalOc2rsUpdate5522 (0x5522) — LLC normal run: compute OC2RS, write HW register
  * ============================================================================ */
-void runNormalMode(void) {
+static void runNormalOc2rsUpdate5522(void) {
     if (!(startupFlags & 0x01)) return;
     startupFlags &= ~0x01;
 
@@ -1049,45 +1043,52 @@ void uart1RxHandler(void) {
     uartRxState = 0;
 }
 
-/* ---- I2C2 comm sub-routines (0x1616-0x29B0) ---- */
-void i2cSubroutine_0x1616(void) { }
-void sub_215A(void) { }
-void sub_21FE(void) { }
-void i2cSubroutine_0x2298(void) { }
-void sub_230C(void) { }
-void i2cSubroutine_0x231C(void) { }
-void i2cSubroutine_0x2378(void) { }
-void i2cSubroutine_0x2382(void) { }
-void i2cSubroutine_0x2466(void) { }
-void sub_249C(void) { }
-void sub_255A(void) { }
-void i2cSubroutine_0x25D4(void) { }
-void sub_25FC(void) { }
-void sub_26A0(void) { }
+/* ---- I2C2 / PMBus comm sub-routines (stubs, addresses noted) ---- */
+void i2cEncodeResponse(void) { }         /* 0x1616 */
+void i2cThresholdMonitor(void) { }       /* 0x215A */
+void i2cFlagUpdate(void) { }             /* 0x21FE */
+void i2cChecksumValidate(void) { }       /* 0x2298 */
+void i2cIoutUpdatePath(void) { }         /* 0x230C */
+void i2cIoutScaling(void) { }            /* 0x231C */
+void i2cTempBandSelect(void) { }         /* 0x2378 */
+void i2cTempHysteresis(void) { }         /* 0x2382 */
+void i2cPeakCurrentTrack(void) { }       /* 0x2466 */
+void i2cStatusByteUpdate(void) { }       /* 0x249C */
+void i2cStatusFlagSync(void) { }         /* 0x255A */
+void i2cPowerEnableCtrl(void) { }        /* 0x25D4 */
+void i2cTargetPeriodUpdate(void) { }     /* 0x25FC */
+void i2cOvThresholdCheck(void) { }       /* 0x26A0 */
 
 /* ---- Helper functions referenced by t1_sub_prot.c ---- */
-uint16_t thresholdCompare(int16_t adc_val, int16_t prev_state,
-                           int16_t lo_thresh, int16_t hi_thresh)
+uint16_t thresholdCompare(int16_t adc_val, int16_t lo_thresh,
+                           int16_t hi_thresh, int16_t prev_state)
 {
-    if (prev_state) {
-        return (adc_val > lo_thresh) ? 1 : 0;
-    } else {
-        return (adc_val > hi_thresh) ? 1 : 0;
+    uint16_t result = (uint8_t)prev_state;
+
+    if ((uint16_t)adc_val > (uint16_t)hi_thresh) {
+        result = 1u;
+    } else if ((uint16_t)adc_val >= (uint16_t)lo_thresh) {
+        result = 0u;
     }
+
+    return result;
 }
 
-uint16_t debounceCounter(int16_t new_val, int16_t prev_val,
-                          volatile int16_t *cnt, int16_t limit)
+uint16_t debounceCounter(int16_t new_val, int16_t limit,
+                          volatile int16_t *cnt, int16_t prev_val)
 {
     if (new_val != prev_val) {
+        int16_t next = (int16_t)(*cnt + 1);
+        *cnt = next;
+        if (next > limit) {
+            *cnt = 0;
+            prev_val = new_val;
+        }
+    } else {
         *cnt = 0;
-        return 0;
     }
-    if (*cnt < limit) {
-        (*cnt)++;
-        return 0;
-    }
-    return 1;
+
+    return (uint16_t)((uint8_t)prev_val);
 }
 
 /* ---- CRC16 lookup table (256 entries, used by flash_ops.c) ---- */
@@ -1125,3 +1126,18 @@ const uint16_t crc16_table[256] = {
     0x4400, 0x84C1, 0x8581, 0x4540, 0x8701, 0x47C0, 0x4680, 0x8641,
     0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040,
 };
+
+/* ============================================================================
+ * delay_us / delay_ms — blocking delays (Fcy = 50 MHz)
+ * ============================================================================ */
+void delay_us(uint16_t us)
+{
+    while (us--)
+        __delay_us(1);
+}
+
+void delay_ms(uint16_t ms)
+{
+    while (ms--)
+        __delay_ms(1);
+}

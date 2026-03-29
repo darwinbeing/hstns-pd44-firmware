@@ -935,9 +935,9 @@ void currentLimit(void)  /* 0x31CC */
         goto current_limit_exit;
     }
 
-    /* 0x31E2  BTST 0x1E1D, #3   — startupFlags bit3 */
+    /* 0x31E2  BTST 0x1E1D, #3   — byte alias of auxFlags bit11 */
     /* 0x31E4  BRA Z, 0x323C    */
-    if (!(startupFlags & (1u << 3))) {
+    if (!(auxFlags & (1u << 11))) {
         goto current_limit_exit;
     }
 

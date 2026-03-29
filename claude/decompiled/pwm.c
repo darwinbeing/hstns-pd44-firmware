@@ -19,6 +19,26 @@
 #include <stdint.h>
 #include <xc.h>        /* dsPIC SFR definitions (PORTD, LATD, LATF, ADCBUF5) */
 #include "variables.h"
+#ifdef SIMULATION_MODE
+#include "simulator.h"
+#endif
+
+#ifdef SIMULATION_MODE
+static inline uint8_t simPortdRd0(void)
+{
+    return (uint8_t)(sim_portd_input & 0x0001u);
+}
+
+static inline uint8_t simPortdRd6(void)
+{
+    return (sim_portd_input & (1u << 6)) ? 1u : 0u;
+}
+
+static inline uint8_t simPortdRd11(void)
+{
+    return (sim_portd_input & (1u << 11)) ? 1u : 0u;
+}
+#endif
 
 /* All RAM variables declared in ram_map.h.
  * Mapping from original addresses:
@@ -42,7 +62,12 @@
 void softStartRamp(void)
 {
     /* Read PORTD byte (SFR byte address 0x02DA) and isolate bit0. */
-    uint8_t portd_b0 = PORTDbits.RD0;
+    uint8_t portd_b0 =
+#ifdef SIMULATION_MODE
+        simPortdRd0();
+#else
+        PORTDbits.RD0;
+#endif
 
     /* Extract bit1 from auxFlags, then shift it down to bit0 so both
      * values occupy the same bit position for comparison.               */
@@ -99,15 +124,20 @@ void softStartRamp(void)
 void softStartRamp2(void)
 {
     /* Bit3 of the byte at 0x02DB (second byte of PORTD word / high byte). */
-    uint8_t portd_b3 = PORTDbits.RD11 ? 0x08u : 0x00u;
+    uint8_t portd_b3 =
+#ifdef SIMULATION_MODE
+        simPortdRd11() ? 0x08u : 0x00u;
+#else
+        PORTDbits.RD11 ? 0x08u : 0x00u;
+#endif
 
     /* Bit3 of startupFlags. */
-    uint8_t flag_b3  = (uint8_t)(startupFlags & 0x08u);
+    uint8_t flag_b3  = (auxFlags & (1u << 11)) ? 0x08u : 0x00u;
 
     if (portd_b3 == flag_b3) {
         /* Bits match — decide the correct freqSetpoint value. */
         uint16_t val = 3u;                          /* default: already near zero */
-        if (!(startupFlags & (1u << 3))) {
+        if (!(auxFlags & (1u << 11))) {
             val = 0x015Eu;                          /* nominal 350 */
         }
         freqSetpoint = (int16_t)val;
@@ -118,7 +148,12 @@ void softStartRamp2(void)
     int16_t fs = freqSetpoint;
     if (fs == 0) {
         /* Ramp complete: copy bit3 of 0x02DB into bit11 of auxFlags. */
-        uint16_t bit11 = (uint16_t)PORTDbits.RD11 << 11;
+        uint16_t bit11 =
+#ifdef SIMULATION_MODE
+            (uint16_t)simPortdRd11() << 11;
+#else
+            (uint16_t)PORTDbits.RD11 << 11;
+#endif
         uint16_t f     = auxFlags;
         f &= ~(1u << 11);
         f |= bit11;
@@ -323,7 +358,7 @@ void voltageRegulation(void)
  * B)  systemState == 2, droopMode == 3:
  *       Read ADCBUF5 (Vout sense).
  *       If ADCBUF5 <= 0x2EB (747): jump to de-assert path.
- *       If voutReference > 0x3A97 (14999): return (do nothing at this tick).
+ *       If llcPeriodCmd > 0x3A97 (14999): return (do nothing at this tick).
  *       Else: fall through to de-assert.
  *
  * C)  systemState == 2, droopMode == 4:
@@ -334,14 +369,14 @@ void voltageRegulation(void)
  *                                         (add #0x229 to the literal 0x1F6F)
  *         else: threshold unchanged (previous value kept)
  *       Then check ADCBUF5 vs 0x16B (363): if <= 363 jump to de-assert.
- *       Check voutReference vs p_vout_lo_thresh:
- *         if voutReference <= threshold: jump to de-assert.
+ *       Check llcPeriodCmd vs p_vout_lo_thresh:
+ *         if llcPeriodCmd <= threshold: jump to de-assert.
  *         Check protStatusByte bit3: if clear → jump to de-assert.
  *         Else: assert LATF bit0 and return.
  *
  * De-assert path (label ~0x2EFC):
  *       If statusFlags bit4 is set (running flag): return (keep current state).
- *       If voutReference > 0x1F40 (8000): return.
+ *       If llcPeriodCmd > 0x1F40 (8000): return.
  *       De-assert LATF bit0 and return.
  * ============================================================================ */
 void outputEnable(void)
@@ -371,12 +406,12 @@ void outputEnable(void)
     uint16_t dm = droopMode;
 
     if (dm == 3u) {
-        /* Droop mode 3: gate on ADCBUF5 Vout and voutReference headroom */
+        /* Droop mode 3: gate on ADCBUF5 Vout and llcPeriodCmd headroom */
         uint16_t vout5 = (uint16_t)ADCBUF5;
         if (vout5 <= 0x02EBu) {         /* 747 ADC counts */
             goto deassert;
         }
-        if (voutReference > (int16_t)0x3A97u) {  /* 14999 — already high enough */
+        if (llcPeriodCmd > (int16_t)0x3A97u) {  /* 14999 — already high enough */
             return;
         }
         goto deassert;
@@ -399,9 +434,9 @@ void outputEnable(void)
             goto deassert;
         }
 
-        /* Check voutReference against the stored lower threshold. */
+        /* Check llcPeriodCmd against the stored lower threshold. */
         int16_t vlo = (int16_t)voutLoThresh;
-        if (voutReference <= vlo) {
+        if (llcPeriodCmd <= vlo) {
             goto deassert;
         }
 
@@ -421,11 +456,11 @@ void outputEnable(void)
 
 deassert:
     /* De-assert path: only clear LATF bit0 if the "running" flag is clear
-     * and voutReference has not yet reached 0x1F40 (8000 counts).             */
+     * and llcPeriodCmd has not yet reached 0x1F40 (8000 counts).             */
     if (statusFlags & (1u << 4)) {
         return;                             /* bit4 set: leave output on */
     }
-    if (voutReference > (int16_t)0x1F40u) {     /* 8000 */
+    if (llcPeriodCmd > (int16_t)0x1F40u) {     /* 8000 */
         return;
     }
     LATFbits.LATF0 = 0;
@@ -523,7 +558,12 @@ void countdownTick(void)
 void portdSample(void)
 {
     /* Step 1: sample PORTD bit6 */
-    uint16_t bit6     = (uint16_t)PORTDbits.RD6;
+    uint16_t bit6 =
+#ifdef SIMULATION_MODE
+        (uint16_t)simPortdRd6();
+#else
+        (uint16_t)PORTDbits.RD6;
+#endif
     portd6Cur = bit6;
 
     /* Step 2: edge detection */
