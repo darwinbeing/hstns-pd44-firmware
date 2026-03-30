@@ -117,7 +117,7 @@ Add these expressions to the Watches window:
 - `sim_debug`
 - `systemState`
 - `statusFlags`
-- `faultFlags`
+- `runtimeFlags`
 - `voutSetpoint`
 - `voutReference`
 - `voltageError`

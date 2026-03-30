@@ -358,38 +358,39 @@ void voutCalibrationAndOvpDetect(void)
 /* ============================================================================
  * pwmDisableAll() — 0x44DC-0x4506
  *
- * Disables all PWM outputs by clearing PENH/PENL bits on IOCON1, IOCON2,
- * and IOCON3 with 3-NOP synchronization delays between each operation.
+ * Note: despite the legacy name, this routine clears OVRENH/OVRENL on
+ * IOCON1/2/3 (addressed via 0x423/0x443/0x463 bit1/bit0 in assembly),
+ * i.e. it releases override and returns control to PWM generator logic.
  * ============================================================================ */
 void pwmDisableAll(void)
 {
-    IOCON1bits.PENH = 0;   /* 0x423 bit1 */
+    IOCON1bits.OVRENH = 0;   /* 0x423 bit1 */
     Nop(); Nop(); Nop();
-    IOCON1bits.PENL = 0;   /* 0x423 bit0 */
+    IOCON1bits.OVRENL = 0;   /* 0x423 bit0 */
     Nop(); Nop(); Nop();
-    IOCON2bits.PENH = 0;   /* 0x443 bit1 */
+    IOCON2bits.OVRENH = 0;   /* 0x443 bit1 */
     Nop(); Nop(); Nop();
-    IOCON2bits.PENL = 0;   /* 0x443 bit0 */
+    IOCON2bits.OVRENL = 0;   /* 0x443 bit0 */
     Nop(); Nop(); Nop();
-    IOCON3bits.PENH = 0;   /* 0x463 bit1 */
+    IOCON3bits.OVRENH = 0;   /* 0x463 bit1 */
     Nop(); Nop(); Nop();
-    IOCON3bits.PENL = 0;   /* 0x463 bit0 */
+    IOCON3bits.OVRENL = 0;   /* 0x463 bit0 */
 }
 
 /* ============================================================================
  * frequencyLimitControl() — 0x4508-0x456C
  *
  * Frequency/period limiting logic:
- *   1) If faultFlags bits 4+5 both set (0x30):
+ *   1) If runtimeFlags bits 4+5 both set (0x30):
  *      - Set 0x1DCE=1 (limit active flag)
- *      - If llcPeriodCmd > 0x206C: clamp all y[n] states to 0x206C, enable PWM
- *      - If llcPeriodCmd <= 0x1FA3: call pwmDisableAll
- *   2) If 0x1DCE was set: clear faultFlags bit5, clear 0x1DCE, disable PWM
- *   3) faultFlags bit10: secondary PWM3 PENH enable/disable toggle
+ *      - If llcPeriodCmd > 0x206C: clamp all y[n] states to 0x206C, assert override
+ *      - If llcPeriodCmd <= 0x1FA3: clear override
+ *   2) If 0x1DCE was set: clear runtimeFlags bit5, clear 0x1DCE, clear override
+ *   3) runtimeFlags bit10: secondary PWM3 OVRENH enable/disable toggle
  * ============================================================================ */
 void frequencyLimitControl(void)
 {
-    if ((faultFlags & 0x30) == 0x30) {
+    if ((runtimeFlags & 0x30) == 0x30) {
         /* Both bits 4+5 set: frequency limit active */
         freqLimitActive = 1;
 
@@ -405,21 +406,21 @@ void frequencyLimitControl(void)
         /* else: llcPeriodCmd in (0x1FA3, 0x206C] — do nothing */
     } else {
         if (freqLimitActive != 0) {
-            faultFlags &= ~(1u << 5);
+            runtimeFlags &= ~(1u << 5);
             freqLimitActive = 0;
             pwmDisableAll();                       /* 0x44DC */
         }
     }
 
-    /* Secondary: faultFlags bit10 (0x400) — PWM3 PENH toggle */
-    if (faultFlags & 0x400) {
-        pwm3PenhFlag = 1;
-        IOCON3bits.PENH = 1;                         /* 0x463 bit1 */
+    /* Secondary: runtimeFlags bit10 (0x400) — PWM3 OVRENH toggle */
+    if (runtimeFlags & 0x400) {
+        pwm3OvrenhFlag = 1;
+        IOCON3bits.OVRENH = 1;                         /* 0x463 bit1 */
         Nop(); Nop(); Nop();
     } else {
-        if (pwm3PenhFlag != 0) {
-            pwm3PenhFlag = 0;
-            IOCON3bits.PENH = 0;
+        if (pwm3OvrenhFlag != 0) {
+            pwm3OvrenhFlag = 0;
+            IOCON3bits.OVRENH = 0;
             Nop(); Nop(); Nop();
         }
     }

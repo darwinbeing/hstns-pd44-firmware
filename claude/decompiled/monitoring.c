@@ -100,7 +100,7 @@ void state0Idle(void)
 
     /* Clear main control and mode flags */
     statusFlags = 0;              /* 0x125A */
-    faultFlags = 0;              /* 0x126A */
+    runtimeFlags = 0;              /* 0x126A */
     pwmSoftStartCnt   = 0;              /* soft-start counter */
 
     /* Initialise soft-start delay timer (~160 ms @ 1 kHz tick) */
@@ -293,7 +293,7 @@ void state3Fault(void)
 
         /* Disable PWM outputs and clear fault register */
         statusFlags = 0;
-        faultFlags = 0;
+        runtimeFlags = 0;
         pwmRunRequest   |= (1u << 0);    /* set PWM run request */
         pwmRunning   &= ~(1u << 0);   /* clear PWM running flag */
         setFaultState();                 /* stop power stage */
@@ -326,7 +326,7 @@ after_droop:
 
     /* ---- Common shutdown sequence ---- */
     statusFlags = 0;
-    faultFlags = 0;
+    runtimeFlags = 0;
     droopMode = 0;
     ovpDebounceFlags &= ~(1u << 6);
 
@@ -1433,7 +1433,7 @@ void state2Active(void)
 do_fault:
     /* Shutdown PWM and transition to FAULT */
     statusFlags = 0;
-    faultFlags = 0;
+    runtimeFlags = 0;
     pwmRunRequest  |= (1u << 0);    /* PWM run request */
     pwmRunning  &= ~(1u << 0);   /* clear PWM running */
     setFaultState();

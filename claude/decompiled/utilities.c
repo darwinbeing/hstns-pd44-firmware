@@ -266,24 +266,39 @@ static void setFaultStateImpl(void) {
 void setFaultState(void) { setFaultStateImpl(); }
 
 /* ============================================================================
- * periodWrite (0x37CA) — Check conditions, toggle LATF bit6
+ * updateLatf6Gate (0x37CA)
+ *
+ * Assembly-equivalent behavior:
+ *   - Set LATF bit6 when any of:
+ *       1) llcPeriodCmd < 0x1F3F AND runtimeFlags bit5 == 0
+ *       2) adcBuf4Raw < 0x13B
+ *       3) voutTargetCode != voutRefTarget
+ *   - Otherwise, clear LATF bit6 only when (uint16_t)Imeas_cal_a >= 0x129.
  * ============================================================================ */
-void periodWrite(void) {
-    int16_t vref = (int16_t)llcPeriodCmd;
-    if (vref > 0x1F3F) {
-        if (!(faultFlags & (1u << 5)))
-            goto set_bit;
-    }
-    if ((int16_t)adcBuf4Raw > 0x13B) goto set_bit;
-    if (voutTargetCode != vrefModeSelect) goto set_bit;
+void updateLatf6Gate(void)
+{
+    int16_t period_cmd = (int16_t)llcPeriodCmd; /* 0x1DA4 */
 
-    if ((int16_t)Imeas_cal_a <= 0x129) {
+    if (period_cmd < 0x1F3F) {
+        if (!(runtimeFlags & (1u << 5))) {
+            LATF |= (1u << 6);
+            return;
+        }
+    }
+
+    if ((int16_t)adcBuf4Raw < 0x13B) {          /* 0x1D94 */
+        LATF |= (1u << 6);
+        return;
+    }
+
+    if (voutTargetCode != voutRefTarget) {      /* 0x1D4E vs 0x1D4A */
+        LATF |= (1u << 6);
+        return;
+    }
+
+    if ((uint16_t)Imeas_cal_a >= 0x0129u) {     /* 0x1E4E, unsigned compare */
         LATF &= ~(1u << 6);
     }
-    return;
-
-set_bit:
-    LATF |= (1u << 6);
 }
 
 /* ============================================================================
@@ -313,7 +328,7 @@ void updatePmbusStatus(void) {
     }
 
     if (!do_fan) {
-        if (faultFlags & (1u << 5)) goto end_section;
+        if (runtimeFlags & (1u << 5)) goto end_section;
         if (flash_read_buf_15E6[0x10] != 0) goto end_section;
         if (internalStatusFlags & (1u << 5)) {
             if ((int16_t)ioutDefault > 0x3E) {

@@ -34,7 +34,7 @@ extern void adcBuf4FastAverage(void);             /* 0x43D4 - apply PWM shadow r
 extern void voutCalibrationAndOvpDetect(void);       /* 0x444C - deadtime + OVP cal */
 extern void frequencyLimitControl(void);       /* 0x4508 - freq limit check */
 extern void portdEdgeFaultDetect(void);     /* 0x4400 - fault latch */
-extern void periodWrite(void);         /* 0x37CA - write PTPER/PDC to shadow */
+extern void updateLatf6Gate(void);     /* 0x37CA - update LATF bit6 gate flag */
 extern void pwmOverrideEnable(void);      /* 0x4B50 - enable PWM outputs */
 
 /* 2P2Z compensator (all variables declared in ram_map.h)
@@ -56,7 +56,7 @@ extern void pwmOverrideEnable(void);      /* 0x4B50 - enable PWM outputs */
  *   freqCoeffB (0x1DAA), freqCoeffC (0x1DAC), softStartCounter (0x1DE2),
  *   droopPeriod (0x1DD6), uvpDebounce (0x1DD4), hbSeqState (0x1DDA),
  *   ocpDetCount (0x1DD0), latfTimer (0x1DD8), voutRefInitial (0x1DA2),
- *   pdc1 (0x1D70), pdc2 (0x1D6E), ptper (0x1D72), dtr3_shadow (0x1D6A),
+ *   pdc1 (0x1D70), pdc2 (0x1D6E), phase3ClampTarget (0x1D72), dtr3_shadow (0x1D6A),
  *   pdc3 (0x1D6C), ptperCommand (0x1D74)
  */
 
@@ -186,9 +186,9 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
         droopBoostFlags |= (1u << 1);  /* set droop boost active */
     }
 
-    /* ==== Section 6b: OVP debounce (faultFlags bit8) ==== */
+    /* ==== Section 6b: OVP debounce (runtimeFlags bit8) ==== */
     /* 0x46C6-0x46DE */
-    if (faultFlags & 0x100) {                       /* bit8 = OVP pending */
+    if (runtimeFlags & 0x100) {                       /* bit8 = OVP pending */
         droopPeriod++;
         if (droopPeriod > 19) {
             droopPeriod = 0;
@@ -205,11 +205,11 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
     uint16_t flags12 = statusFlags;                  /* W12 = 0x125A */
     if (flags12 & (1u << 10)) {
         if (voltageError < -25) {                  /* error + 0x19 < 0 */
-            if (!(faultFlags & 0x100)) {            /* OVP not active */
+            if (!(runtimeFlags & 0x100)) {            /* OVP not active */
                 droopKffFactor = 0x5DC;             /* transient boost */
                 droopBoostFlags |= (1u << 1);
                 droopBoostFlags |= (1u << 0);
-                uvpDebounce = faultFlags & 0x100;  /* save OVP state */
+                uvpDebounce = runtimeFlags & 0x100;  /* save OVP state */
             }
         } else if (voltageError > 25) {            /* error > 0x19 */
             droopBoostFlags |= (1u << 0);
@@ -217,8 +217,8 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
         }
     }
 
-    /* UVP debounce (faultFlags bit9) */
-    if (faultFlags & 0x200) {
+    /* UVP debounce (runtimeFlags bit9) */
+    if (runtimeFlags & 0x200) {
         uvpDebounce++;
         if (uvpDebounce > 19) {
             uvpDebounce = 0;
@@ -303,75 +303,88 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
 
     /* ==== Section 8: Half-bridge sequencing ==== */
     /* 0x47C2-0x48A0 */
-    if (faultFlags & (1u << 1)) {
-        /* Startup request: enable PWM override */
-        faultFlags &= ~(1u << 1);
-        faultFlags |= (1u << 2);
+    if (runtimeFlags & (1u << 1)) {
+        /* 47C8..47E2: startup request -> arm bit2, optional init frequency load */
+        runtimeFlags &= ~(1u << 1);
+        runtimeFlags |= (1u << 2);
         pwmOverrideEnable();                       /* 0x4B50 */
 
-        /* Check statusFlags bit0/bit1 for half-bridge ordering */
-        if ((statusFlags & 0x01) || (statusFlags & 0x02)) {
-            /* Load initial frequency from var_1D34 */
+        if (flags12 & 0x03) {
             int16_t init_freq = initFreq;
-            compY_out = (int32_t)init_freq;          /* sign-extend 16->32 */
-            goto history_shift;
+            compY_out = (int32_t)init_freq;       /* sign-extend 16->32 */
         }
-    } else if (faultFlags & (1u << 2)) {
-        /* Shutdown request: disable PWM outputs */
-        faultFlags &= ~(1u << 2);
-        faultFlags |= (1u << 0);
-
-        int16_t init_freq = initFreq;
-        compY_out = (int32_t)init_freq;              /* sign-extend 16->32 */
+        goto history_shift;                       /* 47D8/47E2 -> 48A0 */
+    } else if (runtimeFlags & (1u << 2)) {
+        /* 47E8..481A: transition bit2 -> bit0 and switch IOCON2 PEN state */
+        runtimeFlags &= ~(1u << 2);
+        runtimeFlags |= (1u << 0);
 
         if (flags12 & 0x01) {
-            /* Half-bridge A: disable IOCON1 PENH/PENL */
-            if (hbSeqState == 0) {
-                IOCON1bits.PENH = 0;                 /* 0x423 bit1 clr */
-                Nop(); Nop(); Nop();
-                IOCON1bits.PENL = 0;                 /* 0x423 bit0 clr */
-                hbSeqState = 1;
-                goto history_shift;
-            } else if (hbSeqState == 1) {
-                IOCON2bits.PENH = 0;                 /* 0x463 bit1 clr */
-                Nop(); Nop(); Nop();
-                IOCON2bits.PENL = 0;                 /* 0x463 bit0 clr */
-                hbSeqState = 0;                    /* faultFlags bit2=0 group */
-                faultFlags &= ~(1u << 0);
-                statusFlags &= ~(1u << 0);
-                goto history_shift;
-            }
+            int16_t init_freq = initFreq;
+            compY_out = (int32_t)init_freq;
+            IOCON2bits.PENH = 0;                  /* 0x443 bit7 */
+            Nop(); Nop(); Nop();
+            IOCON2bits.PENL = 0;                  /* 0x443 bit6 */
         } else if (flags12 & 0x02) {
-            /* Half-bridge B: similar but reversed order */
-            int16_t init_f = initFreq;
-            compY_out = (int32_t)init_f;             /* sign-extend 16->32 */
+            int16_t init_freq = initFreq;
+            compY_out = (int32_t)init_freq;
+            IOCON2bits.PENH = 1;                  /* 0x443 bit7 */
+            Nop(); Nop(); Nop();
+            IOCON2bits.PENL = 1;                  /* 0x443 bit6 */
+        }
+        goto history_shift;                       /* 4802/481A/4806 -> 48A0 */
+    } else if (runtimeFlags & (1u << 0)) {
+        /* 481C..489E: staged OVREN release sequencing */
+        if (flags12 & 0x01) {
+            int16_t init_freq = initFreq;
+            compY_out = (int32_t)init_freq;
 
             if (hbSeqState == 0) {
-                /* Disable all PWM outputs in sequence with NOP delays */
-                IOCON1bits.PENH = 0;
+                IOCON1bits.OVRENH = 0;            /* 0x423 bit1 -> word bit9 */
                 Nop(); Nop(); Nop();
-                IOCON1bits.PENL = 0;
+                IOCON1bits.OVRENL = 0;            /* 0x423 bit0 -> word bit8 */
+                hbSeqState = 1;
+            } else if (hbSeqState == 1) {
+                IOCON3bits.OVRENH = 0;            /* 0x463 bit1 -> word bit9 */
                 Nop(); Nop(); Nop();
-                IOCON2bits.PENH = 0;
+                IOCON3bits.OVRENL = 0;            /* 0x463 bit0 -> word bit8 */
+                hbSeqState = 0;
+                runtimeFlags &= ~(1u << 0);
+                statusFlags &= ~(1u << 0);
+            }
+            goto history_shift;
+        }
+
+        if (flags12 & 0x02) {
+            int16_t init_freq = initFreq;
+            compY_out = (int32_t)init_freq;
+
+            if (hbSeqState == 0) {
+                IOCON1bits.OVRENH = 0;
                 Nop(); Nop(); Nop();
-                IOCON2bits.PENL = 0;
+                IOCON1bits.OVRENL = 0;
+                Nop(); Nop(); Nop();
+                IOCON2bits.OVRENH = 0;
+                Nop(); Nop(); Nop();
+                IOCON2bits.OVRENL = 0;
                 Nop(); Nop(); Nop();
                 hbSeqState = 1;
-                goto history_shift;
             } else if (hbSeqState == 1) {
-                IOCON2bits.PENH = 0;
+                IOCON3bits.OVRENH = 0;
                 Nop(); Nop(); Nop();
-                IOCON2bits.PENL = 0;
+                IOCON3bits.OVRENL = 0;
                 hbSeqState = 0;
-                faultFlags &= ~(1u << 0);
+                runtimeFlags &= ~(1u << 0);
                 statusFlags &= ~(1u << 1);
-                goto history_shift;
             }
+            goto history_shift;
         }
-    } else if (faultFlags & (1u << 0)) {
-        /* Normal shutdown: monitor LATF bit0 off-timer */
-        goto skip_softstart;
+
+        goto history_shift;                       /* 4856 -> 48A0 */
     }
+
+    /* No sequencing request pending: keep error history (jump to 48A4 path). */
+    goto skip_softstart;
 
     /* ==== Section 9: History shift (error & coefficient pipeline) ==== */
 history_shift:
@@ -412,7 +425,7 @@ skip_softstart:
     /* ==== Section 11: Soft-start frequency sweep ==== */
     /* 0x48FC-0x4A68: complex multi-branch frequency calculation */
     if (statusFlags & 0x10) {                         /* bit4 = running */
-        if (!(faultFlags & (1u << 7))) {             /* not in OT mode */
+        if (!(runtimeFlags & (1u << 7))) {             /* not in OT mode */
             int32_t y_out_32 = compY_out;
 
             if (y_out_32 > 0x1F40) {                /* > 8000 */
@@ -449,7 +462,7 @@ skip_softstart:
             if (llcPeriodCmd <= 0xD47)
                 llcPeriodCmd = 0xD48;
 
-            faultFlags |= (1u << 7);                /* set soft-start active */
+            runtimeFlags |= (1u << 7);                /* set soft-start active */
             softStartCounter = 0;                      /* 0x1DE2:0x1DE4 */
         }
 
@@ -585,10 +598,10 @@ skip_softstart:
      * period domain. The T2 path derives period / duty values from that command.
      */
     int32_t ptper_prod = (int32_t)llcPeriodCmd * (int32_t)0x1BB;
-    int16_t ptper_raw = (int16_t)(ptper_prod >> 15) - 0x65;  /* 0xFF9B = -101 */
+    int16_t phase3ClampRaw = (int16_t)(ptper_prod >> 15) - 0x65;  /* 0xFF9B = -101 */
 
-    if (ptper_raw > 0x8E)       ptper_raw = 0x8E;   /* 142 */
-    else if (ptper_raw < 0)     ptper_raw = 0;
+    if (phase3ClampRaw > 0x8E)       phase3ClampRaw = 0x8E;   /* 142 */
+    else if (phase3ClampRaw < 0)     phase3ClampRaw = 0;
 
     /* Deadtime / phase from iout_avg */
     int16_t iavg = iout_avg;                         /* 0x1D46 */
@@ -612,17 +625,22 @@ skip_softstart:
     int16_t ptper_shifted = (int16_t)(__builtin_divsd(0x00B3FB00L, llcPeriodCmd) >> 1);
 
     ptperCommand = ptper_shifted - 8;                  /* 0x1D74 */
-    ptper    = ptper_raw;                         /* 0x1D72 */
+    phase3ClampTarget = phase3ClampRaw;           /* 0x1D72 */
     pdc1   = ptper_shifted;                     /* 0x1D70 */
     pdc2     = ptper_shifted;                     /* 0x1D6E */
     dtr3_shadow  = dt_raw;                            /* 0x1D6A */
 
     /* PDC3 calculation */
-    if (faultFlags & (1u << 5)) {
+    if (runtimeFlags & (1u << 5)) {
         pdc3 = 0;                                /* 0x1D6C */
     } else {
-        if (llcPeriodCmd > 0x1A8F) {
-            pdc3 = ptper_shifted;                /* full duty */
+        /* 4B1C..4B28:
+         *   SUB W1, W0  (W0=0x1A8F, W1=llcPeriodCmd), BRA GT -> cmd < 0x1A8F
+         *   cmd < 0x1A8F  -> pdc3 = ptper_shifted
+         *   cmd >= 0x1A8F -> pdc3 = 0x36B
+         */
+        if (llcPeriodCmd < 0x1A8F) {
+            pdc3 = ptper_shifted;
         } else {
             pdc3 = 0x36B;                        /* fixed 875 */
         }
@@ -632,7 +650,7 @@ skip_softstart:
     /* 0x4B2A-0x4B3A */
     adcBuf4FastAverage();                                  /* 0x43D4 */
     voutCalibrationAndOvpDetect();                            /* 0x444C */
-    periodWrite();                              /* 0x37CA */
+    updateLatf6Gate();                          /* 0x37CA */
     portdEdgeFaultDetect();                          /* 0x4400 */
 
     /* ==== Section 15: Clear interrupt & trigger PWM ==== */

@@ -104,10 +104,10 @@ extern void uartRxTickService(void);      /* 0x583E - UART RX tick service */
  *
  *   ; --- PWM output gate check ---
  *   3846  MOV.B 0x423, WREG        ; IOCON1L
- *   3848  BTST.Z W0, #1            ; test PENH
+ *   3848  BTST.Z W0, #1            ; test OVRENH (bit9)
  *   384A  BRA Z, 0x385C
  *   384C  MOV.B 0x423, WREG
- *   384E  BTST.Z W0, #0            ; test PENL
+ *   384E  BTST.Z W0, #0            ; test OVRENL (bit8)
  *   3850  BRA Z, 0x385C
  *   3852  MOV.B 0x443, WREG        ; IOCON2L
  *   3854  BTST.Z W0, #1
@@ -193,8 +193,8 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
     protectionCheck();                  /* 0x30F8 */
 
     /* ---- PWM update gate (matches 0x3844..0x385C) ----
-     * Assembly calls pwmUpdate() when IOCON1L/IOCON2L gate bits are not all set.
-     * If IOCON1L bit1/bit0 and IOCON2L bit1/bit0 are all 1, the call is skipped.
+     * Assembly checks IOCON1/2 high-byte bit1/bit0 (word bit9/bit8):
+     * OVRENH/OVRENL. If all four override bits are 1, pwmUpdate() is skipped.
      */
     {
         uint8_t iocon1l = (uint8_t)IOCON1;

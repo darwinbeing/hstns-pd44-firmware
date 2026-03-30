@@ -14,7 +14,7 @@ char model_id[5];
 volatile uint16_t systemState;
 volatile uint16_t statusFlags;
 volatile uint16_t protectionStatus;
-volatile uint16_t faultFlags;
+volatile uint16_t runtimeFlags;
 volatile uint16_t thermalFlags;
 volatile uint16_t droopMode;
 volatile uint16_t systemFlags;
@@ -144,7 +144,7 @@ volatile int16_t dtr3_shadow;
 volatile int16_t pdc3;
 volatile int16_t pdc2;
 volatile int16_t pdc1;
-volatile int16_t ptper;
+volatile int16_t phase3ClampTarget;
 volatile int16_t ptperCommand;
 volatile int16_t phase3_target;
 
@@ -250,6 +250,11 @@ volatile uint16_t uartRxByteCount;
 volatile uint16_t softStartRampCnt;
 volatile uint16_t softStartDwellCnt;
 volatile uint16_t softStartPwmLimit;
+volatile uint16_t droopDeltaLo;
+volatile uint16_t droopDeltaHi;
+volatile uint16_t droopDelta2Lo;
+volatile uint16_t droopDelta2Hi;
+volatile uint16_t droopRampCounter;
 volatile int16_t  adcAn0Raw;
 volatile int16_t  adcAn2Raw;
 volatile uint16_t droopBoostFlags;
@@ -279,7 +284,7 @@ volatile int16_t  portdBit1State;
 volatile int16_t  portdBit0State;
 volatile int16_t  ovpCounter;
 volatile int16_t  freqLimitActive;
-volatile int16_t  pwm3PenhFlag;
+volatile int16_t  pwm3OvrenhFlag;
 
 /* Peak tracking */
 volatile uint16_t peakTracking[9];

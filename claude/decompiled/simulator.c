@@ -467,7 +467,7 @@ void simInit(void)
 {
     fw_mode = 2;
     statusFlags = 0;
-    faultFlags = 0;
+    runtimeFlags = 0;
     controlStatus = 0;
     auxFlags = 0;
     startupFlags = 0;
@@ -499,9 +499,9 @@ void simInit(void)
     LATF = 0x0040;
     PORTD = 0x0000;
     sim_portd_input = 0x0000;
-    IOCON1 = 0xC803;
-    IOCON2 = 0xC803;
-    IOCON3 = 0xC803;
+    IOCON1 = 0xC800;
+    IOCON2 = 0xC800;
+    IOCON3 = 0xC800;
     FCLCON1 = 0x0010;
     FCLCON2 = 0x0010;
     FCLCON3 = 0x0010;
@@ -641,7 +641,7 @@ void simRunStep(void)
     statusFlags &= ~(1u << 4);   /* keep T2 in regulation branch, not startup sweep */
     statusFlags &= ~(1u << 7);
     controlStatus &= ~(1u << 4);
-    faultFlags &= ~(1u << 7);
+    runtimeFlags &= ~(1u << 7);
     voutTargetCode = voutRefTarget;
     voutSetpoint = simComputeVoutSetpoint(voutRefTarget);
     sim_debug.observed_state_after_t1 = (uint16_t)systemState;
@@ -689,7 +689,7 @@ void simRunStep(void)
                 statusFlags &= ~(1u << 4);
                 statusFlags &= ~(1u << 7);
                 controlStatus &= ~(1u << 4);
-                faultFlags &= ~(1u << 7);
+                runtimeFlags &= ~(1u << 7);
             }
 #endif
             uint16_t state_before = (uint16_t)systemState;

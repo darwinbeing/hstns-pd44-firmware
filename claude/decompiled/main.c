@@ -154,7 +154,7 @@ int main(void)
     SRbits.IPL = 7;
 
     /* Clear flag words */
-    faultFlags = 0;            /* CLR 0x126A */
+    runtimeFlags = 0;            /* CLR 0x126A */
     statusFlags = 0;            /* CLR 0x125A */
 
     /* ---- Peripheral initialization sequence (while interrupts disabled) ---- */
@@ -201,7 +201,7 @@ int main(void)
         flashReadPage6();               /* 0x4260: Read Flash page 6 (config) */
         flashReadPage7();               /* 0x427E: Read Flash page 7 (calibration) */
         flashProgramRead32();           /* 0x429C: Flash program + read 32B */
-        //flashUart2LoaderService();      /* UART2: AA55+256B+CRC -> AT45DB page write */
+        //flashUart2LoaderService();      /* UART2: AA55+PageIndex+256B+CRC -> AT45DB page write */
 #endif
     }
 }

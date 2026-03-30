@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
 Send AT45DB binary image to MCU over UART2 with frame format:
-  AA 55 + 256-byte payload + CRC16(lo,hi)
+  AA 55 + PageIndex(lo,hi) + 256-byte payload + CRC16(lo,hi)
+
+CRC covers:
+  PageIndex(lo,hi) + 256-byte payload
 
 MCU responses:
   0x06: page write OK
@@ -29,6 +32,24 @@ def crc16_xmodem(data: bytes) -> int:
     return crc & 0xFFFF
 
 
+def build_frame(page_index: int, payload: bytes) -> bytes:
+    page_lo = page_index & 0xFF
+    page_hi = (page_index >> 8) & 0xFF
+
+    crc_data = bytes([page_lo, page_hi]) + payload
+    crc = crc16_xmodem(crc_data)
+
+    frame = bytearray()
+    frame.append(0xAA)
+    frame.append(0x55)
+    frame.append(page_lo)
+    frame.append(page_hi)
+    frame.extend(payload)
+    frame.append(crc & 0xFF)
+    frame.append((crc >> 8) & 0xFF)
+    return bytes(frame)
+
+
 def frame_iter(blob: bytes, pad_byte: int) -> list[bytes]:
     pages = []
     idx = 0
@@ -53,6 +74,7 @@ def main() -> int:
     parser.add_argument("--retry", type=int, default=20, help="max retries per page")
     parser.add_argument("--busy-wait", type=float, default=0.05, help="wait time after busy ack")
     parser.add_argument("--pad-byte", type=lambda x: int(x, 0), default=0xFF, help="tail pad byte")
+    parser.add_argument("--start-page", type=lambda x: int(x, 0), default=0, help="AT45 page index start (0..1023)")
     args = parser.parse_args()
 
     try:
@@ -69,6 +91,9 @@ def main() -> int:
     blob = bin_path.read_bytes()
     pages = frame_iter(blob, args.pad_byte & 0xFF)
     print(f"Input bytes={len(blob)} pages={len(pages)}")
+    if args.start_page < 0 or args.start_page > 0x3FF:
+        print("ERROR: --start-page out of range (0..1023)", file=sys.stderr)
+        return 2
 
     ser = serial.Serial(args.port, args.baud, timeout=args.timeout, write_timeout=args.timeout)
     try:
@@ -77,13 +102,8 @@ def main() -> int:
 
         t0 = time.time()
         for page_idx, page in enumerate(pages):
-            crc = crc16_xmodem(page)
-            frame = bytearray()
-            frame.append(0xAA)
-            frame.append(0x55)
-            frame.extend(page)
-            frame.append(crc & 0xFF)
-            frame.append((crc >> 8) & 0xFF)
+            at45_page = (args.start_page + page_idx) & 0x3FF
+            frame = build_frame(at45_page, page)
 
             ok = False
             for _ in range(args.retry):
@@ -101,12 +121,15 @@ def main() -> int:
                     continue
 
             if not ok:
-                print(f"ERROR: page {page_idx} failed after {args.retry} retries", file=sys.stderr)
+                print(f"ERROR: page {page_idx} (AT45 page {at45_page}) failed after {args.retry} retries", file=sys.stderr)
                 return 1
 
             if (page_idx + 1) % 32 == 0 or (page_idx + 1) == len(pages):
                 dt = time.time() - t0
-                print(f"sent {page_idx + 1}/{len(pages)} pages ({(page_idx + 1) * 256} bytes), {dt:.1f}s")
+                print(
+                    f"sent {page_idx + 1}/{len(pages)} pages "
+                    f"(AT45 page {at45_page}, {(page_idx + 1) * 256} bytes), {dt:.1f}s"
+                )
 
     finally:
         ser.close()

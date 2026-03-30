@@ -182,7 +182,7 @@ PROT_LOCAL uint16_t debounceCounter(uint16_t new_level, uint16_t thresh,
  *
  * Main control flag processing called from T1 ISR.
  * Manages droop-mode debounce counters (0x1232, 0x1230) and flag bits
- * in faultFlags (bit4 = "fan load" flag, bit5 = "temp limit" flag) and
+ * in runtimeFlags (bit4 = "fan load" flag, bit5 = "temp limit" flag) and
  * flags_126B (bit2 = "ready" flag) based on:
  *   - statusFlags bit5 (regulation active)
  *   - thermalFlags bit7 (over-temperature)
@@ -206,7 +206,7 @@ void flagProcess(void)  /* 0x2FA6 */
         /* 0x304C  BCLR 0x126B, #2  */
         /* 0x304E  MOV W0, 0x1230   */
         /* 0x3050  RETURN            */
-        faultFlags &= ~(1u << 5);
+        runtimeFlags &= ~(1u << 5);
         protCounter1232 = 0;
         droopBoostFlags &= ~(1u << 2);
         protCounter1230 = 0;
@@ -243,7 +243,7 @@ void flagProcess(void)  /* 0x2FA6 */
                 /* 0x2FCA  BRA NZ, 0x2FDE  */
                 if ((bf2 & 0x0402) == 0x0002) {
                     /* 0x2FCC  BSET 0x126A, #4 — set "fan load" flag */
-                    faultFlags |= (1u << 4);
+                    runtimeFlags |= (1u << 4);
                     goto after_droop4_check;  /* BRA 0x2FDE */
                 }
                 goto after_droop4_check;  /* BRA NZ also lands at 0x2FDE */
@@ -272,19 +272,19 @@ void flagProcess(void)  /* 0x2FA6 */
 
 clear_fan_flag:
         /* 0x2FDC  BCLR 0x126A, #4 */
-        faultFlags &= ~(1u << 4);
+        runtimeFlags &= ~(1u << 4);
     } else {
         /* One of the enable conditions is false */
-        faultFlags &= ~(1u << 4);
+        runtimeFlags &= ~(1u << 4);
     }
 
 after_droop4_check:
-    /* ---- Manage "temp limit" flag (faultFlags bit5) and counter 0x1232 ---- */
+    /* ---- Manage "temp limit" flag (runtimeFlags bit5) and counter 0x1232 ---- */
 
     /* 0x2FDE  MOV 0x126A, W0 */
     /* 0x2FE0  AND W0, #0x10, W0  — test bit4 (fan-load flag just set/clear above) */
     /* 0x2FE2  BRA Z, 0x300A      — if bit4 clear → clear temp-limit and counter */
-    if (faultFlags & (1u << 4)) {
+    if (runtimeFlags & (1u << 4)) {
         /* bit4 is set */
         /* 0x2FE4  MOV 0x1BE4, W1 */
         uint16_t be4 = adcLiveA2;
@@ -321,7 +321,7 @@ after_droop4_check:
                 protCounter1232 = 1000;
 
                 /* 0x3006  BSET 0x126A, #5  — set temp-limit flag */
-                faultFlags |= (1u << 5);
+                runtimeFlags |= (1u << 5);
                 goto after_temp_counter;  /* BRA 0x300E */
             }
             goto after_temp_counter;  /* BRA LE */
@@ -330,7 +330,7 @@ after_droop4_check:
 
 clear_temp_flag:
         /* 0x2FF0  BCLR 0x126A, #5 — clear temp-limit flag */
-        faultFlags &= ~(1u << 5);
+        runtimeFlags &= ~(1u << 5);
         /* 0x2FF2  CLR 0x1232      — clear counter */
         protCounter1232 = 0;
         /* 0x2FF4  BRA 0x300E      */
@@ -338,7 +338,7 @@ clear_temp_flag:
     } else {
         /* bit4 clear → clear temp-limit flag and zero counter */
         /* 0x300A  BCLR 0x126A, #5 */
-        faultFlags &= ~(1u << 5);
+        runtimeFlags &= ~(1u << 5);
         /* 0x300C  MOV W0, 0x1232   — W0 is 0 (AND result was 0) */
         protCounter1232 = 0;
     }

@@ -61,7 +61,7 @@ extern volatile uint16_t statusFlags;         /* 0x125A - main control flags wor
                                               *   bit10 = OCV flag
                                               *   bit11 = steady-state detect  */
 extern volatile uint16_t protectionStatus;         /* 0x1264 - status flags */
-extern volatile uint16_t faultFlags;         /* 0x126A - mode/status flags
+extern volatile uint16_t runtimeFlags;         /* 0x126A - mode/status flags
                                               *   bit1  = start request
                                               *   bit2  = shutdown request
                                               *   bit7  = over-temperature flag
@@ -238,7 +238,7 @@ extern volatile int16_t dtr3_shadow;         /* 0x1D6A - DTR3 + ALTDTR3 shadow (
 extern volatile int16_t pdc3;                /* 0x1D6C - PDC3 shadow */
 extern volatile int16_t pdc2;                /* 0x1D6E - PDC2 shadow */
 extern volatile int16_t pdc1;                /* 0x1D70 - PDC1 shadow */
-extern volatile int16_t ptper;               /* 0x1D72 - used for PHASE3 clamp comparison */
+extern volatile int16_t phase3ClampTarget;   /* 0x1D72 - PHASE3 clamp/ramp target */
 extern volatile int16_t ptperCommand;        /* 0x1D74 - final PWM period command written to PTPER */
 extern volatile int16_t phase3_target;       /* 0x1E56 - PHASE3 target with ramp-down clamp */
 
@@ -381,6 +381,11 @@ extern volatile uint16_t uartRxByteCount;    /* 0x1CF8 - UART1 RX byte counter *
 extern volatile uint16_t softStartRampCnt;   /* 0x124E - soft-start ramp counter */
 extern volatile uint16_t softStartDwellCnt;  /* 0x124C - soft-start dwell counter */
 extern volatile uint16_t softStartPwmLimit;  /* 0x1D5C - current soft-start PWM limit */
+extern volatile uint16_t droopDeltaLo;       /* was 0x1D5E in original image */
+extern volatile uint16_t droopDeltaHi;       /* was 0x1D60 in original image */
+extern volatile uint16_t droopDelta2Lo;      /* was 0x1D62 in original image */
+extern volatile uint16_t droopDelta2Hi;      /* was 0x1D64 in original image */
+extern volatile uint16_t droopRampCounter;   /* was 0x1250 in original image */
 extern volatile int16_t  adcAn0Raw;          /* 0x1D9C - AN0 raw save */
 extern volatile int16_t  adcAn2Raw;          /* 0x1D98 - AN2 raw save */
 extern volatile uint16_t droopBoostFlags;    /* 0x126B - droop boost flags */
@@ -414,7 +419,7 @@ extern volatile int16_t  portdBit1State;     /* 0x1DC8 - PORTD bit1 state */
 extern volatile int16_t  portdBit0State;     /* 0x1D1A - PORTD bit0 state */
 extern volatile int16_t  ovpCounter;         /* 0x1DCA - OVP counter */
 extern volatile int16_t  freqLimitActive;    /* 0x1DCE - frequency limit active flag */
-extern volatile int16_t  pwm3PenhFlag;       /* 0x1DCC - PWM3 PENH flag */
+extern volatile int16_t  pwm3OvrenhFlag;     /* 0x1DCC - PWM3 OVRENH latch flag */
 
 /* ============================================================================
  * Peak tracking (stored max values, persisted to flash page 0)

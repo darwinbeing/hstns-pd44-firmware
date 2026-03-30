@@ -13,12 +13,6 @@
 
 extern void pwmDisable(void); /* 0x4B7C */
 
-static volatile uint16_t *const droopDeltaLo_1D5E = (volatile uint16_t *)0x1D5E;
-static volatile uint16_t *const droopDeltaHi_1D60 = (volatile uint16_t *)0x1D60;
-static volatile uint16_t *const droopDelta2Lo_1D62 = (volatile uint16_t *)0x1D62;
-static volatile uint16_t *const droopDelta2Hi_1D64 = (volatile uint16_t *)0x1D64;
-static volatile uint16_t *const droopRampCounter_1250 = (volatile uint16_t *)0x1250;
-
 /* ============================================================================
  * softStartTargetRamp  (0x34EE – 0x3556)
  *
@@ -246,8 +240,75 @@ void uartCmdSubroutine3(void)
         adcLiveA1 = 0;
         adcLiveA  = 0;
         adcLiveA2 = 0;
+    } else {
+        uint16_t denom = uartCmdParamExt;
+        uint16_t clamped_denom = (denom < 0x0C81u) ? 0x0C80u : denom;
+        uint16_t prot = protTempAdc;
+        uint16_t scaled;
+        uint16_t ratio_lo;
+        uint16_t ratio_hi;
+
+        adcLiveA = denom;
+
+        if (prot < 0x008Cu) {
+            scaled = (uint16_t)(prot + 0x000Fu);
+        } else {
+            uint32_t prod = (uint32_t)prot * 0x0472u;
+            scaled = (uint16_t)(prod >> 10);
+        }
+
+        ratio_lo = (uint16_t)(((uint32_t)prot << 11) / clamped_denom);
+        ratio_hi = (uint16_t)(((uint32_t)scaled << 11) / clamped_denom);
+
+        if ((prot < 0x008Cu) && ((pwmRunning & 0x0400u) == 0)) {
+            ratio_hi = (uint16_t)(ratio_hi + 7u);
+        }
+
+        if (uartCmdParam1 < 0xF001u) {
+            if (uartCmdParam1 < prot) {
+                adcLiveA2 = (uartCmdParam1 < 0x000Fu) ? uartCmdParam1 : prot;
+            } else {
+                adcLiveA2 = (uartCmdParam1 <= scaled) ? uartCmdParam1 : scaled;
+            }
+        }
+
+        if (adcLiveA1 <= uartCmdParam0 && uartCmdParam0 <= ratio_hi) {
+            adcLiveA1 = uartCmdParam0;
+        } else if (adcLiveA1 > uartCmdParam0) {
+            adcLiveA1 = ratio_hi;
+        } else {
+            adcLiveA1 = ratio_lo;
+        }
+
+        if (adcLiveA1 < 4u) {
+            adcLiveA1 = 4;
+        }
     }
-    /* TODO: implement full ratio calculation from Ghidra 0x2224 */
+
+    if (((pwmRunning & 0x0002u) != 0) && (vinCooldownTimer == 0)) {
+        uint16_t high_clear = 0xFFFFu;
+        uint16_t low_clear = 0;
+
+        if (pmbusReadPtr1 < 0xFEDFu) {
+            high_clear = (uint16_t)(pmbusReadPtr1 + 0x0120u);
+        }
+
+        if (adcLiveA < pmbusReadPtr1) {
+            startupResetLatch |= 0x0002u;
+        } else if (adcLiveA > high_clear) {
+            startupResetLatch &= (uint16_t)~0x0002u;
+        }
+
+        if (pmbusReadPtr0 > 0x00A0u) {
+            low_clear = (uint16_t)(pmbusReadPtr0 - 0x00A0u);
+        }
+
+        if (adcLiveA > pmbusReadPtr0) {
+            startupResetLatch |= 0x0001u;
+        } else if (adcLiveA < low_clear) {
+            startupResetLatch &= (uint16_t)~0x0001u;
+        }
+    }
 }
 
 /* ============================================================================
@@ -330,7 +391,7 @@ void droopMode0Watchdog(void)
     if (controlStatus & 0x0001) {
         /* controlStatus bit0 set → reset droop state */
         statusFlags = 0;
-        faultFlags  = 0;
+        runtimeFlags  = 0;
     }
     else {
         int16_t imeas = Imeas;
@@ -352,7 +413,7 @@ void droopMode0Watchdog(void)
                     if (target < 0x2454)
                         initFreq = 0x2454;  /* lower clamp */
 
-                    faultFlags |= 0x0002;
+                    runtimeFlags |= 0x0002;
                     statusFlags = (statusFlags & ~0x0001) | 0x0002;
                     protectionStatus &= ~0x0800;
                 }
@@ -375,7 +436,7 @@ void droopMode0Watchdog(void)
                 initFreq = 0x125C;  /* lower clamp */
 
             faultResetTimer = 5;
-            faultFlags |= 0x0002;
+            runtimeFlags |= 0x0002;
             statusFlags = (statusFlags & ~0x0002) | 0x0001;
             protectionStatus |= 0x0800;
         }
@@ -418,13 +479,13 @@ void droopMode3Watchdog(void)
     if (controlStatus & 0x0001) {
         /* Reset state */
         statusFlags = 0;
-        faultFlags  = 0;
+        runtimeFlags  = 0;
         return;
     }
 
     /* Simplified: check if LATD bit4 is set and manage droop */
     if ((statusFlags & 0x0010) == 0) {
-        if (((clFlags == 0) || (faultFlags & 0x0008)) &&
+        if (((clFlags == 0) || (runtimeFlags & 0x0008)) &&
             (voutTargetCode != 0x0C4D) &&
             ((systemFlags & 0x00A0) == 0)) {
             statusFlags2 &= ~0x0020;

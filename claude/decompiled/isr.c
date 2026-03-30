@@ -104,23 +104,23 @@ extern void si2c2HandlerSeg1(void);       /* 0x29B0 */
  * PSEM actual handler — 0x5B38 (mode 2)
  *
  * PHASE3 ramp-down clamp:
- *   If (phase3_target - ptper) > 10, apply phase3_target -= 10 (gradual ramp)
- *   Else clamp PHASE3 = ptper (reached target)
+ *   If (phase3_target - phase3ClampTarget) > 10, apply phase3_target -= 10
+ *   Else clamp PHASE3 = phase3ClampTarget (reached target)
  *
  * Assembly:
  *   5B38  MOV.D W0, [W15++]       ; save W0-W1
  *   5B3A  MOV   W2, [W15++]       ; save W2
  *   5B3C  MOV   0x1E56, W2        ; W2 = phase3_target
- *   5B3E  MOV   0x1D72, W1        ; W1 = ptper
- *   5B40  SUB   W2, W1, W0        ; W0 = phase3_target - ptper
+ *   5B3E  MOV   0x1D72, W1        ; W1 = phase3ClampTarget
+ *   5B40  SUB   W2, W1, W0        ; W0 = phase3_target - phase3ClampTarget
  *   5B42  SUB   W0, #0xA, [W15]   ; compare diff vs 10
  *   5B44  BRA   LE, 0x5B4E        ; if diff <= 10, clamp
  *   5B46  SUB   W2, #0xA, W0      ; W0 = phase3_target - 10
  *   5B48  MOV   W0, 0x1E56        ; phase3_target -= 10
  *   5B4A  MOV   W0, PHASE3        ; PHASE3 = phase3_target - 10
  *   5B4C  BRA   0x5B52            ; skip clamp
- *   5B4E  MOV   W1, PHASE3        ; PHASE3 = ptper (clamped)
- *   5B50  MOV   W1, 0x1E56        ; phase3_target = ptper
+ *   5B4E  MOV   W1, PHASE3        ; PHASE3 = phase3ClampTarget (clamped)
+ *   5B50  MOV   W1, 0x1E56        ; phase3_target = phase3ClampTarget
  *   5B52  MOV   0x1D74, W0        ; ptperCommand
  *   5B54  MOV   W0, PTPER         ; write PTPER
  *   5B56  MOV   0x1D70, W0        ; pdc1
@@ -142,19 +142,19 @@ extern void si2c2HandlerSeg1(void);       /* 0x29B0 */
 void __attribute__((interrupt, no_auto_psv)) _PWMSpEventMatchInterrupt(void)
 {
     /* ---- PHASE3 ramp-down clamp ----
-     * Gradually reduce PHASE3 toward ptper in steps of 10.
+     * Gradually reduce PHASE3 toward phase3ClampTarget in steps of 10.
      * This prevents abrupt phase-shift changes that could cause
      * current spikes in the LLC converter.
      */
-    int16_t diff = phase3_target - ptper;
+    int16_t diff = phase3_target - phase3ClampTarget;
     if (diff > 10) {
         /* Still ramping: decrement by 10 */
         phase3_target -= 10;
         PHASE3 = phase3_target;
     } else {
-        /* Reached target: clamp to ptper */
-        PHASE3 = ptper;
-        phase3_target = ptper;
+        /* Reached target: clamp to phase3ClampTarget */
+        PHASE3 = phase3ClampTarget;
+        phase3_target = phase3ClampTarget;
     }
 
     /* ---- Update remaining PWM hardware from shadow registers ---- */

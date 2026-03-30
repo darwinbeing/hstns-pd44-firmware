@@ -18,6 +18,8 @@
 #include "variables.h"
 #define NOP() __builtin_nop()
 
+extern void pwmOverrideEnable(void);   /* 0x4B50 */
+
 /* ============================================================================
  * initClock  (firmware address 0x59CE)
  *
@@ -348,22 +350,11 @@ void initPWM(void)
     FCLCON2 = 0x0010;   /* same for PWM2                                     */
     FCLCON3 = 0x0010;   /* same for PWM3                                     */
 
-    /* ---- Override registers: release all override conditions ----
-     * BSET 0x423, #1 / BSET 0x423, #0 -> IOCON1 bits 1:0 = FLTDAT
-     * BSET 0x443, #1 / BSET 0x443, #0 -> IOCON2 bits 1:0 = FLTDAT
-     * BSET 0x463, #1 / BSET 0x463, #0 -> IOCON3 bits 1:0 = FLTDAT
-     * These write 11b to FLTDAT[1:0] so fault drives both pins high       */
-    IOCON1 |= 0x0003;   /* FLTDAT = 11: fault output = both high            */
-    NOP(); NOP(); NOP();
-    IOCON1 |= 0x0001;   /* reapply bit 0 (settle)                           */
-    NOP(); NOP(); NOP();
-    IOCON2 |= 0x0003;   /* FLTDAT = 11 for PWM2                             */
-    NOP(); NOP(); NOP();
-    IOCON2 |= 0x0001;
-    NOP(); NOP(); NOP();
-    IOCON3 |= 0x0003;   /* FLTDAT = 11 for PWM3                             */
-    NOP(); NOP(); NOP();
-    IOCON3 |= 0x0001;
+    /* ---- Assert override outputs on PWM1/2/3 ----
+     * Assembly calls 0x4B50 here (BSET 0x423/0x443/0x463 bit1 then bit0).
+     * Note these are IOCONx high-byte bit1/bit0 => word bit9/bit8:
+     * OVRENH / OVRENL (not PEN, not FLTDAT).                              */
+    pwmOverrideEnable();
 
     /* ---- Enable PWM timer ---- */
     /* BSET 0x401, #7 -> PTCON bit 15 = PTEN (starts PWM time base)       */

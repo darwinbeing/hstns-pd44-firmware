@@ -483,7 +483,7 @@ deassert:
  *       If delayTimer > 0x6E: return (still timing out).
  *       Check voutTargetCode against 0xC4D (3149):
  *         If voutTargetCode == 0xC4D: return (already at limit).
- *         Else: set faultFlags bit3 (light-load / no-load detected) and return.
+ *         Else: set runtimeFlags bit3 (light-load / no-load detected) and return.
  *   If Imeas_scaled >= p_load_thresh: return immediately (load present).
  *
  * Countdown timer (0x2F3C) — decrement-to-zero helper:
@@ -508,7 +508,7 @@ void loadDetect(void)
         }
 
         /* Confirmed no-load: signal the state machine. */
-        faultFlags |= (1u << 3);
+        runtimeFlags |= (1u << 3);
     }
     /* If load is present (imeas >= load_thr) just return. */
 }
