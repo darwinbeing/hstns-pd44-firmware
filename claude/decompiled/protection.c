@@ -27,6 +27,12 @@
 /* External function called only in currentLimit */
 extern void shutdownPwm(void);   /* 0x4B50 — pwmOverrideEnable alias */
 
+#ifdef UNIT_TEST_MINIMAL
+#define PROT_LOCAL
+#else
+#define PROT_LOCAL static
+#endif
+
 /* ============================================================================
  * thresholdCompare  (0x30E2 – 0x30F6)
  *
@@ -48,8 +54,8 @@ extern void shutdownPwm(void);   /* 0x4B50 — pwmOverrideEnable alias */
  *
  * Then zero-extended (ZE) so upper byte is cleared before return.
  * ============================================================================ */
-static uint16_t thresholdCompare(uint16_t value, uint16_t low_thresh,
-                                  uint16_t high_thresh, uint16_t prev_state)
+PROT_LOCAL uint16_t thresholdCompare(uint16_t value, uint16_t low_thresh,
+                                     uint16_t high_thresh, uint16_t prev_state)
 {
     /* 0x30E2  MOV W0, W4   — save value into W4 */
     /* 0x30E4  MOV W3, W0   — W0 = prev_state (default return value) */
@@ -89,7 +95,7 @@ static uint16_t thresholdCompare(uint16_t value, uint16_t low_thresh,
  * Returns:
  *   W0  = new value (one step closer to W1, or W1 itself)
  * ============================================================================ */
-static int16_t clampToward(int16_t current, int16_t target)
+PROT_LOCAL int16_t clampToward(int16_t current, int16_t target)
 {
     /* 0x3244  SUB W0, W1  — signed compare */
     /* 0x3246  BRA LE, ... — if current <= target go low branch */
@@ -133,8 +139,8 @@ static int16_t clampToward(int16_t current, int16_t target)
  * Returns:
  *   W0  = zero-extended W3  (latched / confirmed signal level)
  * ============================================================================ */
-static uint16_t debounceCounter(uint16_t new_level, uint16_t thresh,
-                                 volatile uint16_t *counter, uint16_t prev_level)
+PROT_LOCAL uint16_t debounceCounter(uint16_t new_level, uint16_t thresh,
+                                    volatile uint16_t *counter, uint16_t prev_level)
 {
     /* 0x31B2  MOV W0, W4   — save new_level */
     uint16_t saved_new = new_level;
@@ -186,6 +192,8 @@ static uint16_t debounceCounter(uint16_t new_level, uint16_t thresh,
  *   - var_1BE4 (0x1BE4) — some counter
  *   - Imeas (0x1D44) — calibrated output current
  * ============================================================================ */
+#ifndef UNIT_TEST_MINIMAL
+
 void flagProcess(void)  /* 0x2FA6 */
 {
     /* 0x2FA6  MOV 0x125A, W0 */
@@ -1222,3 +1230,7 @@ vin_final:
 
     /* 0x32DE  RETURN */
 }
+
+#endif /* UNIT_TEST_MINIMAL */
+
+#undef PROT_LOCAL

@@ -33,8 +33,8 @@
 #pragma config WDTPOST = PS2048
 #pragma config WDTPRE  = PR32
 #pragma config WINDIS  = OFF
-#pragma config FWDTEN  = ON
-// #pragma config FWDTEN = OFF
+// #pragma config FWDTEN  = ON
+#pragma config FWDTEN = OFF
 
 // FPOR - Power-on Reset
 #pragma config FPWRT  = PWR32
@@ -62,6 +62,8 @@ extern void initPWM(void);          /* 0x5288 */
 extern void initI2C2(void);         /* 0x150C */
 extern void initUART1(void);        /* 0x556A */
 extern void initSPI2(void);         /* 0x38A6 */
+extern void serialInit(void);       /* UART2 debug/loader port */
+extern void flashUart2LoaderService(void);   /* UART2 AT45DB frame loader */
 
 extern void i2cService(void);              /* 0x50C2 */
 extern void startupControl(void);             /* 0x5522 */
@@ -169,10 +171,11 @@ int main(void)
     initIOPorts();             /* 0x59A2: GPIO TRIS/LAT/ODC */
     initADC();                 /* 0x5BAE: ADCON=0x1007, trigger source */
     initTIMER();               /* 0x5AF6: T1/T2/T4 */
-    initPWM();                 /* 0x5288: PWM1/2/3 full-bridge+SR, PWM5 */
+    //initPWM();                 /* 0x5288: PWM1/2/3 full-bridge+SR, PWM5 */
     initI2C2();                /* 0x150C: I2C2 slave address 0x58 */
     initUART1();               /* 0x556A: 9N1 4800baud */
     initSPI2();                /* 0x38A6: Master ~1.56MHz */
+    serialInit();              /* UART2 115200 for flash frame loader */
     initVars();                /* 0x508E: RAM variable initialization */
 #endif
 
@@ -198,6 +201,7 @@ int main(void)
         flashReadPage6();               /* 0x4260: Read Flash page 6 (config) */
         flashReadPage7();               /* 0x427E: Read Flash page 7 (calibration) */
         flashProgramRead32();           /* 0x429C: Flash program + read 32B */
+        //flashUart2LoaderService();      /* UART2: AA55+256B+CRC -> AT45DB page write */
 #endif
     }
 }

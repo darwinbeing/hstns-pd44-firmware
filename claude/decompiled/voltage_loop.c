@@ -25,8 +25,14 @@ void pwmOverrideEnable(void);
  * 0x4326: threshold compare helper used by 0x433C
  * 0x430C: state/counter latch helper used by 0x433C
  * ============================================================================ */
-static uint16_t thresholdCompare433C(uint16_t value, uint16_t thresh1,
-                                     uint16_t thresh2, uint16_t prev_state)
+#ifdef UNIT_TEST_MINIMAL
+#define VLOOP_LOCAL
+#else
+#define VLOOP_LOCAL static
+#endif
+
+VLOOP_LOCAL uint16_t thresholdCompare433C(uint16_t value, uint16_t thresh1,
+                                          uint16_t thresh2, uint16_t prev_state)
 {
     uint16_t result = prev_state;
 
@@ -44,8 +50,8 @@ static uint16_t thresholdCompare433C(uint16_t value, uint16_t thresh1,
     return (uint8_t)result; /* ZE W0,W0 */
 }
 
-static uint16_t latchCounter430C(uint16_t new_level, uint16_t limit,
-                                 volatile int16_t *counter, uint16_t prev_level)
+VLOOP_LOCAL uint16_t latchCounter430C(uint16_t new_level, uint16_t limit,
+                                      volatile int16_t *counter, uint16_t prev_level)
 {
     uint16_t result = prev_level;
 
@@ -208,6 +214,10 @@ void adcBuf4FastAverage(void)
     int16_t oldest = ioutRing8pt[new_idx];
     ioutRunSum = sum - oldest;
 }
+
+#ifdef UNIT_TEST_MINIMAL
+#undef VLOOP_LOCAL
+#else
 
 /* ============================================================================
  * portdEdgeFaultDetect() — 0x4400-0x444A
@@ -437,3 +447,5 @@ void pwmOverrideEnable(void)
     Nop(); Nop(); Nop();
     IOCON3bits.OVRENL = 1;   /* 0x463 bit0 */
 }
+
+#endif /* UNIT_TEST_MINIMAL */

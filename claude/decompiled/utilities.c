@@ -10,14 +10,24 @@
 #include <libpic30.h>
 #include "variables.h"
 
+static inline void at45dbCsAssert(void)
+{
+    LATGbits.LATG9 = 0;
+}
+
+static inline void at45dbCsDeassert(void)
+{
+    LATGbits.LATG9 = 1;
+}
+
 
 /* ---- Forward declarations for flash_ops.c ---- */
 extern void at45dbReadStatus(uint16_t *dest);
-extern void at45dbStartPageRead(uint16_t page_num);
-extern void at45dbReadFromBuffer(uint8_t *dest, uint16_t len);
-extern void at45dbWriteBufferToPage(uint16_t page_num);
-extern void at45dbPageProgramRead(uint8_t *buf, uint16_t len,
-                                     uint16_t page_num, uint16_t byte_offset);
+extern void at45dbPageErase(uint16_t page_num);
+extern void at45dbBufferWrite(const uint8_t *src, uint16_t len);
+extern void at45dbBufferProgramToPage(uint16_t page_num);
+extern void at45dbPageRead(uint8_t *buf, uint16_t len,
+                           uint16_t page_num, uint16_t byte_offset);
 
 /* Forward declarations for functions in other files */
 extern void t1IsrI2cBody(void);     /* 0x29FA in i2c_protocol.c */
@@ -78,34 +88,37 @@ static void copyPeaksToFlashBuf(void)
 }
 
 /* ============================================================================
- * at45dbChipErase() — 0x38DC
- * AT45DB chip erase sequence (0x3D, 0x2A, 0x80, 0xA6)
+ * at45dbSetBinaryPage256() — 0x38DC
+ * AT45DB buffer/page size configuration to 256-byte binary mode:
+ *   0x3D, 0x2A, 0x80, 0xA6
+ * Note: this is NOT the AT45DB chip-erase command.
  * ============================================================================ */
-static void at45dbChipErase(void)
+static void at45dbSetBinaryPage256(void)
 {
     at45dbReadStatus(&at45db_status);
     while (!(at45db_status & 0x80))
         at45dbReadStatus(&at45db_status);
 
-    LATGbits.LATG9 = 0;
+    at45dbCsAssert();
     (void)SPI2BUF;
     SPI2BUF = 0x3D; while (!SPI2STATbits.SPIRBF); (void)SPI2BUF;
     SPI2BUF = 0x2A; while (!SPI2STATbits.SPIRBF); (void)SPI2BUF;
     SPI2BUF = 0x80; while (!SPI2STATbits.SPIRBF); (void)SPI2BUF;
     SPI2BUF = 0xA6; while (!SPI2STATbits.SPIRBF);
-    LATGbits.LATG9 = 1;
+    at45dbCsDeassert();
 }
 
 /* ============================================================================
- * flashEraseAndRewrite (0x3ABA) — Erase all 8 pages, rewrite from buffer
+ * flashEraseAndRewrite (0x3ABA) — Page refresh loop over pages 0..7
+ * (called after chip erase in flashCalibrationLoad fallback path)
  * ============================================================================ */
 static void flashEraseAndRewrite(void)
 {
     memset(flash_sector_buf_1498, 0, 256);
     for (uint16_t page = 0; page < 8; page++) {
-        at45dbStartPageRead(page);
-        at45dbReadFromBuffer(flash_sector_buf_1498, 256);
-        at45dbWriteBufferToPage(page);
+        at45dbPageErase(page);
+        at45dbBufferWrite(flash_sector_buf_1498, 256);
+        at45dbBufferProgramToPage(page);
     }
 }
 
@@ -538,7 +551,7 @@ static void fanSpeedCalc(void) {
     /* Read pages 1..7, store 2 bytes each */
     uint16_t idx = 0;
     for (uint16_t page = 1; page < 8; page++) {
-        at45dbPageProgramRead(local_buf, 32, page, 0);
+        at45dbPageRead(local_buf, 32, page, 0);
         flash_sector_buf_1598[idx + 4] = local_buf[0];
         flash_sector_buf_1598[idx + 5] = local_buf[1];
         idx += 2;
@@ -546,7 +559,7 @@ static void fanSpeedCalc(void) {
 
     /* Read pages 0..2, store 2 bytes each at offsets 18..23 */
     for (uint16_t i = 0; i < 3; i++) {
-        at45dbPageProgramRead(local_buf, 32, i, 0);
+        at45dbPageRead(local_buf, 32, i, 0);
         flash_sector_buf_1598[i * 2 + 18] = local_buf[0];
         flash_sector_buf_1598[i * 2 + 19] = local_buf[1];
     }
@@ -557,9 +570,9 @@ static void fanSpeedCalc(void) {
  * ============================================================================ */
 void fanUpdateSpeed(void) {
     fanSpeedCalc();
-    at45dbStartPageRead(5);
-    at45dbReadFromBuffer(flash_sector_buf_1598, 24);
-    at45dbWriteBufferToPage(5);
+    at45dbPageErase(5);
+    at45dbBufferWrite(flash_sector_buf_1598, 24);
+    at45dbBufferProgramToPage(5);
 }
 
 /* ============================================================================
@@ -604,7 +617,7 @@ void flashCalibrationLoad(void) {
     at45dbReadStatus(&at45db_status);
 
     /* Read page 6 (256 bytes) -> flash_read_buf_160E */
-    at45dbPageProgramRead(flash_read_buf_160E, 0x100, 6, 0);
+    at45dbPageRead(flash_read_buf_160E, 0x100, 6, 0);
 
     /* Check if page is blank (0xFF, 0xFF) */
     if (flash_read_buf_160E[0] == 0xFF && flash_read_buf_160E[1] == 0xFF)
@@ -620,9 +633,9 @@ void flashCalibrationLoad(void) {
         goto flash_not_present;
 
     /* Read calibration pages */
-    at45dbPageProgramRead(flash_read_buf_15D0, 0x16, 0, 0);
-    at45dbPageProgramRead(flash_sector_buf_1598, 0x18, 5, 0);
-    at45dbPageProgramRead(flash_read_buf_15E6, 0x20, 7, 0);
+    at45dbPageRead(flash_read_buf_15D0, 0x16, 0, 0);
+    at45dbPageRead(flash_sector_buf_1598, 0x18, 5, 0);
+    at45dbPageRead(flash_read_buf_15E6, 0x20, 7, 0);
 
     /* Copy verify flags */
     flash_verify_flags[0] = flash_sector_buf_1598[0];
@@ -694,7 +707,7 @@ void flashCalibrationLoad(void) {
 
             if ((c & 1) == 0) break;   /* last region OK => done */
 
-            at45dbPageProgramRead(flash_read_buf_160E, 0x100, 6, 0);
+            at45dbPageRead(flash_read_buf_160E, 0x100, 6, 0);
             retry++;
         } while (retry < 3);
     }
@@ -702,7 +715,10 @@ void flashCalibrationLoad(void) {
     goto epilogue;
 
 flash_not_present:
-    flashEraseAndRewrite();
+#ifndef SIMULATION_MODE
+    //at45dbSetBinaryPage256();
+    //flashEraseAndRewrite();
+#endif
 
     flash_verify_flags[0] = 0;
     flash_verify_flags[1] = 0;
@@ -729,9 +745,9 @@ void voltageErrorTracking(void) {
         memset(flash_read_buf_15D0, 0, 0x16);
 
         loadCalibrationFromFlash();
-        at45dbStartPageRead(0);
-        at45dbReadFromBuffer(flash_read_buf_15D0, 0x16);
-        at45dbWriteBufferToPage(0);
+        at45dbPageErase(0);
+        at45dbBufferWrite(flash_read_buf_15D0, 0x16);
+        at45dbBufferProgramToPage(0);
         return;
     }
 
@@ -772,9 +788,9 @@ done:
     if (updated) {
         ovpDebounceFlags &= ~(1u << 4);
         copyPeaksToFlashBuf();
-        at45dbStartPageRead(0);
-        at45dbReadFromBuffer(flash_read_buf_15D0, 0x16);
-        at45dbWriteBufferToPage(0);
+        at45dbPageErase(0);
+        at45dbBufferWrite(flash_read_buf_15D0, 0x16);
+        at45dbBufferProgramToPage(0);
     }
 }
 
@@ -856,14 +872,14 @@ void currentRegulation(void) {
     pmbusAlertFlags &= ~1u;
 
     /* Read sector buffer from flash page 1 */
-    at45dbPageProgramRead(flash_sector_buf_1498, 256, 1, 0);
+    at45dbPageRead(flash_sector_buf_1498, 256, 1, 0);
 
     if ((auxFlags & 2) && (pwmRunning & 8) && (systemState != 5)) {
         /* Active mode */
         flash_crc_accum++;
 
         uint8_t local_frame[64];
-        at45dbPageProgramRead(local_frame, 64, 2, 0);
+        at45dbPageRead(local_frame, 64, 2, 0);
 
         /* Clear sector padding */
         for (uint16_t a = 0; a < 256; a++)
@@ -872,12 +888,12 @@ void currentRegulation(void) {
         snapshotStatusToSectorBuf();
 
         /* Write to flash page 1 */
-        at45dbStartPageRead(1);
-        at45dbReadFromBuffer(flash_sector_buf_1498, 256);
-        at45dbWriteBufferToPage(1);
+        at45dbPageErase(1);
+        at45dbBufferWrite(flash_sector_buf_1498, 256);
+        at45dbBufferProgramToPage(1);
 
         /* Read page 3 */
-        at45dbPageProgramRead(flash_sector_buf_1498, 256, 3, 0);
+        at45dbPageRead(flash_sector_buf_1498, 256, 3, 0);
 
         for (uint16_t a = 0; a < 256; a++)
             flash_sector_buf_1498[a] = 0;
@@ -887,18 +903,18 @@ void currentRegulation(void) {
         /* Idle mode */
         snapshotStatusToSectorBuf();
 
-        at45dbStartPageRead(1);
-        at45dbReadFromBuffer(flash_sector_buf_1498, 256);
-        at45dbWriteBufferToPage(1);
+        at45dbPageErase(1);
+        at45dbBufferWrite(flash_sector_buf_1498, 256);
+        at45dbBufferProgramToPage(1);
 
-        at45dbPageProgramRead(flash_sector_buf_1498, 256, 3, 0);
+        at45dbPageRead(flash_sector_buf_1498, 256, 3, 0);
         snapshotTelemetryToSectorBuf();
     }
 
     /* Common: write to flash page 3, then update fan */
-    at45dbStartPageRead(3);
-    at45dbReadFromBuffer(flash_sector_buf_1498, 256);
-    at45dbWriteBufferToPage(3);
+    at45dbPageErase(3);
+    at45dbBufferWrite(flash_sector_buf_1498, 256);
+    at45dbBufferProgramToPage(3);
     fanUpdateSpeed();
 }
 
@@ -914,9 +930,9 @@ void flashReadbackHandler(void) {
     memset(flash_sector_buf_1498, 0, 256);
 
     for (uint8_t page = 1; page < 6; page++) {
-        at45dbStartPageRead(page);
-        at45dbReadFromBuffer(flash_sector_buf_1498, 256);
-        at45dbWriteBufferToPage(page);
+        at45dbPageErase(page);
+        at45dbBufferWrite(flash_sector_buf_1498, 256);
+        at45dbBufferProgramToPage(page);
     }
 
     flash_verify_flags[0] = 0;

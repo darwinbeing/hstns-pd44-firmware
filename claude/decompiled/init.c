@@ -158,12 +158,10 @@ void initTIMER(void)
     /* ---- Timer 1 ---- */
     T1CON = 0x0000;                     /* stop Timer1, clear all settings     */
     TMR1  = 0x0000;                     /* clear Timer1 counter                */
-#if defined(__MPLAB_DEBUGGER_SIMULATOR) && !defined(SIMULATION_MODE)
-    /* IDE simulator runs instruction-accurate and is very slow for real-time
-     * periods. Use shorter periods so ISR breakpoints (T1/T2/T4) are reached
-     * quickly during interactive debug.
-     */
-    PR1   = 0x0400;                     /* debug-fast period                   */
+#if defined(SIM_FAST_TIMER_PERIODS)
+    /* Optional speed-up for interactive simulator stepping.
+     * Keep disabled by default so initTIMER stays assembly-faithful (0x5AF6). */
+    PR1   = 0x0400;
 #else
     PR1   = 0x2710;                     /* period = 10000 counts               */
 #endif
@@ -187,8 +185,8 @@ void initTIMER(void)
     /* ---- Timer 2 ---- */
     T2CON = 0x0000;                     /* stop Timer2, clear all settings     */
     TMR2  = 0x0000;                     /* clear Timer2 counter                */
-#if defined(__MPLAB_DEBUGGER_SIMULATOR) && !defined(SIMULATION_MODE)
-    PR2   = 0x0020;                     /* debug-fast period                   */
+#if defined(SIM_FAST_TIMER_PERIODS)
+    PR2   = 0x0020;
 #else
     PR2   = 0x03E8;                     /* period = 1000 counts (1 ms @ Fcy/1) */
 #endif
@@ -205,8 +203,8 @@ void initTIMER(void)
     /* ---- Timer 4 ---- */
     T4CON = 0x0000;                     /* stop Timer4, clear all settings     */
     TMR4  = 0x0000;                     /* clear Timer4 counter                */
-#if defined(__MPLAB_DEBUGGER_SIMULATOR) && !defined(SIMULATION_MODE)
-    PR4   = 0x0800;                     /* debug-fast period                   */
+#if defined(SIM_FAST_TIMER_PERIODS)
+    PR4   = 0x0800;
 #else
     PR4   = 0xC350;                     /* period = 50000 counts               */
 #endif

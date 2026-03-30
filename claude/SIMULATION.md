@@ -54,6 +54,19 @@ The automation flow is:
 - generate `out/sim/sim_trace.csv` and `out/sim/sim_trace.svg`
 - return process exit code `0` on pass, non-zero on failure
 
+## Flash Dump Replay Test
+
+If `AT45DB021E.bin` is available in repo root (Flash dump from hardware), run:
+
+- `make flash-dump-test`
+
+What it verifies:
+
+- Replays AT45DB access paths used by firmware (`0x81/0x84` and `0xD2`)
+- Checks `flashReadPage6`, `flashReadPage7`, and sampled `flashProgramRead32` reads
+- Confirms returned bytes match direct reads from the dump file
+- Prints page-7 calibration words and runtime-derived values (as mapped by `adcMiscSample`)
+
 Sampling knobs:
 
 - `SIM_HOST_SAMPLES`: host-side sample count (default `200`)

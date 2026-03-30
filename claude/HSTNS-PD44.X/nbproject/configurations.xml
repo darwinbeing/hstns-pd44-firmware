@@ -38,6 +38,7 @@
       <itemPath>../decompiled/stubs.c</itemPath>
       <itemPath>../decompiled/serial.c</itemPath>
       <itemPath>../decompiled/simulator.c</itemPath>
+      <itemPath>../decompiled/trap.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -51,7 +52,7 @@
         <targetDevice>dsPIC33FJ64GS606</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>Simulator</platformTool>
+        <platformTool>PK5Tool</platformTool>
         <languageToolchain>XC16</languageToolchain>
         <languageToolchainVersion>2.10</languageToolchainVersion>
         <platform>4</platform>
@@ -275,6 +276,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-abff"/>
         <property key="poweroptions.powerenable" value="true"/>
+        <property key="programmerToGoFilePath"
+                  value="/Users/litao/Developer/hstns-pd44-firmware/claude/HSTNS-PD44.X/debug/default/HSTNS-PD44_ptg"/>
         <property key="programmerToGoImageName" value="HSTNS-PD44_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
@@ -859,6 +862,8 @@
         <property key="periphComp5.gte" value="gt"/>
         <property key="periphComp6.gte" value="gt"/>
         <property key="poweroptions.powerenable" value="true"/>
+        <property key="programmerToGoFilePath"
+                  value="/Users/litao/Developer/hstns-pd44-firmware/claude/HSTNS-PD44.X/debug/default/HSTNS-PD44_ptg"/>
         <property key="programmerToGoImageName" value="HSTNS-PD44_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>

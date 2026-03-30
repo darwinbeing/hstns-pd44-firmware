@@ -185,6 +185,8 @@ void stateControlMachine(void)
     marginThreshold = m - 1;
 }
 
+#ifndef UNIT_TEST_MINIMAL
+
 /* ============================================================================
  * 4.  stateInit  (0x2E3C – 0x2E74)
  *
@@ -623,3 +625,5 @@ void portdSample(void)
     /* Signal that a fresh measurement is available. */
     startupFlags |= (1u << 0);
 }
+
+#endif /* UNIT_TEST_MINIMAL */

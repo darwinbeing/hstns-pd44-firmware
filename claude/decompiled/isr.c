@@ -15,12 +15,12 @@
  * Jump table (0x1000):
  *   0x100C -> GOTO 0x5B38  (PSEM handler)
  *   0x1010 -> GOTO 0x37F6  (T1 handler, 5kHz current loop)
- *   0x1014 -> GOTO 0x456E  (T3 handler, voltage loop/frequency control)
+ *   0x1014 -> GOTO 0x456E  (T2 handler, voltage loop/frequency control)
  *   0x1024 -> GOTO 0x29B0  (SI2C2 handler)
  *   others -> GOTO 0x5BE2  (BREAK+RESET, not implemented)
  *
- * Note: T2 ISR stub (0x0DE0) is empty (direct RETURN)!
- *       The actual voltage loop/frequency control runs in the T3 ISR.
+ * Note: one timer vector stub is empty (0x0DE0, direct RETURN).
+ *       The voltage loop/frequency control path is at 0x0D40 -> 0x1014 -> 0x456E.
  * ============================================================================ */
 #include <xc.h>
 #include "variables.h"
@@ -58,7 +58,7 @@ extern void si2c2HandlerSeg1(void);       /* 0x29B0 */
  * 2. Mode-dispatched ISR (checks fw_mode to dispatch):
  *    - 0x0D04 PSEM   PWM special event -> mode2: 0x5B38, else: 0x5C0C
  *    - 0x0D1C T1     Timer1            -> mode2: 0x37F6, mode3: 0x5C10, else: 0x0AC0
- *    - 0x0D40 T3     Timer3            -> mode2: 0x456E, else: 0x5C14
+ *    - 0x0D40 T2     Timer2            -> mode2: 0x456E, else: 0x5C14
  *    - 0x0D58 SPI1E  SPI1 error        -> mode2: 0x5BE2(BREAK), else: 0x5C18
  *    - 0x0D70 MI2C1  I2C1 master       -> mode2: 0x5BE2(BREAK), else: 0x5C1C
  *    - 0x0D8A SI2C2  I2C2 slave        -> mode2: 0x29B0, mode3: 0x5C24, else: 0x0526

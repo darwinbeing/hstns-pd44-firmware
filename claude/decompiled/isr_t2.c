@@ -195,6 +195,9 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
             droopKffFactor = 0x400;                 /* restore normal gain */
             droopBoostFlags &= ~(1u << 0);
         }
+    } else {
+        /* 0x46DE: MOV W0,0x1DD6 with W0=0 when bit8 is clear */
+        droopPeriod = 0;
     }
 
     /* ==== Section 6c: OCV/UVP transient handling ==== */
@@ -222,6 +225,9 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
             droopKffFactor = 0x400;
             droopBoostFlags &= ~(1u << 1);
         }
+    } else {
+        /* 0x471E: MOV W0,0x1DD4 with W0=0 when bit9 is clear */
+        uvpDebounce = 0;
     }
 
     /* ================================================================
