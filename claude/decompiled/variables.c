@@ -75,11 +75,11 @@ volatile int16_t droopPeriod;
 volatile int16_t ocpCurrentRef;
 
 /* 2P2Z compensator coefficients */
-volatile int32_t compN3;            /* n3 = Q15(-0.69126) */
-volatile int32_t compN2;            /* n2 = Q15(2.424896) */
-volatile int32_t compN1;            /* n1 = Q15(-1.95197) */
-volatile int16_t compD1;            /* d3 = Q15(-0.00742) */
-volatile int16_t compD0;            /* d2 = Q15(0.25742) */
+volatile int32_t compN3 = COMP_N3;            /* n3 = Q15(-0.69126) */
+volatile int32_t compN2 = COMP_N2;            /* n2 = Q15(2.424896) */
+volatile int32_t compN1 = COMP_N1;            /* n1 = Q15(-1.95197) */
+volatile int16_t compD1 = (int16_t)COMP_D3;   /* d3 = Q15(-0.00742) */
+volatile int16_t compD0 = (int16_t)COMP_D2;   /* d2 = Q15(0.25742) */
 volatile int16_t compSetpoint;      /* compensator reference */
 
 /* 2P2Z compensator accumulators */

@@ -24,6 +24,9 @@
  * ============================================================================ */
 #include <xc.h>
 #include "variables.h"
+#ifdef SIMULATION_MODE
+#include "simulator.h"
+#endif
 
 /* Sub-routine declarations */
 extern void adcBuf12OvercurrentLatch(void);            /* 0x433C - ADC trigger+wait */
@@ -73,8 +76,18 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
     /* 0x45A0-0x45C0 */
     adcBuf12OvercurrentLatch();                               /* 0x433C */
 
-    int16_t va = ADCBUF0;
-    int16_t vb = ADCBUF2;
+    int16_t va =
+#ifdef SIMULATION_MODE
+        sim_debug.adcbuf0;
+#else
+        ADCBUF0;
+#endif
+    int16_t vb =
+#ifdef SIMULATION_MODE
+        sim_debug.adcbuf2;
+#else
+        ADCBUF2;
+#endif
     adcAn0Raw = va;               /* save AN0 raw */
     adcAn2Raw = vb;               /* save AN2 raw */
 
@@ -618,9 +631,16 @@ skip_softstart:
 
     /* ==== Section 15: Clear interrupt & trigger PWM ==== */
     /* 0x4B34-0x4B3A */
+    /* 4B34..4B3A:
+     *   BCLR IFS0,#7   -> clear T2IF
+     *   BCLR 0x8B,#1   -> clear PSEMIF
+     *   BSET 0x9B,#1   -> set PSEMIE
+     *   BSET 0x401,#3  -> set PTCON.SEIEN
+     *
+     * No T2IE disable in original assembly.
+     */
     IFS0bits.T2IF = 0;                               /* clear T2 interrupt flag */
-    IEC0bits.T2IE = 0;                               /* disable T2 interrupt */
-    /* Re-enabled by next PSEM cycle */
-    PTCONbits.SEIEN = 1;                             /* trigger PWM special event */
-    PTCONbits.PTSIDL = 1;                            /* 0x401 bit3 */
+    IFS3bits.PSEMIF = 0;                             /* clear PWM special event flag */
+    IEC3bits.PSEMIE = 1;                             /* enable PWM special event ISR */
+    PTCONbits.SEIEN = 1;                             /* arm special event interrupt */
 }

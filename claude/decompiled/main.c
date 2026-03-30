@@ -7,6 +7,50 @@
 #include "variables.h"
 #include "simulator.h"
 
+/* Configuration Bits */
+
+// Device: dsPIC33FJ64GS606
+// Config bits extracted from HSTNS-PD44 hardware via PICkit 5 read
+
+// FBS - Boot Segment
+#pragma config BWRP = WRPROTECT_OFF
+#pragma config BSS  = NO_FLASH
+
+// FGS - General Code Segment
+#pragma config GWRP = OFF
+#pragma config GSS  = OFF
+
+// FOSCSEL - Oscillator Source Selection
+#pragma config FNOSC = PRIPLL
+#pragma config IESO  = ON
+
+// FOSC - Oscillator Configuration
+#pragma config POSCMD  = XT
+#pragma config OSCIOFNC = OFF
+#pragma config FCKSM   = CSECMD
+
+// FWDT - Watchdog Timer
+#pragma config WDTPOST = PS2048
+#pragma config WDTPRE  = PR32
+#pragma config WINDIS  = OFF
+#pragma config FWDTEN  = ON
+// #pragma config FWDTEN = OFF
+
+// FPOR - Power-on Reset
+#pragma config FPWRT  = PWR32
+#pragma config ALTSS1 = ON
+#pragma config ALTQIO = OFF
+
+// FICD - In-Circuit Debugger
+#pragma config ICS    = PGD2
+#pragma config JTAGEN = OFF
+
+// FCMP - Comparator
+#pragma config HYST0   = HYST45
+#pragma config CMPPOL0 = POL_FALL
+#pragma config HYST1   = HYST45
+#pragma config CMPPOL1 = POL_FALL
+
 /* ---- Function declarations ---- */
 extern void initClock(void);        /* 0x59CE */
 extern void initCMP4(void);         /* 0x5BD8 */
@@ -56,13 +100,6 @@ void initVars(void)
 
     /* Frequency setpoint */
     freqSetpoint = 350;       /* 0x1D3E = 0x15E */
-
-    /* 2P2Z compensator coefficients */
-    compN1 = COMP_N1;
-    compN2 = COMP_N2;
-    compN3 = COMP_N3;
-    compD0 = (int16_t)COMP_D2;
-    compD1 = (int16_t)COMP_D3;
 
     /* Initialize state machine to IDLE */
     systemState = ST_IDLE;              /* 0x1E22 */

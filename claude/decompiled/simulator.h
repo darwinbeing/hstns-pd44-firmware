@@ -7,6 +7,10 @@
 #define SIM_TRACE_MAX_STEPS 64u
 #endif
 
+#ifndef SIM_ENABLE_TARGET_TRACE
+#define SIM_ENABLE_TARGET_TRACE 0u
+#endif
+
 typedef struct {
     volatile uint16_t step;
     volatile uint16_t t1_count;
@@ -36,6 +40,10 @@ typedef struct {
     volatile uint16_t observed_state_after_t2;
     volatile uint16_t observed_state_after_startup;
     volatile uint16_t observed_state_after_main;
+    volatile uint16_t observed_state_seen_mask;
+    volatile uint16_t observed_idle_to_startup_count;
+    volatile uint16_t observed_startup_to_active_count;
+    volatile uint16_t observed_active_to_fault_count;
     volatile int16_t observed_margin_threshold;
     volatile uint16_t observed_aux_flags;
     volatile uint16_t observed_pwm_running;
@@ -65,6 +73,7 @@ typedef struct {
 extern volatile sim_debug_t sim_debug;
 extern volatile uint16_t sim_trace_mode;
 extern volatile uint16_t sim_trace_count;
+#if SIM_ENABLE_TARGET_TRACE
 extern volatile uint16_t sim_trace_step[SIM_TRACE_MAX_STEPS];
 extern volatile int16_t sim_trace_an0[SIM_TRACE_MAX_STEPS];
 extern volatile int16_t sim_trace_an2[SIM_TRACE_MAX_STEPS];
@@ -91,6 +100,7 @@ extern volatile uint16_t sim_trace_cmpcon3[SIM_TRACE_MAX_STEPS];
 extern volatile uint16_t sim_trace_cmpdac3[SIM_TRACE_MAX_STEPS];
 extern volatile uint16_t sim_trace_cmpcon4[SIM_TRACE_MAX_STEPS];
 extern volatile uint16_t sim_trace_cmpdac4[SIM_TRACE_MAX_STEPS];
+#endif
 extern volatile uint16_t sim_portd_input;
 extern volatile uint16_t sim_test_status;
 extern volatile uint16_t sim_test_failure_count;
@@ -108,6 +118,10 @@ void simAutomationStop(void);
 #define SIM_TEST_STATUS_THERMAL_TRIP  0x0004u
 #define SIM_TEST_STATUS_SAW_ACTIVE    0x0008u
 #define SIM_TEST_STATUS_SAW_FAULT     0x0010u
+#define SIM_TEST_STATUS_SAW_IDLE      0x0020u
+#define SIM_TEST_STATUS_SAW_STARTUP   0x0040u
+#define SIM_TEST_STATUS_IDLE_TO_STARTUP  0x0080u
+#define SIM_TEST_STATUS_STARTUP_TO_ACTIVE 0x0100u
 
 #define SIM_TRACE_MODE_RING           0u
 #define SIM_TRACE_MODE_UNIFORM        1u

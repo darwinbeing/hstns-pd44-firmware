@@ -13,99 +13,155 @@
  * ============================================================================ */
 #include <xc.h>
 #include "variables.h"
+#ifdef SIMULATION_MODE
+#include "simulator.h"
+#endif
 
 /* Forward declaration */
 void pwmOverrideEnable(void);
 
-/* Helpers declared in t1_sub_prot.c */
-extern uint16_t thresholdCompare(int16_t adc_val, int16_t lo_thresh,
-                                  int16_t hi_thresh, int16_t prev_state);
-extern uint16_t debounceCounter(int16_t new_val, int16_t limit,
-                                 volatile int16_t *cnt, int16_t prev_val);
+/* ============================================================================
+ * Local helpers for 0x433C path
+ * 0x4326: threshold compare helper used by 0x433C
+ * 0x430C: state/counter latch helper used by 0x433C
+ * ============================================================================ */
+static uint16_t thresholdCompare433C(uint16_t value, uint16_t thresh1,
+                                     uint16_t thresh2, uint16_t prev_state)
+{
+    uint16_t result = prev_state;
+
+    /* 432A..4338
+     * if (value >= thresh1) result = 1;
+     * else if (value <= thresh2) result = 0;
+     * else result keeps prev_state.
+     */
+    if (value >= thresh1) {
+        result = 1u;
+    } else if (value <= thresh2) {
+        result = 0u;
+    }
+
+    return (uint8_t)result; /* ZE W0,W0 */
+}
+
+static uint16_t latchCounter430C(uint16_t new_level, uint16_t limit,
+                                 volatile int16_t *counter, uint16_t prev_level)
+{
+    uint16_t result = prev_level;
+
+    if (new_level != prev_level) {
+        uint16_t cnt = (uint16_t)(*counter + 1);
+        *counter = (int16_t)cnt;
+
+        /* 4318 BRA NC,0x4322 with SUB W0,W1,[W15] (W0-W1):
+         * cnt < limit -> keep prev and keep counter.
+         * cnt >= limit -> clear counter and accept new level.
+         */
+        if (cnt >= limit) {
+            *counter = 0;
+            result = new_level;
+        }
+    } else {
+        *counter = 0;
+    }
+
+    return (uint8_t)result; /* ZE W3,W0 */
+}
 
 /* ============================================================================
  * adcBuf12OvercurrentLatch() — 0x433C-0x43D2
  *
  * Reads ADCBUF12 (overcurrent sense), applies threshold detection with
- * debounce via helper functions. If overcurrent persists in ACTIVE state
- * with droopMode 3 or 4, triggers fault -> state=FAULT, enables PWM override.
+ * debounce via helper functions, then updates pwmRunning.bit3.
  *
- * Also handles startup gating: if not in ACTIVE state, certain conditions
- * force PWM enable and set systemState=0 (IDLE) with marginThreshold=2500.
+ * In ACTIVE state (systemState=2), oc_flag==0 starts a ramp-down sequence
+ * on voutSetpoint and can force shutdown/override.
+ *
+ * In non-ACTIVE states, it clears the ramp latch and may force IDLE
+ * (systemState=0) with marginThreshold=0x09C4.
  * ============================================================================ */
 void adcBuf12OvercurrentLatch(void)
 {
-    int16_t adc12 = ADCBUF12;
+    uint16_t adc12 =
+#ifdef SIMULATION_MODE
+        (uint16_t)sim_debug.adcbuf12;
+#else
+        (uint16_t)ADCBUF12;
+#endif
 
-    /* Extract bit3 of pwmRunning as previous state for threshold compare */
-    int16_t prev_bit = (pwmRunning >> 3) & 1;
-    int16_t new_state = 0;
+    /* 433E..4362: comparator + latch update for pwmRunning.bit3 */
+    {
+        uint16_t prev_bit3 = (pwmRunning >> 3) & 1u;
+        uint16_t thermal_b1 = (thermalFlags >> 1) & 1u;
+        uint16_t cmp = thresholdCompare433C(adc12, 0x026Cu, 0x0136u, thermal_b1);
+        uint16_t new_level = (cmp == 0u) ? 1u : 0u; /* CP0.B / MOV #1,W9 */
+        uint16_t latched = latchCounter430C(new_level, 3u, &debounceAdc12, prev_bit3);
+        uint16_t w = pwmRunning;
+        w = (uint16_t)((w & (uint16_t)~(1u << 3)) | ((latched & 1u) << 3));
+        pwmRunning = w;
+    }
 
-    /* Threshold compare: ADCBUF12 vs [0x136, 0x26C] with hysteresis */
-    int16_t flags_w3 = (thermalFlags >> 1) & 1;
-    uint16_t cmp = thresholdCompare(adc12, 0x136, 0x26C, flags_w3);
-    if (cmp == 0)
-        new_state = 1;
+    {
+        uint16_t oc_flag = pwmRunning & (1u << 3); /* W8 */
+        uint16_t state = (uint16_t)systemState;    /* W0 at 4370 */
 
-    /* Debounce with counter at debounceAdc12, limit 3 */
-    uint16_t result = debounceCounter(new_state, 3,
-                                       &debounceAdc12, prev_bit);
-
-    /* Update bit3 of pwmRunning */
-    int16_t f1bf2 = pwmRunning;
-    f1bf2 = (f1bf2 & ~(1 << 3)) | ((result & 1) << 3);
-    pwmRunning = f1bf2;
-
-    int16_t oc_flag = f1bf2 & (1 << 3);             /* W8 = bit3 state */
-
-    if (systemState == 2) {
-        /* ACTIVE state */
-        if (oc_flag == 0) {
-            /* No overcurrent: check droopMode 3 or 4 for startup gate */
-            int16_t dm = droopMode;
-            if (dm == 3 || dm == 4) {
-                /* droopMode valid: start voutSetpoint ramp */
-                statusFlags |= (1u << 13);
-                int16_t cnt = ocRampCounter;
-                cnt++;
-                ocRampCounter = cnt;
-                voutSetpoint -= cnt * 2;              /* ramp down target */
-
-                if (cnt > 0x4B) {                    /* > 75 ticks */
-                    ocRampCounter = 0;
-                    pwmRunning &= ~(1u << 0);
+        if (state == 2u) {
+            /* 4378..43B4 */
+            if (oc_flag == 0u) {
+                uint16_t dm_rel = (uint16_t)droopMode - 3u; /* 437E..4380 */
+                if (dm_rel > 1u) {
+                    /* 43C2 path from ACTIVE + droopMode not in {3,4} */
+                    pwmRunning &= (uint16_t)~(1u << 0);
                     pmbusAlertFlags |= (1u << 0);
-                    pwmOverrideEnable();           /* 0x4B50 */
-                    systemState = ST_IDLE;                    /* -> IDLE */
-                    marginThreshold = 0x9C4;        /* 2500 */
-                    statusFlags &= ~(1u << 13);
+                    pwmOverrideEnable();
+                    systemState = (int16_t)oc_flag; /* 0 */
+                    marginThreshold = (int16_t)0x09C4;
+                    return;
                 }
+
+                statusFlags |= (1u << 13);       /* BSET 0x125B,#5 */
+                {
+                    uint16_t cnt = (uint16_t)ocRampCounter + 1u;
+                    ocRampCounter = (int16_t)cnt;
+                    /* 4390 SUB 0x1D4C with W0=2*cnt: memory update on voutSetpoint */
+                    voutSetpoint = (int16_t)(voutSetpoint - (int16_t)(cnt << 1));
+                    if (cnt <= 0x004Bu) {
+                        return;                   /* 4396 BRA LEU 43D0 */
+                    }
+                }
+
+                /* 4398..43AA */
+                ocRampCounter = (int16_t)oc_flag; /* 0 */
+                pwmRunning &= (uint16_t)~(1u << 0);
+                pmbusAlertFlags |= (1u << 0);
+                pwmOverrideEnable();
+                systemState = (int16_t)oc_flag;   /* 0 */
+                marginThreshold = (int16_t)0x09C4;
+                statusFlags &= (uint16_t)~(1u << 13);
+                return;
             }
-        } else {
-            /* Overcurrent active: if bit5 was set, clear and reset */
-            if ((statusFlags & (1u << 13))) {
-                statusFlags &= ~(1u << 13);
+
+            /* 43AC..43B4 */
+            if (statusFlags & (1u << 13)) {
+                statusFlags &= (uint16_t)~(1u << 13);
                 ocRampCounter = 0;
             }
-        }
-    } else {
-        /* Not ACTIVE state */
-        statusFlags &= ~(1u << 13);
-        ocRampCounter = 0;
-
-        if (oc_flag != 0) {
             return;
         }
 
-        if (systemState != 0) {
-            /* Clear run request / assert alert before forcing IDLE. */
-            pwmRunning &= ~(1u << 0);
+        /* 43B6..43D0 : non-ACTIVE path */
+        statusFlags &= (uint16_t)~(1u << 13);
+        ocRampCounter = 0;
+        if (oc_flag != 0u) {
+            return;
+        }
+        if (state != 0u) {
+            pwmRunning &= (uint16_t)~(1u << 0);
             pmbusAlertFlags |= (1u << 0);
         }
-
-        pwmOverrideEnable();                       /* 0x4B50 */
-        systemState = ST_IDLE;                                /* -> IDLE */
-        marginThreshold = 0x9C4;                    /* 2500 */
+        pwmOverrideEnable();
+        systemState = (int16_t)oc_flag;           /* 0 */
+        marginThreshold = (int16_t)0x09C4;
     }
 }
 
@@ -120,7 +176,12 @@ void adcBuf12OvercurrentLatch(void)
  * ============================================================================ */
 void adcBuf4FastAverage(void)
 {
-    int16_t adc4 = ADCBUF4;
+    int16_t adc4 =
+#ifdef SIMULATION_MODE
+        sim_debug.adcbuf4;
+#else
+        ADCBUF4;
+#endif
     adcBuf4Raw = adc4;                               /* save raw */
 
     int16_t idx = ioutRingIdx8pt;
@@ -216,7 +277,12 @@ void voutCalibrationAndOvpDetect(void)
     int16_t vavg_div4 = vout_avg_sum >> 2;           /* W8 */
 
     /* Calibrate ADCBUF5: (ADCBUF5 * cal_va2) >> 13 + ofs_va2 */
-    int16_t adc5 = ADCBUF5;
+    int16_t adc5 =
+#ifdef SIMULATION_MODE
+        sim_debug.adcbuf5;
+#else
+        ADCBUF5;
+#endif
     int32_t prod = __mulsi3((int32_t)adc5, (int32_t)cal_va2);
     int16_t cal_result = (int16_t)(prod >> 13) + ofs_va2;
     voutCalibrated = cal_result;                           /* 0x1D66 */

@@ -14,6 +14,7 @@ extern void __attribute__((interrupt, no_auto_psv)) _PWMSpEventMatchInterrupt(vo
 volatile sim_debug_t sim_debug;
 volatile uint16_t sim_trace_mode;
 volatile uint16_t sim_trace_count;
+#if SIM_ENABLE_TARGET_TRACE
 volatile uint16_t sim_trace_step[SIM_TRACE_MAX_STEPS];
 volatile int16_t sim_trace_an0[SIM_TRACE_MAX_STEPS];
 volatile int16_t sim_trace_an2[SIM_TRACE_MAX_STEPS];
@@ -40,6 +41,7 @@ volatile uint16_t sim_trace_cmpcon3[SIM_TRACE_MAX_STEPS];
 volatile uint16_t sim_trace_cmpdac3[SIM_TRACE_MAX_STEPS];
 volatile uint16_t sim_trace_cmpcon4[SIM_TRACE_MAX_STEPS];
 volatile uint16_t sim_trace_cmpdac4[SIM_TRACE_MAX_STEPS];
+#endif
 volatile uint16_t sim_portd_input;
 volatile uint16_t sim_test_status;
 volatile uint16_t sim_test_failure_count;
@@ -74,6 +76,18 @@ volatile int32_t sim_test_final_comp_out;
 
 #ifndef SIM_PORTD6_EDGE_INTERVAL
 #define SIM_PORTD6_EDGE_INTERVAL 100u
+#endif
+
+#ifndef SIM_STIM_STARTUP_RAMP_STEPS
+#define SIM_STIM_STARTUP_RAMP_STEPS 500u
+#endif
+
+#ifndef SIM_STIM_PLANT_TC_DEN
+#define SIM_STIM_PLANT_TC_DEN 12u
+#endif
+
+#ifndef SIM_STIM_STARTUP_TARGET_SUM
+#define SIM_STIM_STARTUP_TARGET_SUM 8000u
 #endif
 
 static uint16_t sim_portd6_tick_divider;
@@ -117,6 +131,16 @@ static inline uint16_t simEncodeCurrentOffsetRaw(int16_t value)
     return (uint16_t)((int32_t)(value - 1) * 122);
 }
 
+static inline int16_t simComputeVoutSetpoint(int16_t target_code)
+{
+    int32_t target_prod = (int32_t)target_code * (int32_t)cal_va;
+    int16_t target_setpoint = (int16_t)(target_prod >> 13);
+    target_setpoint = (int16_t)(target_setpoint + ofs_va);
+    target_setpoint = (int16_t)(target_setpoint - vref_ls);
+    target_setpoint = (int16_t)(target_setpoint - vrefOcpAdj);
+    return target_setpoint;
+}
+
 static void simLoadCalibrationProfile(void)
 {
     simFlashStoreU16(0x00, 0x1FB7u);
@@ -141,6 +165,7 @@ static void simLoadCalibrationProfile(void)
 
 static inline void simTraceRecord(void)
 {
+#if SIM_ENABLE_TARGET_TRACE
     uint16_t index;
 
 #if SIM_TRACE_UNIFORM_SAMPLING
@@ -193,10 +218,52 @@ static inline void simTraceRecord(void)
         sim_trace_count++;
     }
 #endif
+#else
+    sim_trace_count = 0u;
+#endif
+}
+
+static inline void simMarkStateSeen(uint16_t state)
+{
+    if (state < 16u) {
+        sim_debug.observed_state_seen_mask |= (uint16_t)(1u << state);
+    }
+
+    if (state == ST_IDLE) {
+        sim_test_status |= SIM_TEST_STATUS_SAW_IDLE;
+    } else if (state == ST_STARTUP) {
+        sim_test_status |= SIM_TEST_STATUS_SAW_STARTUP;
+    } else if (state == ST_ACTIVE) {
+        sim_test_status |= SIM_TEST_STATUS_SAW_ACTIVE;
+    } else if (state == ST_FAULT) {
+        sim_test_status |= SIM_TEST_STATUS_SAW_FAULT;
+    }
+}
+
+static inline void simRecordStateTransition(uint16_t before_state)
+{
+    uint16_t after_state = (uint16_t)systemState;
+    simMarkStateSeen(after_state);
+
+    if (before_state == after_state) {
+        return;
+    }
+
+    if ((before_state == ST_IDLE) && (after_state == ST_STARTUP)) {
+        sim_debug.observed_idle_to_startup_count++;
+        sim_test_status |= SIM_TEST_STATUS_IDLE_TO_STARTUP;
+    } else if ((before_state == ST_STARTUP) && (after_state == ST_ACTIVE)) {
+        sim_debug.observed_startup_to_active_count++;
+        sim_test_status |= SIM_TEST_STATUS_STARTUP_TO_ACTIVE;
+    } else if ((before_state == ST_ACTIVE) && (after_state == ST_FAULT)) {
+        sim_debug.observed_active_to_fault_count++;
+    }
 }
 
 static inline void simRecordStateDrop(uint16_t phase_id, uint16_t before_state)
 {
+    simRecordStateTransition(before_state);
+
     if (sim_debug.first_drop_step != 0xFFFFu) {
         return;
     }
@@ -274,16 +341,24 @@ static inline void simApplyAutoStimulus(void)
 {
     uint16_t step = sim_debug.step;
     uint16_t portd = sim_portd_input;
+    uint16_t ramp_steps = (uint16_t)SIM_STIM_STARTUP_RAMP_STEPS;
 
-    if (step < 4u) {
-        sim_debug.target_vout_sum = (int16_t)(1600 + ((int32_t)step * 120));
-        sim_debug.adcbuf4 = (int16_t)(4 + step * 2);
-        sim_debug.adcbuf12 = (int16_t)(0x0180 + step * 2);
+    if (ramp_steps == 0u) {
+        ramp_steps = 1u;
+    }
+
+    if (step < ramp_steps) {
+        int16_t ramp_target = (int16_t)(((int32_t)SIM_STIM_STARTUP_TARGET_SUM * (int32_t)step) / (int32_t)ramp_steps);
+        sim_debug.target_vout_sum = simClamp16(ramp_target, 0, (int16_t)SIM_STIM_STARTUP_TARGET_SUM);
+        sim_debug.adcbuf4 = (int16_t)(4 + ((int32_t)step * 12) / (int32_t)ramp_steps);
+        sim_debug.adcbuf12 = (int16_t)(0x0180 + ((int32_t)step * 10) / (int32_t)ramp_steps);
     } else {
         int16_t cmd = llcPeriodCmd;
         int16_t plant_target;
         int16_t plant_state = sim_debug.target_vout_sum;
-        static const int16_t settle_dither[8] = {-3, -2, -1, 0, 1, 2, 1, 0};
+        int16_t delta;
+        uint16_t tc_den = (uint16_t)SIM_STIM_PLANT_TC_DEN;
+        static const int16_t settle_dither[8] = {-1, 0, 1, 0, -1, 0, 1, 0};
 
         /* Closed-loop plant approximation.
          * llcPeriodCmd behaves as a scaled switching-frequency command:
@@ -299,8 +374,16 @@ static inline void simApplyAutoStimulus(void)
         plant_target = (int16_t)(3119 - (((int32_t)cmd - 3500) / 4));
         plant_target = simClamp16(plant_target, 1200, 3900);
 
-        /* First-order response (about 4 control ticks time constant). */
-        plant_state = (int16_t)(plant_state + ((plant_target - plant_state) / 4));
+        if (tc_den == 0u) {
+            tc_den = 1u;
+        }
+        /* First-order response, intentionally slowed to make AN0/AN2
+         * convergence observable without increasing x-axis span. */
+        delta = (int16_t)((plant_target - plant_state) / (int16_t)tc_den);
+        if ((delta == 0) && (plant_target != plant_state)) {
+            delta = (plant_target > plant_state) ? 1 : -1;
+        }
+        plant_state = (int16_t)(plant_state + delta);
         plant_state = (int16_t)(plant_state + settle_dither[step & 7u]);
         sim_debug.target_vout_sum = simClamp16(plant_state, 1200, 3700);
 
@@ -309,8 +392,8 @@ static inline void simApplyAutoStimulus(void)
         sim_debug.adcbuf12 = (int16_t)(0x0190 + (sim_debug.adcbuf4 >> 2));
     }
 
-    sim_debug.adcbuf0 = (sim_debug.target_vout_sum >> 2) + 2;
-    sim_debug.adcbuf2 = (sim_debug.target_vout_sum >> 2) - 2;
+    sim_debug.adcbuf0 = simClamp16((sim_debug.target_vout_sum >> 2) + 2, 0, 4095);
+    sim_debug.adcbuf2 = simClamp16((sim_debug.target_vout_sum >> 2) - 2, 0, 4095);
     sim_debug.adcbuf5 = (sim_debug.target_vout_sum >> 2);
     sim_debug.adcbuf14 = 320;
 
@@ -323,14 +406,10 @@ static inline void simApplyAutoStimulus(void)
 
 static inline void simCaptureObservations(void)
 {
-    int32_t target_prod = (int32_t)(int16_t)voutRefTarget * (int32_t)cal_va;
-    int16_t target_setpoint = (int16_t)(target_prod >> 13);
-    target_setpoint = (int16_t)(target_setpoint + ofs_va);
-    target_setpoint = (int16_t)(target_setpoint - vref_ls);
-    target_setpoint = (int16_t)(target_setpoint - vrefOcpAdj);
+    int16_t target_setpoint = simComputeVoutSetpoint(voutRefTarget);
 
     sim_debug.observed_system_state = (uint16_t)systemState;
-    sim_debug.observed_vout_sum = (int16_t)((ADCBUF0 + ADCBUF2) << 1);
+    sim_debug.observed_vout_sum = vout_sum;
     sim_debug.observed_vout_setpoint = voutSetpoint;
     sim_debug.observed_vout_setpoint_target = target_setpoint;
     sim_debug.observed_vout_reference = llcPeriodCmd;
@@ -360,12 +439,7 @@ static inline void simCaptureObservations(void)
     sim_debug.observed_cmpdac4 = CMPDAC4;
     sim_debug.observed_comp_out = compY_out;
 
-    if (systemState == ST_ACTIVE) {
-        sim_test_status |= SIM_TEST_STATUS_SAW_ACTIVE;
-    }
-    if (systemState == ST_FAULT) {
-        sim_test_status |= SIM_TEST_STATUS_SAW_FAULT;
-    }
+    simMarkStateSeen((uint16_t)systemState);
     if (thermalFlags & (1u << 7)) {
         sim_test_status |= SIM_TEST_STATUS_THERMAL_TRIP;
     }
@@ -476,13 +550,13 @@ void simInit(void)
     sim_debug.t4_divider = 1;
     freqSetpoint = 0;
 #endif
-    sim_debug.adcbuf0 = 80;
-    sim_debug.adcbuf2 = 78;
+    sim_debug.adcbuf0 = 0;
+    sim_debug.adcbuf2 = 0;
     sim_debug.adcbuf4 = 4;
-    sim_debug.adcbuf5 = 79;
-    sim_debug.adcbuf12 = 80;
+    sim_debug.adcbuf5 = 0;
+    sim_debug.adcbuf12 = 0x0180;
     sim_debug.adcbuf14 = 320;
-    sim_debug.target_vout_sum = 3160;
+    sim_debug.target_vout_sum = 0;
     sim_debug.observed_vout_sum = 0;
     sim_debug.observed_vout_setpoint = 0;
     sim_debug.observed_vout_reference = 0;
@@ -495,6 +569,10 @@ void simInit(void)
     sim_debug.observed_state_after_t2 = 0;
     sim_debug.observed_state_after_startup = 0;
     sim_debug.observed_state_after_main = 0;
+    sim_debug.observed_state_seen_mask = 0;
+    sim_debug.observed_idle_to_startup_count = 0;
+    sim_debug.observed_startup_to_active_count = 0;
+    sim_debug.observed_active_to_fault_count = 0;
     sim_debug.observed_margin_threshold = 0;
     sim_debug.observed_aux_flags = 0;
     sim_debug.observed_pwm_running = 0;
@@ -520,6 +598,7 @@ void simInit(void)
     sim_debug.first_drop_step = 0xFFFFu;
     sim_debug.first_drop_phase = 0;
     sim_debug.observed_comp_out = 0;
+    simMarkStateSeen((uint16_t)systemState);
 
     simLoadCalibrationProfile();
     simApplyAutoStimulus();
@@ -563,6 +642,8 @@ void simRunStep(void)
     statusFlags &= ~(1u << 7);
     controlStatus &= ~(1u << 4);
     faultFlags &= ~(1u << 7);
+    voutTargetCode = voutRefTarget;
+    voutSetpoint = simComputeVoutSetpoint(voutRefTarget);
     sim_debug.observed_state_after_t1 = (uint16_t)systemState;
     startupFlags |= 0x0001;
     {
@@ -575,6 +656,8 @@ void simRunStep(void)
         simRecordStateDrop(3u, state_before);
         sim_debug.psem_count++;
     }
+    voutTargetCode = voutRefTarget;
+    voutSetpoint = simComputeVoutSetpoint(voutRefTarget);
     sim_debug.observed_state_after_t2 = (uint16_t)systemState;
     sim_debug.observed_state_after_startup = (uint16_t)systemState;
     sim_debug.observed_state_after_main = (uint16_t)systemState;

@@ -158,7 +158,15 @@ void initTIMER(void)
     /* ---- Timer 1 ---- */
     T1CON = 0x0000;                     /* stop Timer1, clear all settings     */
     TMR1  = 0x0000;                     /* clear Timer1 counter                */
+#if defined(__MPLAB_DEBUGGER_SIMULATOR) && !defined(SIMULATION_MODE)
+    /* IDE simulator runs instruction-accurate and is very slow for real-time
+     * periods. Use shorter periods so ISR breakpoints (T1/T2/T4) are reached
+     * quickly during interactive debug.
+     */
+    PR1   = 0x0400;                     /* debug-fast period                   */
+#else
     PR1   = 0x2710;                     /* period = 10000 counts               */
+#endif
 
     /* T1CON byte at 0xA5: read-modify-write
      * Mask with 0x8F to preserve TON/TCS bits, then set bit5 = TCKPS1
@@ -179,7 +187,11 @@ void initTIMER(void)
     /* ---- Timer 2 ---- */
     T2CON = 0x0000;                     /* stop Timer2, clear all settings     */
     TMR2  = 0x0000;                     /* clear Timer2 counter                */
+#if defined(__MPLAB_DEBUGGER_SIMULATOR) && !defined(SIMULATION_MODE)
+    PR2   = 0x0020;                     /* debug-fast period                   */
+#else
     PR2   = 0x03E8;                     /* period = 1000 counts (1 ms @ Fcy/1) */
+#endif
 
     /* T2CON byte at 0xA7: set bit6 = TCKPS1, start timer */
     T2CONbits.TCKPS = 2;                /* prescaler 1:64                      */
@@ -193,7 +205,11 @@ void initTIMER(void)
     /* ---- Timer 4 ---- */
     T4CON = 0x0000;                     /* stop Timer4, clear all settings     */
     TMR4  = 0x0000;                     /* clear Timer4 counter                */
+#if defined(__MPLAB_DEBUGGER_SIMULATOR) && !defined(SIMULATION_MODE)
+    PR4   = 0x0800;                     /* debug-fast period                   */
+#else
     PR4   = 0xC350;                     /* period = 50000 counts               */
+#endif
 
     /* Clear Timer4 IFS/IEC flags (addr 0x87/0x97, bit 3) */
     *(volatile uint8_t *)0x87 &= ~(1 << 3); /* T4IF = 0 (clear IFS1 bit3)     */
