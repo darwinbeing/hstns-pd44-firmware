@@ -20,23 +20,58 @@
 
 extern void pwmOverrideEnable(void);   /* 0x4B50 */
 
+enum {
+    TIMER1_PERIOD_COUNTS = 0x2710,
+    TIMER2_PERIOD_COUNTS = 0x03E8,
+    TIMER4_PERIOD_COUNTS = 0xC350,
+    TIMER3_PERIOD_COUNTS = 0x07D0,
+
+    PWM_PTCON_INIT       = 0x0400,
+    PWM_PTPER_INIT       = 0x011E,
+    PWM_IOCON_MAIN_INIT  = 0xC800,
+    PWM_PWMCON_MAIN_INIT = 0x1001,
+    PWM_DUTY_MAIN_INIT   = 0x0126,
+    PWM_DTR12_INIT       = 0x002A,
+    PWM_DTR3_INIT        = 0x002F,
+    PWM_PHASE3_INIT      = 0x0082,
+    PWM_PWMCON5_INIT     = 0x0280,
+    PWM_PHASE5_INIT      = 0x049B,
+    PWM_DUTY5_INIT       = 0x0372,
+    PWM_IOCON5_INIT      = 0x8C00,
+    PWM_FCLCON_INIT      = 0x0010,
+
+    OC2CON_IDLE_MODE     = 0x0008,
+    OC2CON_PWM_MODE      = 0x000E,
+    OC2RS_INIT           = 0x0190,
+
+    ADCON_INIT           = 0x1007,
+    ADCPC_COMMON_INIT    = 0x1F1F,
+    ADCPC1_INIT          = 0x001F,
+    ADPCFG_INIT          = 0x0080,
+
+    CMPCON3_INIT         = 0x0081,
+    CMPDAC3_INIT         = 0x01A3,
+    CMPCON4_INIT         = 0x0101,
+    CMPDAC4_INIT         = 0x0000,
+
+    UART1_MODE_INIT      = 0x0006,
+    UART1_BRG_INIT       = 0x028A,
+    SPI2CON1_INIT        = 0x0122,
+    I2C2CON_INIT         = 0x9040,
+};
+
 /* ============================================================================
  * initClock  (firmware address 0x59CE)
  *
- * Configures the primary oscillator PLL and auxiliary clock:
- *   - External 16 MHz crystal + PLL mode
- *   - PLLFBD = 0x30 (48) -> M = 50 (N1=2, N2=4 -> Fosc = 16MHz * 50 / 8 = 100 MHz, Fcy = 50 MHz)
- *   - CLKDIV: PLLPRE=0 (N1=2), PLLPOST=1 (N2=4), DOZE disabled
- *   - Oscillator switch sequence to FRC+PLL via OSCCON unlock
- *   - Waits for PLL lock (LOCK bit in OSCCON)
- *   - ACLKCON = 0x2740: auxiliary clock from primary PLL, divide-by-1
- *   - Waits for auxiliary clock ready (bit 6 of ACLKCON)
+ * Configures oscillator registers exactly as in firmware image:
+ *   - PLLFBD / CLKDIV programmed
+ *   - clock switch requested via OSCCON unlock sequence
+ *   - waits for COSC/LOCK in hardware mode
+ *   - enables and waits auxiliary PLL (ACLKCON)
  * ============================================================================ */
 void initClock(void)
 {
-    /* ---- PLL configuration ----
-     * Fosc = Fin * M / (N1 * N2) = 16 MHz * 50 / (2 * 4) = 100 MHz
-     * Fcy = Fosc / 2 = 50 MHz                                             */
+    /* ---- PLL configuration (exact register values from image) ---- */
     PLLFBD = 48;                        /* M = PLLFBD + 2 = 50               */
     CLKDIVbits.PLLPOST = 0;            /* N1 = 2                            */
     CLKDIVbits.PLLPRE  = 2;            /* N2 = PLLPRE + 2 = 4              */
@@ -134,26 +169,26 @@ void initIOPorts(void)
  *
  * Configures Timer1, Timer2, and Timer4:
  *
- *   Timer1: 10 ms tick interrupt
- *     - Clock: Fcy/8 prescaler -> 46 MHz / 8 = 5.75 MHz
- *     - PR1 = 0x2710 (10000) -> period = 10000 / 5.75 MHz = ~1.739 ms
- *       (actual period depends on prescaler setting written to T1CON)
- *     - Interrupt priority = 5 (IPC1 / T1IP)
+ *   Timer1: 5 kHz interrupt
+ *     - Clock: Fcy, no prescaler (TCKPS=00)
+ *     - PR1 = 0x2710 (10000) -> 5 kHz @ Fcy=50 MHz
+ *     - Interrupt priority configured via IPC0H (addr 0xA5)
  *     - T1IE = 1, T1IF = 0
  *
- *   Timer2: 1 ms auxiliary tick
- *     - PR2 = 0x03E8 (1000)
- *     - Interrupt priority = 6 (T2IP)
+ *   Timer2: 50 kHz interrupt
+ *     - Clock: Fcy, no prescaler (TCKPS=00)
+ *     - PR2 = 0x03E8 (1000) -> 50 kHz @ Fcy=50 MHz
+ *     - Interrupt priority configured via IPC1H (addr 0xA7)
  *     - T2IE = 1, T2IF = 0
  *
- *   Timer4: 50 ms slow tick (0xC350 = 50000 counts)
- *     - PR4 = 0xC350
- *     - T4IE = 1, T4IF = 0
+ *   Timer4: 1 ms tick (0xC350 = 50000 counts @ Fcy=50 MHz)
+ *     - PR4 = 0xC350 (1 kHz)
+ *     - T4IE = 0, T4IF = 0
  *     - protectionStatus cleared (state flag reset)
  *
- * Note: T1CON/T2CON/T4CON are written by read-modify-write on the byte at
- *       addresses 0xA5/0xA7/... to preserve the prescaler bits while setting
- *       the TON (timer on) bit.
+ * Note:
+ *   - T1IP/T2IP are configured in IPC0bits/IPC1bits.
+ *   - Timer run bits are T1CONbits.TON / T2CONbits.TON / T4CONbits.TON.
  * ============================================================================ */
 void initTIMER(void)
 {
@@ -165,24 +200,16 @@ void initTIMER(void)
      * Keep disabled by default so initTIMER stays assembly-faithful (0x5AF6). */
     PR1   = 0x0400;
 #else
-    PR1   = 0x2710;                     /* period = 10000 counts               */
+    PR1   = TIMER1_PERIOD_COUNTS;
 #endif
 
-    /* T1CON byte at 0xA5: read-modify-write
-     * Mask with 0x8F to preserve TON/TCS bits, then set bit5 = TCKPS1
-     * Result: prescaler = 1:8 (TCKPS[1:0] = 01 after bit5 set)
-     * Then set TON = bit 15 (top byte separately).                        */
-    T1CONbits.TCKPS = 1;                /* prescaler 1:8                       */
-    T1CONbits.TON   = 1;               /* start Timer1                        */
+    /* 5B00..5B08: IPC0H = (IPC0H & 0x8F) | 0x20 -> T1IP = 2 */
+    IPC0bits.T1IP = 2;
 
     IFS0bits.T1IF = 0;                  /* clear Timer1 interrupt flag         */
     IEC0bits.T1IE = 1;                  /* enable Timer1 interrupt             */
-    /* BSET 0x105, #7: sets bit 7 of IPC1 -> T1IP[2:0] priority bits
-     * 0x105 is IPC4 byte (T1IP is at IPC0 bits [14:12]); actually 0x105
-     * is IPC2 high byte. Set bit 7 = IP[2] -> priority = 4+...
-     * Firmware writes bit 7 of 0x105 = IPC2H -> sets T3IP or T1IP to 5  */
-    /* Interrupt priority configuration for Timer1 (addr 0x105, bit 7)    */
-    *(volatile uint8_t *)0x105 |= 0x80; /* T1IP = 5 (or 7 depending on field) */
+    /* 5B0E: BSET 0x105,#7 -> T1CONbits.TON = 1 */
+    T1CONbits.TON = 1;                  /* start Timer1 */
 
     /* ---- Timer 2 ---- */
     T2CON = 0x0000;                     /* stop Timer2, clear all settings     */
@@ -190,17 +217,16 @@ void initTIMER(void)
 #if defined(SIM_FAST_TIMER_PERIODS)
     PR2   = 0x0020;
 #else
-    PR2   = 0x03E8;                     /* period = 1000 counts (1 ms @ Fcy/1) */
+    PR2   = TIMER2_PERIOD_COUNTS;
 #endif
 
-    /* T2CON byte at 0xA7: set bit6 = TCKPS1, start timer */
-    T2CONbits.TCKPS = 2;                /* prescaler 1:64                      */
-    T2CONbits.TON   = 1;               /* start Timer2                        */
+    /* 5B18..5B1E: IPC1H = (IPC1H & 0x8F) | 0x40 -> T2IP = 4 */
+    IPC1bits.T2IP = 4;
 
     IFS0bits.T2IF = 0;                  /* clear Timer2 interrupt flag         */
     IEC0bits.T2IE = 1;                  /* enable Timer2 interrupt             */
-    /* BSET 0x111, #7: sets Timer2 interrupt priority in IPC8              */
-    *(volatile uint8_t *)0x111 |= 0x80; /* T2IP priority bits                 */
+    /* 5B24: BSET 0x111,#7 -> T2CONbits.TON = 1 */
+    T2CONbits.TON = 1;                  /* start Timer2 */
 
     /* ---- Timer 4 ---- */
     T4CON = 0x0000;                     /* stop Timer4, clear all settings     */
@@ -208,15 +234,14 @@ void initTIMER(void)
 #if defined(SIM_FAST_TIMER_PERIODS)
     PR4   = 0x0800;
 #else
-    PR4   = 0xC350;                     /* period = 50000 counts               */
+    PR4   = TIMER4_PERIOD_COUNTS;
 #endif
 
-    /* Clear Timer4 IFS/IEC flags (addr 0x87/0x97, bit 3) */
-    *(volatile uint8_t *)0x87 &= ~(1 << 3); /* T4IF = 0 (clear IFS1 bit3)     */
-    *(volatile uint8_t *)0x97 &= ~(1 << 3); /* T4IE = 0 (disabled for now)    */
-
-    /* BSET 0x11F, #7: set Timer4 interrupt priority                       */
-    *(volatile uint8_t *)0x11F |= 0x80; /* T4IP priority bits                 */
+    /* 5B2E/5B30: clear T4 interrupt flag and keep T4 interrupt disabled */
+    IFS1bits.T4IF = 0;
+    IEC1bits.T4IE = 0;
+    /* 5B32: BSET 0x11F,#7 -> T4CONbits.TON = 1 */
+    T4CONbits.TON = 1;
 
     /* Clear status flags */
     protectionStatus = 0x0000;
@@ -254,16 +279,16 @@ void initTIMER(void)
  * FCLCON1/2/3 = 0x0010: fault current-limit disabled, fault pin polarity active-high
  *
  * OC2 (Output Compare 2): used as soft-start / fan speed ramp
- *   Timer3 timebase: PR3 = 0x07D0 (2000), T3CON = 0 (timer off initially)
+ *   Timer3 timebase: PR3 = 0x07D0 (2000), then T3CON.TON = 1
  *   OC2R  = 0x0000: compare value 0
  *   OC2RS = 0x0190 (400): secondary compare (loaded into oc2rs_shadow)
  *   OC2CON = 0x000E: PWM mode with fault
- *   Timer3 interrupt enabled (IPC19 via 0x113 bit 7)
+ *   Timer3 started by setting T3CON.TON (0x113 bit7 in byte form)
  *
  * Interrupt:
  *   IPC14 priority bits set for PWM special event (priority 5)
  *   SEVTCMP = 0: special event trigger at start of period
- *   BSET 0x9B, #1: IEC4 bit1 = PWM special event interrupt enable
+ *   IEC3bits.PSEMIE = 1: PWM special event interrupt enable
  *   BSET 0x401, #7: PTCON bit 15 = PTEN (PWM timer enable)
  * ============================================================================ */
 void initPWM(void)
@@ -271,84 +296,76 @@ void initPWM(void)
     /* ---- Timer3 setup (OC2 timebase for soft-start ramp) ---- */
     T3CON = 0x0000;                     /* Timer3 off, prescaler 1:1           */
     TMR3  = 0x0000;                     /* clear Timer3 counter                */
-    PR3   = 0x07D0;                     /* period = 2000 counts                */
-    /* Enable Timer3 interrupt: BSET 0x113, #7 -> sets T3IP in IPC9       */
-    *(volatile uint8_t *)0x113 |= 0x80; /* T3IP priority bits                 */
+    PR3   = TIMER3_PERIOD_COUNTS;
+    T3CONbits.TON = 1;                  /* BSET 0x113,#7 in original image     */
 
     /* ---- OC2 (Output Compare 2): soft-start ramp generator ---- */
-    OC2CON = 0x0008;                    /* OC2 off, configure mode first       */
+    OC2CON = OC2CON_IDLE_MODE;          /* OC2 off, configure mode first       */
     OC2R   = 0x0000;                    /* compare register = 0                */
-    OC2RS  = 0x0190;                    /* secondary compare = 400 (0x190)     */
-    OC2CON = 0x000E;                    /* PWM mode on OC2 with fault disabled */
+    OC2RS  = OC2RS_INIT;                /* secondary compare = 400             */
+    OC2CON = OC2CON_PWM_MODE;           /* PWM mode on OC2 with fault disabled */
 
-    /* ---- PTCON: configure PWM module (partial - PTEN not set yet) ----
-     * 0x000E + 0x3F2 = 0x0400... wait: 0xE + 0x3F2 = 0x400
-     * ADD W0, #0x3F2, W0 where W0=0xE -> W0 = 0x400
-     * MOV W0, PTCON -> PTCON = 0x0400 (EIPU=0, SYNCPOL=0, SYNCEN=0,
-     *   SYNCSEL=0, SEVOPS=0, SEIEN=0, SESTAT=0, EIPU=0)
-     * Actually 0x400 = bit 10 set. In PTCON: bit10=SYNCOEN. But firmware
-     * likely uses this as a placeholder before PTEN (bit15) is set later. */
-    PTCON = (uint16_t)(0x000E + 0x3F2); /* PTCON = 0x0400                      */
+    /* 52A2..52A4 computes and writes PTCON = 0x0400 */
+    PTCON = PWM_PTCON_INIT;
 
     /* ---- IPC14: set PWM special event interrupt priority = 5 ----
      * Read-modify-write: keep bits [7:4], set bits [3:0] = 0x5 (priority 5) */
-    IPC14 = (IPC14 & 0xFF8F) | 0x0050; /* PWM special event IP = 5            */
+    IPC14bits.PSEMIP = 5;
 
     /* ---- Enable PWM special event interrupt ---- */
-    /* BSET 0x9B, #1 -> IEC4 bit 1 = PSEMIE (PWM special event match IE)  */
-    *(volatile uint16_t *)0x9B |= 0x0002;
+    IEC3bits.PSEMIE = 1;
 
     /* ---- SEVTCMP: special event compare register ---- */
-    SEVTCMP = 0x0000;                   /* trigger at count = 0 (start of period) */
+    SEVTCMP = 0x0000;
 
     /* ---- PTCON2: PWM input clock prescaler ----
      * Read-modify-write: mask bits [2:0] to 0, then OR 0x03
      * PTCON2 bits [2:0] = PCLKDIV: 011 = divide by 8
      * With Fcy = 46 MHz: PWM clock = 46/8 = 5.75 MHz                    */
-    PTCON2 = (PTCON2 & 0xF8) | 0x03;   /* PCLKDIV = 3 (1:8 prescaler)         */
+    PTCON2bits.PCLKDIV = 3;             /* PCLKDIV = 1:8                        */
 
     /* ---- PTPER: PWM period register ---- */
-    PTPER = 0x011E;                     /* period = 286 counts -> ~20.1 kHz    */
+    PTPER = PWM_PTPER_INIT;             /* 286 counts                            */
 
     /* ---- PWM Generator 1 (half-bridge leg A high-side) ---- */
-    IOCON1  = 0xC800;   /* PENH=1, PENL=1 (PWM module owns pins),
+    IOCON1  = PWM_IOCON_MAIN_INIT;   /* PENH=1, PENL=1 (PWM module owns pins),
                            PMOD=00 complementary, POLH=0, POLL=0 active-high,
                            OVRENH=0, OVRENL=0, FLTDAT=0, CLDAT=0, SWAP=0 */
-    PWMCON1 = 0x1001;   /* FLTIEN=1 (fault interrupt enable),
+    PWMCON1 = PWM_PWMCON_MAIN_INIT;   /* FLTIEN=1 (fault interrupt enable),
                            IUE=0, XPRES=0, ITB=0 (master time base),
                            MDCS=0 (master duty cycle), DTC=01 (positive dead-time) */
-    PDC1    = 0x0126;   /* duty cycle = 294 counts (~51.4% of 572 period)    */
-    DTR1    = 0x002A;   /* dead time = 42 counts (~7.3 ns each at 5.75 MHz)  */
-    ALTDTR1 = 0x002A;   /* alternate dead time = 42 counts                   */
+    PDC1    = PWM_DUTY_MAIN_INIT;
+    DTR1    = PWM_DTR12_INIT;
+    ALTDTR1 = PWM_DTR12_INIT;
     PHASE1  = 0x0000;   /* no phase shift on PWM1                            */
 
     /* ---- PWM Generator 2 (half-bridge leg A low-side) ---- */
-    IOCON2  = 0xC800;   /* same pin config as PWM1                           */
-    PWMCON2 = 0x1001;   /* same control as PWM1                              */
-    PDC2    = 0x0126;   /* duty cycle = 294 counts                           */
-    DTR2    = 0x002A;   /* dead time = 42 counts                             */
-    ALTDTR2 = 0x002A;   /* alternate dead time = 42 counts                   */
+    IOCON2  = PWM_IOCON_MAIN_INIT;
+    PWMCON2 = PWM_PWMCON_MAIN_INIT;
+    PDC2    = PWM_DUTY_MAIN_INIT;
+    DTR2    = PWM_DTR12_INIT;
+    ALTDTR2 = PWM_DTR12_INIT;
     PHASE2  = 0x0000;   /* no phase shift on PWM2                            */
 
     /* ---- PWM Generator 3 (half-bridge leg B / LLC transformer center tap) ---- */
-    IOCON3  = 0xC800;   /* same pin config as PWM1/2                         */
-    PWMCON3 = 0x1001;   /* same control as PWM1/2                            */
-    PDC3    = 0x0126;   /* duty cycle = 294 counts                           */
-    DTR3    = 0x002F;   /* dead time = 47 counts (slightly larger for leg B) */
-    ALTDTR3 = 0x002F;   /* alternate dead time = 47 counts                   */
-    PHASE3  = 0x0082;   /* phase shift = 130 counts (offset leg B timing)    */
+    IOCON3  = PWM_IOCON_MAIN_INIT;
+    PWMCON3 = PWM_PWMCON_MAIN_INIT;
+    PDC3    = PWM_DUTY_MAIN_INIT;
+    DTR3    = PWM_DTR3_INIT;
+    ALTDTR3 = PWM_DTR3_INIT;
+    PHASE3  = PWM_PHASE3_INIT;
 
     /* ---- PWM Generator 5 (auxiliary: fan drive or bias supply) ---- */
-    PWMCON5 = 0x0280;   /* single-ended mode, independent time base          */
-    PHASE5  = 0x049B;   /* phase offset = 1179 counts                        */
-    PDC5    = 0x0372;   /* duty cycle = 882 counts                           */
-    IOCON5  = 0x8C00;   /* PENH=1 (PWM5H owned by PWM module),
+    PWMCON5 = PWM_PWMCON5_INIT;
+    PHASE5  = PWM_PHASE5_INIT;
+    PDC5    = PWM_DUTY5_INIT;
+    IOCON5  = PWM_IOCON5_INIT;   /* PENH=1 (PWM5H owned by PWM module),
                            PENL=0 (PWM5L is GPIO), PMOD=11 push-pull single  */
 
     /* ---- Fault current-limit control (all three PWM generators) ---- */
-    FCLCON1 = 0x0010;   /* current-limit disabled, fault input not used      */
-    FCLCON2 = 0x0010;   /* same for PWM2                                     */
-    FCLCON3 = 0x0010;   /* same for PWM3                                     */
+    FCLCON1 = PWM_FCLCON_INIT;
+    FCLCON2 = PWM_FCLCON_INIT;
+    FCLCON3 = PWM_FCLCON_INIT;
 
     /* ---- Assert override outputs on PWM1/2/3 ----
      * Assembly calls 0x4B50 here (BSET 0x423/0x443/0x463 bit1 then bit0).
@@ -389,7 +406,7 @@ void initPWM(void)
 void initADC(void)
 {
     /* ---- ADC global control ---- */
-    ADCON  = 0x1007;    /* FORM=01 (signed fractional), enable all ADC pairs  */
+    ADCON  = ADCON_INIT;
 
     /* ---- Clear status and base address registers ---- */
     ADSTAT = 0x0000;    /* clear all ADC status flags                        */
@@ -398,13 +415,13 @@ void initADC(void)
     /* ---- ADC pair conversion control ----
      * Each ADCPC register controls two conversion pairs.
      * Trigger source 0x1F = PWM special event (SEVTCMP match)             */
-    ADCPC0 = 0x1F1F;    /* pair 0 (AN0/AN1) and pair 1 (AN2/AN3): PWM trigger */
-    ADCPC1 = 0x001F;    /* pair 2 (AN4/AN5): PWM trigger; pair 3 unused      */
-    ADCPC2 = 0x1F1F;    /* pair 4 and pair 5: PWM trigger                   */
-    ADCPC3 = 0x1F1F;    /* pair 6 and pair 7: PWM trigger                   */
+    ADCPC0 = ADCPC_COMMON_INIT;
+    ADCPC1 = ADCPC1_INIT;
+    ADCPC2 = ADCPC_COMMON_INIT;
+    ADCPC3 = ADCPC_COMMON_INIT;
 
     /* ---- Analog/digital pin configuration ---- */
-    ADPCFG = 0x0080;    /* AN7 = digital I/O; all other AN pins = analog     */
+    ADPCFG = ADPCFG_INIT;
 
     /* ---- Enable ADC module ---- */
     /* BSET 0x301, #7 -> ADCON bit 15 = ADON                               */
@@ -416,24 +433,21 @@ void initADC(void)
  *
  * Configures Comparator 3 for overvoltage protection (OVP) or current limit.
  *
- * CMPCON3 = 0x0081:
- *   bit 7 = CMPON: comparator 3 on
- *   bit 0 = CMPOE: comparator output enable
+ * CMPCON3/CMPDAC3 are loaded from image constants.
+ * Final step sets CMPCON3bits.CMPON=1 (BSET 0x549,#7).
  *
  * CMPDAC3 = 0x01A3 (419):
  *   10-bit DAC value sets the comparator reference threshold.
  *   At 3.3V AVDD: Vref = 419/1023 * 3.3V = ~1.35V
  *
- * BSET 0x549, #7: enables the comparator DAC output / reference (DACOE bit)
+ * Note: BSET 0x549,#7 is CMPCON3.CMPON, not DACOE.
  * ============================================================================ */
 void initCMP3(void)
 {
-    CMPCON3 = 0x0081;   /* comparator 3 ON (bit7=CMPON), output enabled (bit0=CMPOE) */
-    CMPDAC3 = 0x01A3;   /* DAC reference = 419 counts (~1.35V threshold)      */
+    CMPCON3 = CMPCON3_INIT;
+    CMPDAC3 = CMPDAC3_INIT;
 
-    /* Enable DAC output for comparator 3 (CMPDAC3 high byte bit 7 = DACOE) */
-    /* BSET 0x549, #7 -> set DACOE in CMPDAC3 upper byte                   */
-    *(volatile uint8_t *)0x549 |= 0x80; /* DACOE = 1: enable DAC output        */
+    CMPCON3bits.CMPON = 1;
 }
 
 /* ============================================================================
@@ -449,84 +463,46 @@ void initCMP3(void)
  * CMPDAC4 = 0x0000: DAC reference = 0 (threshold at GND, comparator acts
  *   as a zero-crossing detector or is disabled via zero reference)
  *
- * BSET 0x54D, #7: enables comparator 4 DAC output (DACOE bit in CMPDAC4H)
+ * Final step sets CMPCON4bits.CMPON=1 (BSET 0x54D,#7).
  * ============================================================================ */
 void initCMP4(void)
 {
-    CMPCON4 = 0x0101;   /* comparator 4: INSEL=1 (select input channel 1),
+    CMPCON4 = CMPCON4_INIT;   /* comparator 4: INSEL=1 (select input channel 1),
                            output enabled (bit0=CMPOE)                        */
-    CMPDAC4 = 0x0000;   /* DAC reference = 0 (zero-crossing or gated off)    */
+    CMPDAC4 = CMPDAC4_INIT;
 
-    /* Enable DAC output for comparator 4 */
-    /* BSET 0x54D, #7 -> set DACOE in CMPDAC4 upper byte                   */
-    *(volatile uint8_t *)0x54D |= 0x80; /* DACOE = 1: enable DAC output        */
+    CMPCON4bits.CMPON = 1;
 }
 
 /* ============================================================================
  * initUART1  (firmware address 0x556A)
  *
- * Configures UART1 for communication with external host (PMBus command
- * interface over UART, used for calibration and firmware update).
+ * Assembly sequence (0x556A..0x5580):
+ *   U1MODE = 0x0006
+ *   U1BRG  = 0x028A
+ *   U1STA  = 0x0000
+ *   clear U1RXIF/U1TXIF, keep U1RXIE/U1TXIE disabled
+ *   set U1MODE.UARTEN and U1STA.UTXEN
  *
- * U1MODE = 0x0006:
- *   bits[2:1] = 11: 9-bit data (address-detect mode), or
- *               PDSEL = 11 = 8-bit, no parity (most likely)
- *   bit 15 = 0: UARTEN disabled here, enabled via IEC later
- *   Note: in dsPIC33F U1MODE bit1:0 = STSEL, bits[3:2] = PDSEL
- *   0x0006 = PDSEL=01 (8-bit, even parity) or PDSEL=01,STSEL=10
- *   Actually: bits[2:1]=11 means PDSEL=11 = 8-bit, no parity, 1 stop bit is default.
- *   0x0006 = bit2=1,bit1=1 -> PDSEL[1:0]=11 = 9-bit no parity
- *   Most likely 8-bit no parity: U1MODE = 0x0006 sets PDSEL=01, STSEL=0
- *   -> 8-bit odd parity, 1 stop bit
- *
- * U1BRG = 0x028A (650):
- *   Baud rate = Fcy / (16 * (U1BRG + 1)) = 46,000,000 / (16 * 651) = ~4415 baud
- *   Or with BRGH=1: Baud = Fcy / (4 * (BRG+1)) = 46 MHz / 2604 = ~17,663 baud
- *   Likely standard 9600 baud if Fcy = 25 MHz, or 19200 if Fcy = 50 MHz.
- *   With Fcy=46.0625 MHz: 46062500 / (16 * 651) = 4421 baud (non-standard)
- *   Interpretation: BRG=650, BRGH=0 -> ~4421 bps (custom protocol rate)
- *
- * U1STA = 0x0000: clear all status/control bits
- *
- * Interrupt configuration:
- *   BCLR 0x85, #4: IFS4 bit 4 = U1RXIF = 0 (clear RX interrupt flag)
- *   BCLR 0x95, #4: IEC4 bit 4 = U1RXIE = 0 (disable RX interrupt initially)
- *   BCLR 0x85, #3: IFS4 bit 3 = clear another UART flag
- *   BCLR 0x95, #3: IEC4 bit 3 = disable
- *   BSET 0x221, #7: enable UART1 RX interrupt (IEC? bit)
- *   BSET 0x223, #2: enable UART1 TX interrupt or UARTEN
- *
- * Note: 0x221 and 0x223 are in the extended interrupt enable register range.
- *   0x221 = IEC8 or U1RXIE in a higher IEC register
- *   0x223 = U1TXIE or UART1 enable
+ * Important:
+ *   - BSET 0x221,#7 maps to U1MODEbits.UARTEN (not IEC).
+ *   - BSET 0x223,#2 maps to U1STAbits.UTXEN (not IEC).
  * ============================================================================ */
 void initUART1(void)
 {
-    /* ---- UART1 mode ---- */
-    U1MODE = 0x0006;    /* 8-bit data (PDSEL=01 even parity or PDSEL config),
-                           1 stop bit, no flow control                        */
+    U1MODE = UART1_MODE_INIT;      /* exact image value from firmware */
+    U1BRG  = UART1_BRG_INIT;       /* exact image value from firmware */
+    U1STA  = 0x0000;               /* clear status/control before enable */
 
-    /* ---- Baud rate ---- */
-    U1BRG  = 0x028A;    /* BRG = 650 -> baud rate ~4421 bps at Fcy=46 MHz    */
+    /* clear UART1 interrupt flags and keep IRQ disabled (assembly BCLRs) */
+    IFS0bits.U1RXIF = 0;
+    IEC0bits.U1RXIE = 0;
+    IFS0bits.U1TXIF = 0;
+    IEC0bits.U1TXIE = 0;
 
-    /* ---- Clear status register ---- */
-    U1STA  = 0x0000;    /* clear overrun error, framing error, TX/RX status   */
-
-    /* ---- Clear UART1 interrupt flags (IFS4) ---- */
-    /* BCLR 0x85, #4 -> IFS4 bit 4 (address 0x85 is IFS4 low byte)        */
-    *(volatile uint8_t *)0x85 &= ~(1 << 4); /* U1RXIF = 0                     */
-    /* BCLR 0x95, #4 -> IEC4 bit 4 = U1RXIE = 0 (disable during init)    */
-    *(volatile uint8_t *)0x95 &= ~(1 << 4); /* U1RXIE = 0                     */
-    /* BCLR 0x85, #3 -> IFS4 bit 3 (clear U1TXIF)                         */
-    *(volatile uint8_t *)0x85 &= ~(1 << 3); /* U1TXIF = 0                     */
-    /* BCLR 0x95, #3 -> IEC4 bit 3 = U1TXIE = 0                           */
-    *(volatile uint8_t *)0x95 &= ~(1 << 3); /* U1TXIE = 0                     */
-
-    /* ---- Enable UART1 RX and TX interrupts via upper IEC registers ---- */
-    /* BSET 0x221, #7 -> enable U1RXIE (in IEC8 or remapped register)     */
-    *(volatile uint8_t *)0x221 |= 0x80; /* U1RXIE = 1 (enable RX interrupt)   */
-    /* BSET 0x223, #2 -> enable UARTEN or U1TXIE                           */
-    *(volatile uint8_t *)0x223 |= 0x04; /* UARTEN=1 or U1TXIE=1               */
+    /* final enable sequence from 0x557C/0x557E */
+    U1MODEbits.UARTEN = 1;    /* module enable */
+    U1STAbits.UTXEN   = 1;    /* transmitter enable */
 }
 
 /* ============================================================================
@@ -562,7 +538,7 @@ void initSPI2(void)
     SPI2STAT = 0x0000;  /* SPIEN = 0: disable SPI module                     */
 
     /* ---- SPI2 configuration register 1 ---- */
-    SPI2CON1 = 0x0122;  /* CKE=1 (data changes on active-to-idle clock edge),
+    SPI2CON1 = SPI2CON1_INIT;  /* CKE=1 (data changes on active-to-idle clock edge),
                            MSTEN=1 (master mode),
                            PPRE=01 (primary prescaler 4:1),
                            SPRE=000 (secondary prescaler 8:1),
@@ -600,7 +576,7 @@ extern void initI2cPointerTables(void);   /* 0x13C2 - I2C pointer table setup */
 void initI2C2(void) {
     initI2cPointerTables();               /* RCALL 0x13C2 */
 
-    I2C2CON = 0x9040;                     /* I2CEN=1, SCLREL=1, STREN=1 */
+    I2C2CON = I2C2CON_INIT;               /* I2CEN=1, SCLREL=1, STREN=1 */
     I2C2ADD = 0x0058;                     /* slave address 0x58 */
 
     IPC12bits.SI2C2IP = 3;                /* I2C2 slave interrupt priority = 3 */

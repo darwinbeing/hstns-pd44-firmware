@@ -45,8 +45,7 @@ static int16_t softStartTargetRamp(int16_t target)
                     statusFlags2 &= ~(1u << 5);
                     softStartDwellCnt = 0;
                     droopMode = 3;
-                    droopWorkA = 0x8000;
-                    droopWorkB = 0x0166;
+                    droopIntegrator = 0x01668000L;
                     statusFlags2 |= 1u;
                 }
             } else if (target == 0x0C4D) {
@@ -54,8 +53,7 @@ static int16_t softStartTargetRamp(int16_t target)
                 statusFlags2 &= ~(1u << 5);
                 droopMode = 3;
                 LATD &= ~(1u << 4);
-                droopWorkA = 0;
-                droopWorkB = 0;
+                droopIntegrator = 0;
             }
         }
     }
@@ -201,7 +199,7 @@ void tempFanHandler(void)
  * uartCmdSubroutine2  (0x2042 – 0x2158)
  *
  * Power / current calculation for PMBus telemetry path.
- * Computes llcFreqPeriod (0x1BE0), adcLive1 (0x1BE2), pdcShadowA (0x1BDE),
+ * Computes voutScaledQ2 (0x1BE0), adcLive1 (0x1BE2), pdcShadowA (0x1BDE),
  * pmbusLiveBC0 (0x1BC0), pmbusLiveBC0 min-clamp=6, pmbusLive197A.
  * Performs 32-bit division via FUN_rom_001100 (hardware __divsd).
  * Also checks OV/UV thresholds and sets startupResetLatch bits 2-6.
@@ -216,7 +214,7 @@ void uartCmdSubroutine2(void)
         adcLive1     = 0;
         pdcShadowA   = 0;
         pmbusLiveBC0 = 0;
-        llcFreqPeriod = 0;
+        voutScaledQ2 = 0;
         pmbusLiveBC0 = 0;
     }
     /* TODO: implement full telemetry calculation from Ghidra 0x2042 */
@@ -371,6 +369,125 @@ void unknownSubroutine2594(void)
 }
 
 /* ============================================================================
+ * droopDecayFreq  (sub_3558, 0x3558 – 0x35D2)
+ *
+ * Droop integrator decay + frequency target update.  Called from
+ * droopMode3Watchdog to bring voutTargetCode back toward voutRefTarget.
+ *
+ *   1) Select decay delta:
+ *      - voutTargetCode > 0xB11: fast decay (0x8659), reset ramp counter.
+ *      - currentLimitFlags.0x0800 or restartFlags.0x06: slow decay (0x04FA),
+ *        with ramp counter gating (hold at zero until counter > 0x226).
+ *      - otherwise: fast decay (0x8659).
+ *   2) Subtract delta from 32-bit integrator.
+ *   3) Compute voutTargetCode = voutRefTarget − (integrator >> 14).
+ *   4) If reached target (voutTargetCode >= voutRefTarget): reset integrator,
+ *      clamp to target, clear flags and LATD.4.
+ * ============================================================================ */
+void droopDecayFreq(void)
+{
+    /* Step 1: select decay delta */
+    if (voutTargetCode > 0x0B11) {
+        /* Far from target: fast decay, reset ramp counter */
+        droopDelta = 0x8659L;
+        droopRampCounter = 0;
+    } else if ((currentLimitFlags & 0x0800) || (restartFlags & 0x06)) {
+        /* Current-limit or restart active: slow decay */
+        droopDelta = 0x04FAL;
+
+        if (runtimeFlags & 0x0008) {
+            /* Ramp counter gating: hold delta at zero until count > 0x226 */
+            droopRampCounter++;
+            if (droopRampCounter > 0x0226) {
+                droopRampCounter = 0x0226;  /* clamp counter */
+            } else {
+                droopDelta = 0;             /* hold: no decay yet */
+            }
+        }
+    } else {
+        /* Default: fast decay */
+        droopDelta = 0x8659L;
+    }
+
+    /* Step 2: 32-bit integrator decay (subtract) */
+    droopIntegrator -= droopDelta;
+
+    /* Step 3: compute voutTargetCode from integrator */
+    voutTargetCode = voutRefTarget - (int16_t)(droopIntegrator >> 14);
+
+    /* Step 4: check if reached target */
+    if (voutTargetCode >= voutRefTarget) {
+        /* Reached/overshot: reset integrator, clamp to target, clean up */
+        droopIntegrator = 0;
+        voutTargetCode = voutRefTarget;
+        faultResetTimer = 5;
+        runtimeFlags &= ~0x0008;
+        restartFlags &= ~0x06;
+        LATD &= ~0x0010;
+        protectionStatus &= ~0x0200;
+    } else {
+        /* Still approaching target */
+        protectionStatus |= 0x0200;
+    }
+}
+
+/* ============================================================================
+ * droopIntegrateFreq  (sub_35D4, 0x35D4 – 0x3664)
+ *
+ * Droop integrator + frequency target computation.  Called from
+ * droopMode3Watchdog when current-droop re-computation is needed.
+ *
+ *   1) Select droop delta: 0x4C75 if voutTargetCode > 0xB99, else 0x9547.
+ *   2) Accumulate into 32-bit integrator (droopWorkB:droopWorkA),
+ *      clamp at 0x01668000.
+ *   3) If saturated AND Imeas <= 0xC0: compute initFreq with
+ *      [0x125C, 0x13EC] clamp, set flags, droopMode = 4.
+ *   4) Update voutTargetCode = voutRefTarget − (integrator >> 14).
+ * ============================================================================ */
+void droopIntegrateFreq(void)
+{
+    /* Step 1: select delta based on voutTargetCode vs 0xB99 threshold */
+    droopDelta2 = (voutTargetCode > 0x0B99) ? 0x4C75L : 0x9547L;
+
+    /* Step 2: 32-bit integrator accumulate */
+    droopIntegrator += droopDelta2;
+
+    if (droopIntegrator > 0x01667FFFL) {
+        /* Saturated → clamp to 0x01668000 */
+        droopIntegrator = 0x01668000L;
+
+        /* Step 3: if Imeas low, compute initFreq */
+        int16_t imeas = Imeas;
+        if (imeas <= 0x00C0) {
+            int32_t prod = (int32_t)imeas * (int16_t)0xFD5A;  /* × (−0x02A6) */
+            int16_t scaled = (int16_t)(prod >> 8);
+            int16_t target = scaled + 0x1418;
+
+            if (target > 0x13EC)
+                initFreq = 0x13EC;          /* upper clamp */
+            else if (target > 0x125B)
+                initFreq = target;
+            else
+                initFreq = 0x125C;          /* lower clamp */
+
+            faultResetTimer = 5;
+            runtimeFlags |= 0x0002;
+            statusFlags = (statusFlags & ~0x0002) | 0x0001;
+            protectionStatus |= 0x0800;
+        }
+
+        countdown_1D20 = 0x32;
+        droopMode = 4;
+        protectionStatus &= ~0x0400;
+    } else {
+        protectionStatus |= 0x0400;
+    }
+
+    /* Step 4: voutTargetCode = voutRefTarget − (integrator >> 14) */
+    voutTargetCode = voutRefTarget - (int16_t)(droopIntegrator >> 14);
+}
+
+/* ============================================================================
  * droopMode0Watchdog  (0x3666 – 0x3718)
  *
  * Droop compensation mode-0 watchdog.  Manages voltage target (initFreq,
@@ -403,8 +520,7 @@ void droopMode0Watchdog(void)
                 if (protectionStatus & 0x0800) {
                     /* Branch A: compute scaled frequency target */
                     int32_t prod = (int32_t)imeas * (-0x0D3D);
-                    int16_t scaled = (int16_t)((prod >> 16) << 8) |
-                                     (int16_t)((prod >> 8) & 0xFF);
+                    int16_t scaled = (int16_t)(prod >> 8);
                     int16_t target = scaled + 0x33A6;
 
                     initFreq = 0x34BC;  /* upper clamp */
@@ -421,12 +537,11 @@ void droopMode0Watchdog(void)
             }
         }
         else if ((Imeas_cal_a < 0x00C1) &&
-                 (imeas >= 0x00C0) &&
+                 (imeas <= 0x00C0) &&
                  ((protectionStatus & 0x0800) == 0)) {
             /* Branch B: low-current droop */
             int32_t prod = (int32_t)imeas * (-0x02A6);
-            int16_t scaled = (int16_t)((prod >> 16) << 8) |
-                             (int16_t)((prod >> 8) & 0xFF);
+            int16_t scaled = (int16_t)(prod >> 8);
             int16_t target = scaled + 0x1418;
 
             initFreq = 0x13EC;  /* upper clamp */
@@ -450,13 +565,12 @@ void droopMode0Watchdog(void)
  * droopMode3Watchdog  (0x371A – 0x3788)
  *
  * Droop compensation mode-3 watchdog.  More complex than mode-0; manages
- * GPIO LATD bit4, calls sub_3558 / sub_35D4 for frequency computation,
- * and monitors current threshold crossings.
+ * GPIO LATD bit4, calls sub_3558 / droopIntegrateFreq for frequency
+ * computation, and monitors current threshold crossings.
  *
  * Sets voutRefTarget = 0xC4D (~12.25V scaled Vref).
  *
- * TODO: requires sub_3558() and sub_35D4() helpers for full implementation.
- *       Stub preserves watchdog reload and basic flag management.
+ * Calls droopDecayFreq (sub_3558) and droopIntegrateFreq (sub_35D4).
  * ============================================================================ */
 void droopMode3Watchdog(void)
 {
@@ -470,7 +584,7 @@ void droopMode3Watchdog(void)
 
     if ((statusFlags2 & 0x0100) && (clFlags != 0)) {
         /* Current-limit active with mode-3 flag: check threshold */
-        if (Imeas >= 0x00C0) {
+        if (Imeas <= 0x00C0) {
             statusFlags2 |= 0x0020;
         }
         statusFlags2 &= ~0x0100;
@@ -489,11 +603,11 @@ void droopMode3Watchdog(void)
             (voutTargetCode != 0x0C4D) &&
             ((systemFlags & 0x00A0) == 0)) {
             statusFlags2 &= ~0x0020;
+            droopDecayFreq();
             protectionStatus &= ~0x0400;
-            /* TODO: call sub_3558() for frequency computation */
         }
         else if ((statusFlags2 & 0x0020) || (systemFlags & 0x00A0)) {
-            /* TODO: call sub_35D4() for alternate frequency path */
+            droopIntegrateFreq();
             LATD |= 0x0010;
         }
         else {
@@ -506,7 +620,7 @@ void droopMode3Watchdog(void)
                 voutRefTarget = 0x0C4D;
                 return;
             }
-            /* TODO: call sub_35D4() */
+            droopIntegrateFreq();
         }
     }
 }

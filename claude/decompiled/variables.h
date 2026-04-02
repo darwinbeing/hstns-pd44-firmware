@@ -341,8 +341,7 @@ extern volatile uint16_t statusFlags2;       /* 0x1262 - Status flags:
                                               *   bit6  = OT shutdown latch
                                               *   bit14 = enable-pin high */
 extern volatile uint16_t ovpDebounceFlags;   /* 0x1263 - bit5 = OVP debounce, bit6 = active */
-extern volatile uint16_t droopWorkA;         /* 0x126E - Droop work reg A */
-extern volatile uint16_t droopWorkB;         /* 0x1270 - Droop work reg B */
+extern volatile int32_t  droopIntegrator;    /* 0x126E:0x1270 - 32-bit droop integrator */
 extern volatile uint16_t pmbusAlertFlags;    /* 0x192A - bit0 = PMBus alert */
 extern volatile uint16_t tempAdcValue;       /* 0x1D16 - temperature ADC value */
 extern volatile uint16_t voutRefInitial;     /* 0x1DA2 - Vout ref initial */
@@ -364,7 +363,7 @@ extern volatile uint16_t uptimeCounterHi;    /* 0x1E00 - Uptime counter hi */
 extern volatile uint16_t pdcShadowA;         /* 0x1BDE - PDC shadow A */
 extern volatile uint16_t pdcShadowB;         /* 0x1BD0 - PDC shadow B */
 extern volatile uint16_t oc1rsGateTiming;    /* 0x1926 - OC1RS / gate timing */
-extern volatile uint16_t llcFreqPeriod;      /* 0x1BE0 - LLC frequency period */
+extern volatile uint16_t voutScaledQ2;       /* 0x1BE0 - vcal_a << 2, scaled Vout for dead-time computation */
 extern volatile uint16_t pdc3Shadow;         /* 0x1BCE - PDC3 shadow */
 extern volatile uint16_t oc2rsGateTiming;    /* 0x1924 - OC2RS / gate timing 2 */
 extern volatile uint16_t ocpThresholdHw;     /* 0x1BB6 - OCP threshold (HW) */
@@ -381,10 +380,8 @@ extern volatile uint16_t uartRxByteCount;    /* 0x1CF8 - UART1 RX byte counter *
 extern volatile uint16_t softStartRampCnt;   /* 0x124E - soft-start ramp counter */
 extern volatile uint16_t softStartDwellCnt;  /* 0x124C - soft-start dwell counter */
 extern volatile uint16_t softStartPwmLimit;  /* 0x1D5C - current soft-start PWM limit */
-extern volatile uint16_t droopDeltaLo;       /* was 0x1D5E in original image */
-extern volatile uint16_t droopDeltaHi;       /* was 0x1D60 in original image */
-extern volatile uint16_t droopDelta2Lo;      /* was 0x1D62 in original image */
-extern volatile uint16_t droopDelta2Hi;      /* was 0x1D64 in original image */
+extern volatile int32_t  droopDelta;         /* 0x1D5E:0x1D60 - 32-bit droop decay delta */
+extern volatile int32_t  droopDelta2;        /* 0x1D62:0x1D64 - 32-bit droop integrate delta */
 extern volatile uint16_t droopRampCounter;   /* was 0x1250 in original image */
 extern volatile int16_t  adcAn0Raw;          /* 0x1D9C - AN0 raw save */
 extern volatile int16_t  adcAn2Raw;          /* 0x1D98 - AN2 raw save */

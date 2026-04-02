@@ -13,9 +13,18 @@
 #include <xc.h>
 #include "variables.h"
 
-/* Helper: read 16-bit little-endian value from flash calibration buffer */
-#define FLASH_CAL_U16(offset) \
-    ((uint16_t)(flash_read_buf_15E6[(offset)+1] << 8) | flash_read_buf_15E6[(offset)])
+/* Helper: read 16-bit little-endian value from flash calibration buffer.
+ * Keeping this as an inline function avoids macro side effects and improves
+ * debugger readability while preserving the same generated behavior.
+ */
+static inline uint16_t flashCalReadU16(uint8_t offset)
+{
+    uint8_t hi_idx = (uint8_t)(offset + 1u);
+    if (hi_idx >= (uint8_t)sizeof(flash_read_buf_15E6))
+        return 0u;
+    return (uint16_t)(((uint16_t)flash_read_buf_15E6[hi_idx] << 8) |
+                      (uint16_t)flash_read_buf_15E6[offset]);
+}
 
 /* ============================================================================
  * adcMiscSample() — 0x2A30
@@ -46,16 +55,16 @@ void adcMiscSample(void)
     statusFlags &= ~(1u << 6);
 
     /* Vout channel B calibration (buf[0x11]:buf[0x12]) */
-    cal_vb = (int16_t)FLASH_CAL_U16(0x11);              /* 0x1D2A */
-    ofs_vb = (int16_t)((int16_t)FLASH_CAL_U16(0x13) >> 4) + 1;  /* 0x1D28 */
+    cal_vb = (int16_t)flashCalReadU16(0x11);              /* 0x1D2A */
+    ofs_vb = (int16_t)((int16_t)flashCalReadU16(0x13) >> 4) + 1;  /* 0x1D28 */
 
     /* Vout channel A calibration (buf[0]:buf[1]) */
-    cal_va = (int16_t)FLASH_CAL_U16(0x00);              /* 0x1D32 */
-    ofs_va = (int16_t)((int16_t)FLASH_CAL_U16(0x02) >> 4) + 1;  /* 0x1D30 */
+    cal_va = (int16_t)flashCalReadU16(0x00);              /* 0x1D32 */
+    ofs_va = (int16_t)((int16_t)flashCalReadU16(0x02) >> 4) + 1;  /* 0x1D30 */
 
     /* Vout channel A2 (AN5) calibration (buf[4]:buf[5]) */
-    cal_va2 = (int16_t)FLASH_CAL_U16(0x04);             /* 0x1D2E */
-    ofs_va2 = (int16_t)((int16_t)FLASH_CAL_U16(0x06) >> 4) + 1; /* 0x1D2C */
+    cal_va2 = (int16_t)flashCalReadU16(0x04);             /* 0x1D2E */
+    ofs_va2 = (int16_t)((int16_t)flashCalReadU16(0x06) >> 4) + 1; /* 0x1D2C */
 
     /* Current gain (buf[8]:buf[9]) */
     uint8_t lo_ee = flash_read_buf_15E6[0x08];
@@ -67,19 +76,19 @@ void adcMiscSample(void)
         flash_read_buf_15E6[0x0A] == 0 && flash_read_buf_15E6[0x0B] == 0) {
         cal_a_offset = 0;                                /* 0x1D24 */
     } else {
-        int16_t raw = (int16_t)FLASH_CAL_U16(0x0A);
+        int16_t raw = (int16_t)flashCalReadU16(0x0A);
         cal_a_offset = (int16_t)(raw / 122) + 1;        /* DIV.SW by 0x7A */
     }
 
     /* PDC5 calibration: apply only if within valid range */
-    uint16_t pdc5_val = FLASH_CAL_U16(0x0C);
+    uint16_t pdc5_val = flashCalReadU16(0x0C);
     cal_pdc5 = (int16_t)pdc5_val;                       /* 0x1E44 */
     /* Check: (pdc5_val + 0xFCDF) unsigned <= 0x9E, i.e. pdc5_val in [0x0321..0x03BF] */
     if ((uint16_t)(pdc5_val + 0xFCDF) <= 0x9E)
         PDC5 = pdc5_val;
 
     /* Auxiliary calibration value (buf[0x0E]:buf[0x0F]) */
-    cal_var_1E42 = (int16_t)FLASH_CAL_U16(0x0E);        /* 0x1E42 */
+    cal_var_1E42 = (int16_t)flashCalReadU16(0x0E);        /* 0x1E42 */
 }
 
 /* ============================================================================
@@ -317,8 +326,7 @@ void pidControl(void)
     if (mode == 4) {
         /* High-gain mode: direct 16x16->32 signed multiply */
         int32_t p = (int32_t)imeas * (int32_t)0x3B05;
-        result = (int16_t)((p << 1) >> 16 | ((uint32_t)((int16_t)p) >> 15));
-        /* Simplified: equivalent to (imeas * 0x3B05) >> 15 */
+        result = (int16_t)(p >> 15);
     } else {
         droopAdj = 0;                                   /* 0x1212 */
 

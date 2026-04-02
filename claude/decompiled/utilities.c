@@ -465,7 +465,7 @@ void checkCurrentLimit(void) {
  *   Header 0x60 = streaming (from UART RX buffer)
  *
  * Status packet layout:
- *   [0]=0x58, [1]=fault_byte, [2:3]=llcFreqPeriod(BE),
+ *   [0]=0x58, [1]=fault_byte, [2:3]=voutScaledQ2(BE),
  *   [4:5]=RAM16(0x1D0E)(BE), [6:7]=cal_var_1E42(BE), [8]=checksum
  * ============================================================================ */
 void updateStatusLeds(void) {
@@ -497,7 +497,7 @@ void updateStatusLeds(void) {
     {
         uint8_t *pkt = uartTxBuf;
         uint16_t checksum = 0;
-        uint16_t freq = llcFreqPeriod;
+        uint16_t freq = voutScaledQ2;
         uint16_t val_1D0E = uartStatusWord;
         uint16_t cal = cal_var_1E42;
 

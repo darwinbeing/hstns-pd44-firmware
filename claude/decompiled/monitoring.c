@@ -121,9 +121,8 @@ void state0Idle(void)
     /* Initialise PID coefficient */
     ocpCurrentRef = 0x028E;           /* 654 */
 
-    /* Clear droop working registers */
-    droopWorkA = 0;
-    droopWorkB = 0;
+    /* Clear droop integrator */
+    droopIntegrator = 0;
 
     /* Initialise voltage error integrator lower bound */
     voutTargetCode = (int16_t)0xFFB0;  /* -80 */
@@ -966,13 +965,13 @@ void monitorTemperature(void)
  * checkFanControl — fan I2C address update
  * Assembly: 0x4FBC – 0x4FEC
  *
- * Reads three hardware configuration bits (PORTD/PORTB GPIO), assembles
+ * Reads three hardware configuration bits (PORTC/PORTD GPIO), assembles
  * a fan controller I2C address, and writes it to I2C2ADD.
  *
  * Bit mapping:
- *   Address bit1 ← PORTD[0x2D3] bit5 (shifted right 5, masked bit1)
- *   Address bit2 ← PORTD[0x2D3] bit3 (shifted right 3, masked bit2)
- *   Address bit3 ← PORTB[0x2DB] bit0 (shifted left  1, masked bit3)
+ *   Address bit1 ← PORTC high-byte bit6  (RC14)
+ *   Address bit2 ← PORTC high-byte bit5  (RC13)
+ *   Address bit3 ← PORTD high-byte bit2  (RD10)
  *
  * Final I2C address = (assembled_bits | 0xB0) >> 1
  * ============================================================================ */

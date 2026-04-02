@@ -171,7 +171,7 @@ int main(void)
     initIOPorts();             /* 0x59A2: GPIO TRIS/LAT/ODC */
     initADC();                 /* 0x5BAE: ADCON=0x1007, trigger source */
     initTIMER();               /* 0x5AF6: T1/T2/T4 */
-    //initPWM();                 /* 0x5288: PWM1/2/3 full-bridge+SR, PWM5 */
+    initPWM();                 /* 0x5288: PWM1/2/3 full-bridge+SR, PWM5 */
     initI2C2();                /* 0x150C: I2C2 slave address 0x58 */
     initUART1();               /* 0x556A: 9N1 4800baud */
     initSPI2();                /* 0x38A6: Master ~1.56MHz */

@@ -236,16 +236,14 @@ void faultHandler(void)   /* 0x3386 – 0x33F2 */
     uint16_t state;
     uint16_t adc4_raw;
     uint32_t prod;
-    uint16_t dt_lo, dt_hi;
+    uint16_t dt_lo;
 
     /* --- Check OVP/OCP latch: protectionStatus bits [8:7] must be non-zero --- */
     f = protectionStatus;       /* MOV 0x1264, W0 */
-    if (f & 0x0180) {                       /* AND #0x180,W0 / BRA NZ */
-        /* At least one fault latch bit set – fall through */
-    } else {
+    if ((f & 0x0180) == 0) {               /* AND #0x180,W0 / BRA NZ */
         /* No OVP/OCP latch → check auxFlags bit2 (OCV latch) */
-        if (!(auxFlags & (1u << 2)))      /* BTST 0x1E1C,#2 / BRA Z */
-            return;                         /* no fault at all */
+        if (!(auxFlags & (1u << 2)))       /* BTST 0x1E1C,#2 / BRA Z */
+            return;                        /* no fault at all */
     }
 
     /* --- Guard: only act when systemState == 2 --- */
@@ -290,24 +288,22 @@ compute_deadtime:
     /* --- Scale ADCBUF4 for dead-time registers ---
      *   raw = ADCBUF4
      *   product = raw * 0x1E80   (32-bit unsigned)
-     *   dt_lo  = (product_hi << 6) | (product_lo >> 10)   [bits 15:0 of Q10 result]
-     *   dt_hi  = product_hi >> 10
+     *   dt_lo  = product >> 10   [Q10 scaled dead-time]
      */
     adc4_raw = ADCBUF4; /* MOV ADCBUF4, W0 */
     prod = (uint32_t)adc4_raw * 0x1E80u;    /* MUL.UU W0, #0x1E80, W0:W1 */
-    dt_lo = (uint16_t)(((prod >> 16) << 6) | ((prod & 0xFFFF) >> 10));
-    dt_hi = (uint16_t)((prod >> 16) >> 10);
+    dt_lo = (uint16_t)(prod >> 10);
 
     pdcShadowA = dt_lo;                      /* MOV W0, 0x1BDE */
     pdcShadowB = dt_lo;                      /* MOV W0, 0x1BD0 */
-    oc1rsGateTiming = dt_lo;                      /* MOV W0, 0x1926 */
+    oc1rsGateTiming = dt_lo;                 /* MOV W0, 0x1926 */
 
-    /* --- Second scaling pass for pdc3Shadow using 0x1BE0 ---
-     *   product2 = 0x1BE0_reg * dt_hi  (using MUL instruction result in W3:W2)
-     *   out = (W3 << 2) | (W2 >> 14)   [Q14 result]
+    /* --- Second scaling pass for pdc3Shadow ---
+     *   product2 = voutScaledQ2 * dt_lo   (MUL 0x1BE0, W3:W2 = f × WREG)
+     *   out = product2 >> 14               [Q14 result]
      */
-    uint32_t prod2 = (uint32_t)llcFreqPeriod * (uint32_t)dt_hi; /* MUL 0x1BE0 */
-    uint16_t out_lo = (uint16_t)(((prod2 >> 16) << 2) | ((prod2 & 0xFFFF) >> 14));
+    uint32_t prod2 = (uint32_t)voutScaledQ2 * (uint32_t)dt_lo; /* MUL 0x1BE0 */
+    uint16_t out_lo = (uint16_t)(prod2 >> 14);
     pdc3Shadow = out_lo;                     /* MOV W2, 0x1BCE */
     oc2rsGateTiming = out_lo;                     /* MOV W2, 0x1924 */
 
@@ -360,7 +356,7 @@ void pwmUpdate(void)   /* 0x33F4 – 0x34EC */
 {
     uint16_t adc4_raw;
     uint32_t prod;
-    uint16_t dt_lo, dt_hi;
+    uint16_t dt_lo;
     uint8_t  seq;
     uint8_t  fclcon;
 
@@ -392,15 +388,14 @@ void pwmUpdate(void)   /* 0x33F4 – 0x34EC */
     /* Scale ADCBUF4 → dead-time registers (same calculation as fault_handler) */
     adc4_raw = ADCBUF4; /* MOV ADCBUF4, W0 */
     prod   = (uint32_t)adc4_raw * 0x1E80u;
-    dt_lo  = (uint16_t)(((prod >> 16) << 6) | ((prod & 0xFFFF) >> 10));
-    dt_hi  = (uint16_t)((prod >> 16) >> 10);
+    dt_lo  = (uint16_t)(prod >> 10);
 
     pdcShadowA = dt_lo;
     pdcShadowB = dt_lo;
     oc1rsGateTiming = dt_lo;
 
-    uint32_t prod2 = (uint32_t)llcFreqPeriod * (uint32_t)dt_hi;
-    uint16_t out_lo = (uint16_t)(((prod2 >> 16) << 2) | ((prod2 & 0xFFFF) >> 14));
+    uint32_t prod2 = (uint32_t)voutScaledQ2 * (uint32_t)dt_lo;
+    uint16_t out_lo = (uint16_t)(prod2 >> 14);
     pdc3Shadow = out_lo;
     oc2rsGateTiming = out_lo;
 

@@ -192,25 +192,13 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
 #endif
     protectionCheck();                  /* 0x30F8 */
 
-    /* ---- PWM update gate (matches 0x3844..0x385C) ----
-     * Assembly checks IOCON1/2 high-byte bit1/bit0 (word bit9/bit8):
-     * OVRENH/OVRENL. If all four override bits are 1, pwmUpdate() is skipped.
+    /* ---- PWM update gate (0x3844..0x385C) ----
+     * Skip pwmUpdate only if all four OVREN bits are set (all outputs overridden).
+     * Assembly reads IOCON1H (0x423) and IOCON2H (0x443) byte-addressable high bytes.
      */
-    {
-        uint8_t iocon1l = (uint8_t)IOCON1;
-        uint8_t iocon2l = (uint8_t)IOCON2;
-        uint8_t skip_pwm_update = 0u;
-
-        if ((iocon1l & (1u << 1)) != 0u &&
-            (iocon1l & (1u << 0)) != 0u &&
-            (iocon2l & (1u << 1)) != 0u &&
-            (iocon2l & (1u << 0)) != 0u) {
-            skip_pwm_update = 1u;
-        }
-
-        if (!skip_pwm_update) {
-            pwmUpdate();             /* 0x33F4 */
-        }
+    if (!(IOCON1bits.OVRENH && IOCON1bits.OVRENL &&
+          IOCON2bits.OVRENH && IOCON2bits.OVRENL)) {
+        pwmUpdate();                 /* 0x33F4 */
     }
 
     /* ---- Delay-triggered state initialization ---- */

@@ -220,7 +220,7 @@ void mainStateDispatch(void)
     updatePmbusStatus();            /* 0x546C */
     checkOtp();                     /* 0x4D94 */
 #ifndef SIMULATION_MODE
-    flashCalibrationLoad();         /* 0x3B5E */
+    //flashCalibrationLoad();         /* 0x3B5E */
 #endif
     voltageErrorTracking();         /* 0x40C2 */
     currentRegulation();            /* 0x3F0E */

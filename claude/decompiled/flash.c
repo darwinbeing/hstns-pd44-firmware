@@ -255,7 +255,7 @@ uint8_t flash_lookup_1598(uint16_t idx) { return flash_sector_buf_1598[idx]; } /
  *   41B2  MOV #0x100, W1           ; len=256
  *   41B4  MOV #0x181E, W0          ; dest
  *   41B6  RCALL 0x3A1C             ; at45dbPageRead
- *   41B8  BSET 0x217, #4           ; U1STA.UTXEN=1
+ *   41B8  BSET 0x217, #4           ; I2C2CON.SCLREL=1 (release SCL clock stretch)
  *   41BA  BCLR 0x1928, #1
  *   41BC  RETURN
  * ============================================================================ */
@@ -266,7 +266,7 @@ void flashPageProgramRead(void)
     at45dbPageRead(flash_buf_181E, 256,
                    i2cRxDataHi, i2cRxDataLo);
 
-    U1STAbits.UTXEN = 1;
+    I2C2CONbits.SCLREL = 1;
     flashCmdFlags &= ~(1u << 1);
 }
 
@@ -286,7 +286,7 @@ void flashPageReadWrite(void)
         at45dbBufferProgramToPage(page);
     }
 
-    U1STAbits.UTXEN = 1;
+    I2C2CONbits.SCLREL = 1;
     flashCmdFlags &= ~(1u << 0);
 }
 
@@ -354,7 +354,7 @@ void flashReadPage6(void)
         at45dbBufferProgramToPage(6);
     }
 
-    U1STAbits.UTXEN = 1;
+    I2C2CONbits.SCLREL = 1;
     flashCmdFlags &= ~(1u << 4);
 }
 
@@ -373,7 +373,7 @@ void flashReadPage7(void)
         at45dbBufferProgramToPage(7);
     }
 
-    U1STAbits.UTXEN = 1;
+    I2C2CONbits.SCLREL = 1;
     flashCmdFlags &= ~(1u << 6);
 }
 
@@ -389,7 +389,7 @@ void flashProgramRead32(void)
     at45dbPageRead(flash_read_buf_15B0, 32,
                    flash_data_160C, flash_data_160A);
 
-    U1STAbits.UTXEN = 1;
+    I2C2CONbits.SCLREL = 1;
     flashCmdFlags &= ~(1u << 5);
 }
 
