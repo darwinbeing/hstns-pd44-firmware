@@ -54,25 +54,27 @@ extern void shutdownPwm(void);   /* 0x4B50 — pwmOverrideEnable alias */
  *
  * Then zero-extended (ZE) so upper byte is cleared before return.
  * ============================================================================ */
-PROT_LOCAL uint16_t thresholdCompare(uint16_t value, uint16_t low_thresh,
-                                     uint16_t high_thresh, uint16_t prev_state)
+PROT_LOCAL uint16_t thresholdCompare(uint16_t value, uint16_t upper_thresh,
+                                     uint16_t lower_thresh, uint16_t prev_state)
 {
     /* 0x30E2  MOV W0, W4   — save value into W4 */
     /* 0x30E4  MOV W3, W0   — W0 = prev_state (default return value) */
     uint16_t result = prev_state;
 
-    /* 0x30E6  SUB W4, W1   — value - low_thresh, set C */
-    /* 0x30E8  BRA NC, ...  — if value >= low_thresh (no borrow) skip */
-    if ((uint16_t)value < (uint16_t)low_thresh) {
-        /* 0x30EA  MOV #0x1, W0 — below low threshold → return 1 */
+    /* 0x30E6  SUB W4, W1   — value - upper_thresh */
+    /* 0x30E8  BRA NC, 0x30EE
+     * NC path is taken when value < upper_thresh.
+     * Fall-through (value >= upper_thresh) sets result=1.
+     */
+    if ((uint16_t)value >= (uint16_t)upper_thresh) {
         result = 1;
-    } else if ((uint16_t)value <= (uint16_t)high_thresh) {
+    } else if ((uint16_t)value <= (uint16_t)lower_thresh) {
         /* 0x30EE..0x30F2:
-         * not GTU (value <= high) -> CLR W0
+         * value <= lower_thresh -> clear result to 0
          */
         result = 0;
     }
-    /* value > high: keep prev_state */
+    /* lower_thresh < value < upper_thresh: keep prev_state (hysteresis band) */
 
     /* 0x30F4  ZE W0, W0   — zero-extend low byte (clears upper byte) */
     result = (uint8_t)result;

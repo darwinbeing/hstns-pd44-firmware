@@ -13,6 +13,8 @@ begin
    process is
    begin
       RD0 <= '1';   -- enable input
+      RD1 <= '1';
+      RD10 <= '0';
       RD11 <= '1';  -- supply-good input
       RD6 <= '0';   -- keep edge-fault path quiet
       wait;

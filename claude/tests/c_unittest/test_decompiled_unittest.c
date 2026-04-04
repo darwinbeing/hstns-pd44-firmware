@@ -451,12 +451,55 @@ static void test_adcBuf4FastAverage_random_medium(void)
 static void test_protection_helpers_medium(void)
 {
     volatile uint16_t cnt = 0;
+    int i;
+    struct tc {
+        uint16_t value;
+        uint16_t low;
+        uint16_t high;
+        uint16_t prev;
+    } cases[] = {
+        /* Below/at/above primary threshold */
+        {0,    100, 200, 0},
+        {99,   100, 200, 1},
+        {100,  100, 200, 0},
+        {150,  100, 200, 1},
+        {200,  100, 200, 0},
+        {201,  100, 200, 1},
+        {65535,100, 200, 0},
+        /* Assembly call pattern where low > high (hysteresis window is (high, low)) */
+        {233,  0x26C, 0x136, 0},
+        {233,  0x26C, 0x136, 1},
+        {309,  0x26C, 0x136, 0},   /* at high boundary */
+        {620,  0x26C, 0x136, 1},   /* at low boundary */
+        {621,  0x26C, 0x136, 0},   /* >= low -> 1 */
+    };
 
-    /* thresholdCompare (0x30E2): below low -> 1; <=high -> 0; above high -> prev */
-    ASSERT_EQ_I32(1, thresholdCompare(90, 100, 200, 0), "thresholdCompare below low");
-    ASSERT_EQ_I32(1, thresholdCompare(210, 100, 200, 1), "thresholdCompare above high keep prev=1");
-    ASSERT_EQ_I32(0, thresholdCompare(210, 100, 200, 0), "thresholdCompare above high keep prev=0");
-    ASSERT_EQ_I32(0, thresholdCompare(150, 100, 200, 1), "thresholdCompare mid band forced 0");
+    /* thresholdCompare (0x30E2) assembly-equivalent model:
+     *   if value >= low      -> 1
+     *   else if value <= high -> 0
+     *   else                  -> prev
+     */
+    ASSERT_EQ_I32(0, thresholdCompare(90, 100, 200, 0), "thresholdCompare value<=high -> 0");
+    ASSERT_EQ_I32(1, thresholdCompare(210, 100, 200, 1), "thresholdCompare value>=low -> 1");
+    ASSERT_EQ_I32(1, thresholdCompare(210, 100, 200, 0), "thresholdCompare value>=low ignores prev");
+    ASSERT_EQ_I32(1, thresholdCompare(150, 100, 200, 1), "thresholdCompare value>=low -> 1");
+
+    for (i = 0; i < (int)(sizeof(cases) / sizeof(cases[0])); i++) {
+        int32_t exp;
+        uint16_t got = thresholdCompare(cases[i].value, cases[i].low, cases[i].high, cases[i].prev);
+        if (cases[i].value >= cases[i].low) {
+            exp = 1;
+        } else if (cases[i].value <= cases[i].high) {
+            exp = 0;
+        } else {
+            exp = (cases[i].prev & 0xFFu);
+        }
+        ASSERT_EQ_I32(exp, got, "thresholdCompare vector mismatch");
+    }
+
+    /* Hysteresis hold band check: high < value < low keeps prev */
+    ASSERT_EQ_I32(0, thresholdCompare(400, 620, 309, 0), "thresholdCompare hold prev=0");
+    ASSERT_EQ_I32(1, thresholdCompare(400, 620, 309, 1), "thresholdCompare hold prev=1");
 
     /* clampToward (0x3242): one-step toward target */
     ASSERT_EQ_I32(9, clampToward(10, 3), "clampToward down");
@@ -473,6 +516,123 @@ static void test_protection_helpers_medium(void)
     cnt = 9;
     ASSERT_EQ_I32(1, debounceCounter(1, 3, &cnt, 1), "debounceCounter equal-level keeps previous");
     ASSERT_EQ_I32(0, cnt, "debounceCounter equal-level clears counter");
+}
+
+static uint16_t thresholdCompare_inline_asm_wrapper(uint16_t value,
+                                                    uint16_t low_thresh,
+                                                    uint16_t high_thresh,
+                                                    uint16_t prev_state)
+{
+#if defined(__XC16__)
+    register uint16_t w0 __asm__("w0") = value;
+    register uint16_t w1 __asm__("w1") = low_thresh;
+    register uint16_t w2 __asm__("w2") = high_thresh;
+    register uint16_t w3 __asm__("w3") = prev_state;
+
+    /* Original 0x30E2..0x30F6 sequence, instruction-for-instruction. */
+    __asm__ volatile(
+        "mov w0, w4\n\t"
+        "mov w3, w0\n\t"
+        "sub w4, w1, [w15]\n\t"
+        "bra nc, 1f\n\t"
+        "mov #0x1, w0\n\t"
+        "bra 2f\n\t"
+        "1:\n\t"
+        "sub w4, w2, [w15]\n\t"
+        "bra gtu, 2f\n\t"
+        "clr w0\n\t"
+        "2:\n\t"
+        "ze w0, w0\n\t"
+        : "+r"(w0), "+r"(w1), "+r"(w2), "+r"(w3)
+        :
+        : "w4", "memory", "cc");
+
+    return (uint8_t)w0;
+#else
+    /* Host unit-test fallback: same control flow as the original instructions. */
+    uint16_t w0 = value;
+    uint16_t w1 = low_thresh;
+    uint16_t w2 = high_thresh;
+    uint16_t w3 = prev_state;
+    uint16_t w4;
+
+    w4 = w0;
+    w0 = w3;
+
+    if (w4 >= w1) {
+        w0 = 1;
+    } else if (w4 <= w2) {
+        w0 = 0;
+    }
+    return (uint8_t)w0;
+#endif
+}
+
+static void test_thresholdCompare_inline_asm_agree(void)
+{
+    size_t i;
+    uint16_t v;
+    struct cfg {
+        uint16_t low;
+        uint16_t high;
+    } cfgs[] = {
+        {100, 200},
+        {0x026C, 0x0136},
+        {0, 0},
+        {500, 500},
+        {0xFFFF, 0x0000},
+    };
+    uint16_t prevs[] = {0, 1, 0x55, 0xFF};
+    uint16_t edge_values[32];
+    size_t edge_count = 0;
+
+    for (i = 0; i < (sizeof(cfgs) / sizeof(cfgs[0])); i++) {
+        uint16_t low = cfgs[i].low;
+        uint16_t high = cfgs[i].high;
+        size_t p;
+
+        edge_count = 0;
+        edge_values[edge_count++] = 0;
+        edge_values[edge_count++] = 1;
+        edge_values[edge_count++] = 0x00FF;
+        edge_values[edge_count++] = 0x0100;
+        edge_values[edge_count++] = 0x7FFF;
+        edge_values[edge_count++] = 0xFFFE;
+        edge_values[edge_count++] = 0xFFFF;
+        edge_values[edge_count++] = low;
+        edge_values[edge_count++] = (uint16_t)(low - 1u);
+        edge_values[edge_count++] = (uint16_t)(low + 1u);
+        edge_values[edge_count++] = high;
+        edge_values[edge_count++] = (uint16_t)(high - 1u);
+        edge_values[edge_count++] = (uint16_t)(high + 1u);
+
+        for (p = 0; p < (sizeof(prevs) / sizeof(prevs[0])); p++) {
+            uint16_t prev = prevs[p];
+
+            for (v = 0; v < 1024; v++) {
+                uint16_t got = thresholdCompare(v, low, high, prev);
+                uint16_t ref = thresholdCompare_inline_asm_wrapper(v, low, high, prev);
+                if (got != ref) {
+                    printf("FAIL: %s mismatch low=0x%04X high=0x%04X prev=0x%04X value=0x%04X got=0x%04X ref=0x%04X\n",
+                           __func__, low, high, prev, v, got, ref);
+                    g_failures++;
+                    return;
+                }
+            }
+
+            for (v = 0; v < edge_count; v++) {
+                uint16_t value = edge_values[v];
+                uint16_t got = thresholdCompare(value, low, high, prev);
+                uint16_t ref = thresholdCompare_inline_asm_wrapper(value, low, high, prev);
+                if (got != ref) {
+                    printf("FAIL: %s edge mismatch low=0x%04X high=0x%04X prev=0x%04X value=0x%04X got=0x%04X ref=0x%04X\n",
+                           __func__, low, high, prev, value, got, ref);
+                    g_failures++;
+                    return;
+                }
+            }
+        }
+    }
 }
 
 static uint16_t crc16_ref_update(uint8_t byte, uint16_t crc)
@@ -876,6 +1036,7 @@ int main(int argc, char **argv)
     RUN_TEST(test_adcBuf4FastAverage_medium);
     RUN_TEST(test_adcBuf4FastAverage_random_medium);
     RUN_TEST(test_protection_helpers_medium);
+    RUN_TEST(test_thresholdCompare_inline_asm_agree);
     RUN_TEST(test_flash_helpers_medium);
     RUN_TEST(test_eeprom_and_lookup_simple);
     RUN_TEST(test_adc_misc_voltage_current_medium);

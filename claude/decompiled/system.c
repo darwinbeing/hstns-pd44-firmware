@@ -39,7 +39,7 @@ extern void droopMode0Watchdog(void);                /* 0x3666 – droop mode 0 
 extern void droopMode3Watchdog(void);                /* 0x371A – droop mode 3 watchdog */
 extern void runNormalMode(void);                /* 0x378A – normal mode watchdog */
 extern void flashSaveStatusPage(void);              /* 0x3EAC – apply new fan speed */
-extern uint16_t thresholdCompare(int16_t, int16_t, int16_t, int16_t);   /* 0x30E2: value, low, high, prev */
+extern uint16_t thresholdCompare(int16_t, int16_t, int16_t, int16_t);   /* 0x30E2: value, upper, lower, prev */
 extern uint16_t debounceCounter(int16_t, int16_t, volatile int16_t *, int16_t); /* 0x31B2: new, limit, counter, prev */
 
 /* ============================================================================
@@ -366,7 +366,10 @@ void pwmUpdate(void)   /* 0x33F4 – 0x34EC */
 
     /* --- Check CMPCON3 bit3 (comparator fault output) --- */
     fclcon = (uint8_t)CMPCON3;               /* MOV.B CMPCON3, WREG */
-    if (!(fclcon & (1u << 3)))            /* BTST.Z W0,#3 / BRA NZ */
+    /* 0x33FA: BTST.Z W0,#3 ; 0x33FC: BRA NZ,0x348E
+     * bit3==1 -> soft-start/disarm path, bit3==0 -> continue normal branch.
+     */
+    if (fclcon & (1u << 3))
         goto soft_start_path;
 
     /* --- Comparator not tripped: mark regulating active --- */

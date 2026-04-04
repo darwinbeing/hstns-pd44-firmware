@@ -15,8 +15,6 @@ begin
       RD10 <= '0';
       RD11 <= '1';
       RD6 <= '0';
-      wait for 30000000 ic;
-      RD11 <= '0';
       wait;
    end process;
 
@@ -55,56 +53,93 @@ begin
       ADCBUF0 <= 0;
       ADCBUF2 <= 0;
       ADCBUF5 <= 0;
-      wait for 120000 ic;
+      wait for 6000000 ic;
 
       ADCBUF0 <= 80;
       ADCBUF2 <= 82;
       ADCBUF5 <= 84;
-      wait for 120000 ic;
+      wait for 6000000 ic;
 
       ADCBUF0 <= 160;
       ADCBUF2 <= 162;
       ADCBUF5 <= 165;
-      wait for 120000 ic;
+      wait for 6000000 ic;
 
       ADCBUF0 <= 240;
       ADCBUF2 <= 242;
       ADCBUF5 <= 246;
-      wait for 120000 ic;
+      wait for 6000000 ic;
 
       ADCBUF0 <= 320;
       ADCBUF2 <= 322;
       ADCBUF5 <= 327;
-      wait for 120000 ic;
+      wait for 6000000 ic;
 
       ADCBUF0 <= 420;
       ADCBUF2 <= 422;
       ADCBUF5 <= 430;
-      wait for 120000 ic;
+      wait for 6000000 ic;
 
       ADCBUF0 <= 520;
       ADCBUF2 <= 522;
-      ADCBUF5 <= 530;
-      wait for 120000 ic;
+      ADCBUF5 <= 528;
+      wait for 6000000 ic;
 
       ADCBUF0 <= 620;
       ADCBUF2 <= 622;
       ADCBUF5 <= 628;
-      wait for 120000 ic;
+      wait for 6000000 ic;
 
       ADCBUF0 <= 700;
       ADCBUF2 <= 702;
       ADCBUF5 <= 708;
-      wait for 120000 ic;
+      wait for 6000000 ic;
 
       ADCBUF0 <= 760;
       ADCBUF2 <= 762;
       ADCBUF5 <= 768;
-      wait for 120000 ic;
+      wait for 6000000 ic;
 
-      ADCBUF0 <= 777;
-      ADCBUF2 <= 778;
-      ADCBUF5 <= 791;
-      wait;
+      -- Let steady-state detector settle first (bit11 path).
+      ADCBUF0 <= 780;
+      ADCBUF2 <= 783;
+      ADCBUF5 <= 789;
+      wait for 24000000 ic;
+
+      -- Moderate excitation:
+      -- sweep around setpoint with bounded amplitude to avoid fault entry.
+      loop
+         ADCBUF0 <= 780;
+         ADCBUF2 <= 783;
+         ADCBUF5 <= 789;
+         wait for 100000 ic;
+
+         -- mild over-feedback (negative error, should raise llcPeriodCmd)
+         ADCBUF0 <= 820;
+         ADCBUF2 <= 823;
+         ADCBUF5 <= 829;
+         wait for 120000 ic;
+
+         ADCBUF0 <= 835;
+         ADCBUF2 <= 838;
+         ADCBUF5 <= 844;
+         wait for 120000 ic;
+
+         ADCBUF0 <= 790;
+         ADCBUF2 <= 793;
+         ADCBUF5 <= 799;
+         wait for 100000 ic;
+
+         -- mild under-feedback (positive error)
+         ADCBUF0 <= 755;
+         ADCBUF2 <= 758;
+         ADCBUF5 <= 764;
+         wait for 120000 ic;
+
+         ADCBUF0 <= 740;
+         ADCBUF2 <= 743;
+         ADCBUF5 <= 749;
+         wait for 120000 ic;
+      end loop;
    end process;
 end testbench;

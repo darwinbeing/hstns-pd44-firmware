@@ -255,8 +255,8 @@ void uartCmdSubroutine3(void)
             scaled = (uint16_t)(prod >> 10);
         }
 
-        ratio_lo = (uint16_t)(((uint32_t)prot << 11) / clamped_denom);
-        ratio_hi = (uint16_t)(((uint32_t)scaled << 11) / clamped_denom);
+        ratio_lo = (uint16_t)__builtin_divsd(prot << 11, clamped_denom);
+        ratio_hi = (uint16_t)__builtin_divsd(scaled << 11, clamped_denom);
 
         if ((prot < 0x008Cu) && ((pwmRunning & 0x0400u) == 0)) {
             ratio_hi = (uint16_t)(ratio_hi + 7u);
@@ -270,12 +270,13 @@ void uartCmdSubroutine3(void)
             }
         }
 
-        if (adcLiveA1 <= uartCmdParam0 && uartCmdParam0 <= ratio_hi) {
-            adcLiveA1 = uartCmdParam0;
-        } else if (adcLiveA1 > uartCmdParam0) {
-            adcLiveA1 = ratio_hi;
-        } else {
+        /* 0x22A4: clamp uartCmdParam0 into [ratio_lo, ratio_hi] */
+        if (uartCmdParam0 < ratio_lo) {
             adcLiveA1 = ratio_lo;
+        } else if (uartCmdParam0 <= ratio_hi) {
+            adcLiveA1 = uartCmdParam0;
+        } else {
+            adcLiveA1 = ratio_hi;
         }
 
         if (adcLiveA1 < 4u) {
@@ -476,7 +477,7 @@ void droopIntegrateFreq(void)
             protectionStatus |= 0x0800;
         }
 
-        countdown_1D20 = 0x32;
+        countdownTimer = 0x32;
         droopMode = 4;
         protectionStatus &= ~0x0400;
     } else {
@@ -515,8 +516,8 @@ void droopMode0Watchdog(void)
 
         if ((((currentLimitFlags & 0x0800) == 0) &&
              ((systemFlags & 0x00A0) == 0)) ||
-            (ocpThresholdHw <= (uint16_t)delayTimer)) {
-            if (countdown_1D20 == 0) {
+            (Imeas_scaled > (int16_t)ocpThresholdHw)) {
+            if (countdownTimer == 0) {
                 if (protectionStatus & 0x0800) {
                     /* Branch A: compute scaled frequency target */
                     int32_t prod = (int32_t)imeas * (-0x0D3D);
@@ -648,14 +649,15 @@ void runNormalMode(void)
 /* --------------------------------------------------------------------------
  * initI2cPointerTables (0x13C2 – 0x150A)
  *
- * Initialises I2C2 PMBus pointer/dispatch tables (ptrTable19B0, ptrTable19BA,
- * ptrTable19D0, ptrTable19F0, ptrTable1A10, ptrTable1A70, ptrTable1B90)
- * with RAM addresses of PMBus data/config registers.
- *
- * 165 instructions, all MOV #imm, W0 / MOV W0, addr pairs.
- * TODO: decompile full table initialization from Ghidra.
+ * Keep startup-safe defaults that are required by the control-loop path used
+ * in simulation. The full PMBus pointer-table RAM clear is not enabled here
+ * because current decompiled table mappings are still incomplete.
  * -------------------------------------------------------------------------- */
 void initI2cPointerTables(void)
 {
-    /* stub — pointer tables left uninitialized */
+    llcStatus      = 1;
+    i2cPeriodCnt   = 0x05DC;
+    ioutScaleConst = 0x3133;
+    ocpThresholdHw = 0x0640;
+    ioutAdcRaw     = 0x1180;
 }

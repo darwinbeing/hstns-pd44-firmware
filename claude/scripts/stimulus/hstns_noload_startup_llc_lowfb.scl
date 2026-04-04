@@ -12,6 +12,8 @@ begin
    process is
    begin
       RD0 <= '1';
+      RD1 <= '1';
+      RD10 <= '0';
       RD11 <= '1';
       RD6 <= '0';
       wait;

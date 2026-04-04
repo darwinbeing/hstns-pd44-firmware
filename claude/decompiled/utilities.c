@@ -1088,19 +1088,19 @@ void i2cTargetPeriodUpdate(void) { }     /* 0x25FC */
 void i2cOvThresholdCheck(void) { }       /* 0x26A0 */
 
 /* ---- Helper functions referenced by t1_sub_prot.c ---- */
-uint16_t thresholdCompare(int16_t adc_val, int16_t lo_thresh,
-                           int16_t hi_thresh, int16_t prev_state)
+uint16_t thresholdCompare(int16_t adc_val, int16_t upper_thresh,
+                           int16_t lower_thresh, int16_t prev_state)
 {
     uint16_t result = (uint8_t)prev_state;
 
-    /* 0x30E2..0x30F6:
-     *   value <  low  -> 1
-     *   value <= high -> 0
-     *   value >  high -> prev_state
+    /* 0x30E2..0x30F6 — hysteresis comparator:
+     *   value >= upper  -> 1 (above upper threshold)
+     *   value <= lower  -> 0 (below lower threshold)
+     *   in between      -> prev_state (hysteresis band)
      */
-    if ((uint16_t)adc_val < (uint16_t)lo_thresh) {
+    if ((uint16_t)adc_val >= (uint16_t)upper_thresh) {
         result = 1u;
-    } else if ((uint16_t)adc_val <= (uint16_t)hi_thresh) {
+    } else if ((uint16_t)adc_val <= (uint16_t)lower_thresh) {
         result = 0u;
     }
 
