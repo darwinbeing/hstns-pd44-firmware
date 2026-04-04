@@ -64,3 +64,28 @@ If symbols are missing in the log:
    - `SCL_PRINT_MDB_LOG=1 make sim-scl`
 3. Verify `mdb.sh` path:
    - `/Applications/microchip/mplabx/v6.20/mplab_platform/bin/mdb.sh`
+
+## Latest Finding (2026-04-04): `droopKffFactor`
+
+- In current decompiled build, `droopKffFactor` does **not** have a static initializer.
+- Original ASM writes `droopKffFactor` in T2 ISR transient branches (set `0x5DC` / restore `0x400`), but those branches require preconditions (`statusFlags` bit9/bit10, `runtimeFlags` bit8/bit9).
+- In no-init simulation, `llcPeriodCmd` can stay at `24000`, so bit9/bit10 conditions are never reached, and `droopKffFactor` remains `0`.
+
+Observed no-init behavior:
+
+- `droopKffFactor = 0` (entire run)
+- `llcPeriodCmd = 24000` (entire run)
+- `statusFlags.bit11` may set, but `statusFlags.bit9/bit10` remain clear
+- therefore Kff transient branches are not entered
+
+Important for MDB/SCL injection:
+
+- Use **symbol address from current ELF map**, not the original firmware RAM address.
+- In this build, `_droopKffFactor` is at `0x099E` (map), while original firmware analysis references `0x1DA6`.
+- Writing `0x1DA6` in simulator does not affect this build variable; writing `0x099E` does.
+
+Example one-shot MDB seed command:
+
+```mdb
+write /rh 0x099E 0x0400
+```
