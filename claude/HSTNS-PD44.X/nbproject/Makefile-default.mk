@@ -51,17 +51,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=../decompiled/main.c ../decompiled/init.c ../decompiled/state_machine.c ../decompiled/monitoring.c ../decompiled/isr.c ../decompiled/isr_t1.c ../decompiled/isr_t2.c ../decompiled/voltage_loop.c ../decompiled/adc.c ../decompiled/pwm.c ../decompiled/protection.c ../decompiled/pmbus.c ../decompiled/flash.c ../decompiled/system.c ../decompiled/utilities.c ../decompiled/variables.c ../decompiled/stubs.c ../decompiled/serial.c ../decompiled/simulator.c ../decompiled/trap.c
+SOURCEFILES_QUOTED_IF_SPACED=../decompiled/main.c ../decompiled/init.c ../decompiled/state_machine.c ../decompiled/monitoring.c ../decompiled/isr.c ../decompiled/isr_t1.c ../decompiled/isr_t2.c ../decompiled/voltage_loop.c ../decompiled/adc.c ../decompiled/pwm.c ../decompiled/protection.c ../decompiled/pmbus.c ../decompiled/flash.c ../decompiled/system.c ../decompiled/utilities.c ../decompiled/variables.c ../decompiled/stubs.c ../decompiled/serial.c ../decompiled/trap.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1533516737/main.o ${OBJECTDIR}/_ext/1533516737/init.o ${OBJECTDIR}/_ext/1533516737/state_machine.o ${OBJECTDIR}/_ext/1533516737/monitoring.o ${OBJECTDIR}/_ext/1533516737/isr.o ${OBJECTDIR}/_ext/1533516737/isr_t1.o ${OBJECTDIR}/_ext/1533516737/isr_t2.o ${OBJECTDIR}/_ext/1533516737/voltage_loop.o ${OBJECTDIR}/_ext/1533516737/adc.o ${OBJECTDIR}/_ext/1533516737/pwm.o ${OBJECTDIR}/_ext/1533516737/protection.o ${OBJECTDIR}/_ext/1533516737/pmbus.o ${OBJECTDIR}/_ext/1533516737/flash.o ${OBJECTDIR}/_ext/1533516737/system.o ${OBJECTDIR}/_ext/1533516737/utilities.o ${OBJECTDIR}/_ext/1533516737/variables.o ${OBJECTDIR}/_ext/1533516737/stubs.o ${OBJECTDIR}/_ext/1533516737/serial.o ${OBJECTDIR}/_ext/1533516737/simulator.o ${OBJECTDIR}/_ext/1533516737/trap.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1533516737/main.o.d ${OBJECTDIR}/_ext/1533516737/init.o.d ${OBJECTDIR}/_ext/1533516737/state_machine.o.d ${OBJECTDIR}/_ext/1533516737/monitoring.o.d ${OBJECTDIR}/_ext/1533516737/isr.o.d ${OBJECTDIR}/_ext/1533516737/isr_t1.o.d ${OBJECTDIR}/_ext/1533516737/isr_t2.o.d ${OBJECTDIR}/_ext/1533516737/voltage_loop.o.d ${OBJECTDIR}/_ext/1533516737/adc.o.d ${OBJECTDIR}/_ext/1533516737/pwm.o.d ${OBJECTDIR}/_ext/1533516737/protection.o.d ${OBJECTDIR}/_ext/1533516737/pmbus.o.d ${OBJECTDIR}/_ext/1533516737/flash.o.d ${OBJECTDIR}/_ext/1533516737/system.o.d ${OBJECTDIR}/_ext/1533516737/utilities.o.d ${OBJECTDIR}/_ext/1533516737/variables.o.d ${OBJECTDIR}/_ext/1533516737/stubs.o.d ${OBJECTDIR}/_ext/1533516737/serial.o.d ${OBJECTDIR}/_ext/1533516737/simulator.o.d ${OBJECTDIR}/_ext/1533516737/trap.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/_ext/1533516737/main.o ${OBJECTDIR}/_ext/1533516737/init.o ${OBJECTDIR}/_ext/1533516737/state_machine.o ${OBJECTDIR}/_ext/1533516737/monitoring.o ${OBJECTDIR}/_ext/1533516737/isr.o ${OBJECTDIR}/_ext/1533516737/isr_t1.o ${OBJECTDIR}/_ext/1533516737/isr_t2.o ${OBJECTDIR}/_ext/1533516737/voltage_loop.o ${OBJECTDIR}/_ext/1533516737/adc.o ${OBJECTDIR}/_ext/1533516737/pwm.o ${OBJECTDIR}/_ext/1533516737/protection.o ${OBJECTDIR}/_ext/1533516737/pmbus.o ${OBJECTDIR}/_ext/1533516737/flash.o ${OBJECTDIR}/_ext/1533516737/system.o ${OBJECTDIR}/_ext/1533516737/utilities.o ${OBJECTDIR}/_ext/1533516737/variables.o ${OBJECTDIR}/_ext/1533516737/stubs.o ${OBJECTDIR}/_ext/1533516737/serial.o ${OBJECTDIR}/_ext/1533516737/trap.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/_ext/1533516737/main.o.d ${OBJECTDIR}/_ext/1533516737/init.o.d ${OBJECTDIR}/_ext/1533516737/state_machine.o.d ${OBJECTDIR}/_ext/1533516737/monitoring.o.d ${OBJECTDIR}/_ext/1533516737/isr.o.d ${OBJECTDIR}/_ext/1533516737/isr_t1.o.d ${OBJECTDIR}/_ext/1533516737/isr_t2.o.d ${OBJECTDIR}/_ext/1533516737/voltage_loop.o.d ${OBJECTDIR}/_ext/1533516737/adc.o.d ${OBJECTDIR}/_ext/1533516737/pwm.o.d ${OBJECTDIR}/_ext/1533516737/protection.o.d ${OBJECTDIR}/_ext/1533516737/pmbus.o.d ${OBJECTDIR}/_ext/1533516737/flash.o.d ${OBJECTDIR}/_ext/1533516737/system.o.d ${OBJECTDIR}/_ext/1533516737/utilities.o.d ${OBJECTDIR}/_ext/1533516737/variables.o.d ${OBJECTDIR}/_ext/1533516737/stubs.o.d ${OBJECTDIR}/_ext/1533516737/serial.o.d ${OBJECTDIR}/_ext/1533516737/trap.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/_ext/1533516737/main.o ${OBJECTDIR}/_ext/1533516737/init.o ${OBJECTDIR}/_ext/1533516737/state_machine.o ${OBJECTDIR}/_ext/1533516737/monitoring.o ${OBJECTDIR}/_ext/1533516737/isr.o ${OBJECTDIR}/_ext/1533516737/isr_t1.o ${OBJECTDIR}/_ext/1533516737/isr_t2.o ${OBJECTDIR}/_ext/1533516737/voltage_loop.o ${OBJECTDIR}/_ext/1533516737/adc.o ${OBJECTDIR}/_ext/1533516737/pwm.o ${OBJECTDIR}/_ext/1533516737/protection.o ${OBJECTDIR}/_ext/1533516737/pmbus.o ${OBJECTDIR}/_ext/1533516737/flash.o ${OBJECTDIR}/_ext/1533516737/system.o ${OBJECTDIR}/_ext/1533516737/utilities.o ${OBJECTDIR}/_ext/1533516737/variables.o ${OBJECTDIR}/_ext/1533516737/stubs.o ${OBJECTDIR}/_ext/1533516737/serial.o ${OBJECTDIR}/_ext/1533516737/simulator.o ${OBJECTDIR}/_ext/1533516737/trap.o
+OBJECTFILES=${OBJECTDIR}/_ext/1533516737/main.o ${OBJECTDIR}/_ext/1533516737/init.o ${OBJECTDIR}/_ext/1533516737/state_machine.o ${OBJECTDIR}/_ext/1533516737/monitoring.o ${OBJECTDIR}/_ext/1533516737/isr.o ${OBJECTDIR}/_ext/1533516737/isr_t1.o ${OBJECTDIR}/_ext/1533516737/isr_t2.o ${OBJECTDIR}/_ext/1533516737/voltage_loop.o ${OBJECTDIR}/_ext/1533516737/adc.o ${OBJECTDIR}/_ext/1533516737/pwm.o ${OBJECTDIR}/_ext/1533516737/protection.o ${OBJECTDIR}/_ext/1533516737/pmbus.o ${OBJECTDIR}/_ext/1533516737/flash.o ${OBJECTDIR}/_ext/1533516737/system.o ${OBJECTDIR}/_ext/1533516737/utilities.o ${OBJECTDIR}/_ext/1533516737/variables.o ${OBJECTDIR}/_ext/1533516737/stubs.o ${OBJECTDIR}/_ext/1533516737/serial.o ${OBJECTDIR}/_ext/1533516737/trap.o
 
 # Source Files
-SOURCEFILES=../decompiled/main.c ../decompiled/init.c ../decompiled/state_machine.c ../decompiled/monitoring.c ../decompiled/isr.c ../decompiled/isr_t1.c ../decompiled/isr_t2.c ../decompiled/voltage_loop.c ../decompiled/adc.c ../decompiled/pwm.c ../decompiled/protection.c ../decompiled/pmbus.c ../decompiled/flash.c ../decompiled/system.c ../decompiled/utilities.c ../decompiled/variables.c ../decompiled/stubs.c ../decompiled/serial.c ../decompiled/simulator.c ../decompiled/trap.c
+SOURCEFILES=../decompiled/main.c ../decompiled/init.c ../decompiled/state_machine.c ../decompiled/monitoring.c ../decompiled/isr.c ../decompiled/isr_t1.c ../decompiled/isr_t2.c ../decompiled/voltage_loop.c ../decompiled/adc.c ../decompiled/pwm.c ../decompiled/protection.c ../decompiled/pmbus.c ../decompiled/flash.c ../decompiled/system.c ../decompiled/utilities.c ../decompiled/variables.c ../decompiled/stubs.c ../decompiled/serial.c ../decompiled/trap.c
 
 
 
@@ -89,125 +89,119 @@ MP_LINKER_FILE_OPTION=,--script=p33FJ64GS606.gld
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: compile
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-${OBJECTDIR}/_ext/1533516737/main.o: ../decompiled/main.c  .generated_files/flags/default/a9196644872121ef3ea6cf9af362b43ee1b56089 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/main.o: ../decompiled/main.c  .generated_files/flags/default/cefb537df9fa0d686b066f71391d3467ff24cc3f .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/main.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/main.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/main.c  -o ${OBJECTDIR}/_ext/1533516737/main.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/main.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/main.c  -o ${OBJECTDIR}/_ext/1533516737/main.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/main.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/init.o: ../decompiled/init.c  .generated_files/flags/default/8af8d00bbb47c47bb9d261f27f0bd801481cbd43 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/init.o: ../decompiled/init.c  .generated_files/flags/default/dc091f04914799c08622fade0e98f4b0b054bb60 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/init.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/init.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/init.c  -o ${OBJECTDIR}/_ext/1533516737/init.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/init.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/init.c  -o ${OBJECTDIR}/_ext/1533516737/init.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/init.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/state_machine.o: ../decompiled/state_machine.c  .generated_files/flags/default/d5ecb7b11768b02c3881abcde461926398487632 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/state_machine.o: ../decompiled/state_machine.c  .generated_files/flags/default/9bd0bc11fbb98fb3fd6defa2b5d63734c3394e20 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/state_machine.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/state_machine.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/state_machine.c  -o ${OBJECTDIR}/_ext/1533516737/state_machine.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/state_machine.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/state_machine.c  -o ${OBJECTDIR}/_ext/1533516737/state_machine.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/state_machine.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/monitoring.o: ../decompiled/monitoring.c  .generated_files/flags/default/c545ac3795e30d57e78723cc1810ea58dc6b8b74 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/monitoring.o: ../decompiled/monitoring.c  .generated_files/flags/default/43a2ddd56a8e8e05d8ec0671b212c086fa77493d .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/monitoring.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/monitoring.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/monitoring.c  -o ${OBJECTDIR}/_ext/1533516737/monitoring.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/monitoring.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/monitoring.c  -o ${OBJECTDIR}/_ext/1533516737/monitoring.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/monitoring.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/isr.o: ../decompiled/isr.c  .generated_files/flags/default/54cd5f6679ad67638ab551dc11bd7c8a9ab3c9b9 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/isr.o: ../decompiled/isr.c  .generated_files/flags/default/c7a59728b2e769f4ca5cfd4821395a88132ee1d .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/isr.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/isr.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/isr.c  -o ${OBJECTDIR}/_ext/1533516737/isr.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/isr.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/isr.c  -o ${OBJECTDIR}/_ext/1533516737/isr.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/isr.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/isr_t1.o: ../decompiled/isr_t1.c  .generated_files/flags/default/c2005e317faffcf8d5acfeed424c3bc18105723e .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/isr_t1.o: ../decompiled/isr_t1.c  .generated_files/flags/default/69caa07052b3b379f00ebe74b9af3bfbb3058c1a .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/isr_t1.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/isr_t1.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/isr_t1.c  -o ${OBJECTDIR}/_ext/1533516737/isr_t1.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/isr_t1.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/isr_t1.c  -o ${OBJECTDIR}/_ext/1533516737/isr_t1.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/isr_t1.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/isr_t2.o: ../decompiled/isr_t2.c  .generated_files/flags/default/d3aba4dea8afff2111c6e1cbc7229064d4e9222a .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/isr_t2.o: ../decompiled/isr_t2.c  .generated_files/flags/default/9fee034b74b28604c98701f5b8df8ddade5f6fbf .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/isr_t2.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/isr_t2.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/isr_t2.c  -o ${OBJECTDIR}/_ext/1533516737/isr_t2.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/isr_t2.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/isr_t2.c  -o ${OBJECTDIR}/_ext/1533516737/isr_t2.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/isr_t2.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/voltage_loop.o: ../decompiled/voltage_loop.c  .generated_files/flags/default/75801939fa70c5c1600f5a2b146ea10160f6923c .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/voltage_loop.o: ../decompiled/voltage_loop.c  .generated_files/flags/default/c51cfe37ee678f8a2e2b70ae10542a9eba939941 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/voltage_loop.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/voltage_loop.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/voltage_loop.c  -o ${OBJECTDIR}/_ext/1533516737/voltage_loop.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/voltage_loop.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/voltage_loop.c  -o ${OBJECTDIR}/_ext/1533516737/voltage_loop.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/voltage_loop.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/adc.o: ../decompiled/adc.c  .generated_files/flags/default/9a96bbcb7d0ebf15d085ab03f2f7075b83a7bc7d .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/adc.o: ../decompiled/adc.c  .generated_files/flags/default/26cc27696d15224d7c32cb8cc2e7e91451c9762b .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/adc.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/adc.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/adc.c  -o ${OBJECTDIR}/_ext/1533516737/adc.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/adc.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/adc.c  -o ${OBJECTDIR}/_ext/1533516737/adc.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/adc.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/pwm.o: ../decompiled/pwm.c  .generated_files/flags/default/e323965ed4722aebca33e42029c64d2ab4779b73 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/pwm.o: ../decompiled/pwm.c  .generated_files/flags/default/23e9a13b5f456bbeeee509d774502e298b86a811 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/pwm.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/pwm.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/pwm.c  -o ${OBJECTDIR}/_ext/1533516737/pwm.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/pwm.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/pwm.c  -o ${OBJECTDIR}/_ext/1533516737/pwm.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/pwm.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/protection.o: ../decompiled/protection.c  .generated_files/flags/default/9111bd5423253ad9a99df5e0ab2fb0e539a96300 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/protection.o: ../decompiled/protection.c  .generated_files/flags/default/5646b2340336942d76d3f83d0eb1bffac6b13a99 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/protection.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/protection.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/protection.c  -o ${OBJECTDIR}/_ext/1533516737/protection.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/protection.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/protection.c  -o ${OBJECTDIR}/_ext/1533516737/protection.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/protection.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/pmbus.o: ../decompiled/pmbus.c  .generated_files/flags/default/ae465765964526c49504c9ec73a206fe3556b0d9 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/pmbus.o: ../decompiled/pmbus.c  .generated_files/flags/default/853a81da49ff2e22ea1b1f80811ec9b6a45b5ea .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/pmbus.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/pmbus.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/pmbus.c  -o ${OBJECTDIR}/_ext/1533516737/pmbus.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/pmbus.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/pmbus.c  -o ${OBJECTDIR}/_ext/1533516737/pmbus.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/pmbus.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/flash.o: ../decompiled/flash.c  .generated_files/flags/default/bd1dde00afb2ce7b3e9829d450802d5f421e351a .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/flash.o: ../decompiled/flash.c  .generated_files/flags/default/926f753143f190fdff534b2c87e8d6de28dfa198 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/flash.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/flash.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/flash.c  -o ${OBJECTDIR}/_ext/1533516737/flash.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/flash.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/flash.c  -o ${OBJECTDIR}/_ext/1533516737/flash.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/flash.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/system.o: ../decompiled/system.c  .generated_files/flags/default/7343d3db816b7df083ffeab79df24cde822247c8 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/system.o: ../decompiled/system.c  .generated_files/flags/default/39d91cc1a4280c793fe3d07fd9305a2643024866 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/system.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/system.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/system.c  -o ${OBJECTDIR}/_ext/1533516737/system.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/system.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/system.c  -o ${OBJECTDIR}/_ext/1533516737/system.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/system.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/utilities.o: ../decompiled/utilities.c  .generated_files/flags/default/bf0eda23ada4c1da6001bb9747014f1175b6fcf0 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/utilities.o: ../decompiled/utilities.c  .generated_files/flags/default/70d209d579192fb48f0a31611a10533073b1b098 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/utilities.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/utilities.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/utilities.c  -o ${OBJECTDIR}/_ext/1533516737/utilities.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/utilities.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/utilities.c  -o ${OBJECTDIR}/_ext/1533516737/utilities.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/utilities.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/variables.o: ../decompiled/variables.c  .generated_files/flags/default/2d6a95d564a6432c538e50bf211c360d6fff0f97 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/variables.o: ../decompiled/variables.c  .generated_files/flags/default/9f09649632fb46999a744a1fa6288c2d00076e9f .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/variables.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/variables.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/variables.c  -o ${OBJECTDIR}/_ext/1533516737/variables.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/variables.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/variables.c  -o ${OBJECTDIR}/_ext/1533516737/variables.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/variables.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/stubs.o: ../decompiled/stubs.c  .generated_files/flags/default/eb15646d02e5193b4eae50bac1e704e89dcfe293 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/stubs.o: ../decompiled/stubs.c  .generated_files/flags/default/a7b3307da6e93d5eb35a908ecac34fb064517b06 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/stubs.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/stubs.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/stubs.c  -o ${OBJECTDIR}/_ext/1533516737/stubs.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/stubs.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/stubs.c  -o ${OBJECTDIR}/_ext/1533516737/stubs.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/stubs.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/serial.o: ../decompiled/serial.c  .generated_files/flags/default/9158f0c4fc8979dceda3345b0e9e3a5f4150b232 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/serial.o: ../decompiled/serial.c  .generated_files/flags/default/b737396431aff238f8a9220a279addb2f8462d81 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/serial.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/serial.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/serial.c  -o ${OBJECTDIR}/_ext/1533516737/serial.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/serial.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/serial.c  -o ${OBJECTDIR}/_ext/1533516737/serial.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/serial.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/simulator.o: ../decompiled/simulator.c  .generated_files/flags/default/83e05b2f105aab4a51ad187b9f795b9b82424557 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
-	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
-	@${RM} ${OBJECTDIR}/_ext/1533516737/simulator.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1533516737/simulator.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/simulator.c  -o ${OBJECTDIR}/_ext/1533516737/simulator.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/simulator.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
-	
-${OBJECTDIR}/_ext/1533516737/trap.o: ../decompiled/trap.c  .generated_files/flags/default/ec50f589a6d57848aabd5740397663dd45750e0f .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/_ext/1533516737/trap.o: ../decompiled/trap.c  .generated_files/flags/default/40687d7dd73916978319e2bd1b5a70e5ede30337 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/trap.o.d 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/trap.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/trap.c  -o ${OBJECTDIR}/_ext/1533516737/trap.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/trap.o.d"      -g -D__DEBUG     -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
+	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/trap.c  -o ${OBJECTDIR}/_ext/1533516737/trap.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/trap.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
 else
 ${OBJECTDIR}/_ext/1533516737/main.o: ../decompiled/main.c  .generated_files/flags/default/af5bfe98e3324a0be15caae88cb6991cbe920465 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
@@ -318,12 +312,6 @@ ${OBJECTDIR}/_ext/1533516737/serial.o: ../decompiled/serial.c  .generated_files/
 	@${RM} ${OBJECTDIR}/_ext/1533516737/serial.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/serial.c  -o ${OBJECTDIR}/_ext/1533516737/serial.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/serial.o.d"        -g -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/_ext/1533516737/simulator.o: ../decompiled/simulator.c  .generated_files/flags/default/fd29494208983b18639bc014af2bc645fe69993b .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
-	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
-	@${RM} ${OBJECTDIR}/_ext/1533516737/simulator.o.d 
-	@${RM} ${OBJECTDIR}/_ext/1533516737/simulator.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ../decompiled/simulator.c  -o ${OBJECTDIR}/_ext/1533516737/simulator.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/_ext/1533516737/simulator.o.d"        -g -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled" -O1 -I"../decompiled" -msmart-io=1 -Wall -mno-isr-warn -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
-	
 ${OBJECTDIR}/_ext/1533516737/trap.o: ../decompiled/trap.c  .generated_files/flags/default/d28ac82525eda374c0ac8c05b0b3181cd37d5b37 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
 	@${MKDIR} "${OBJECTDIR}/_ext/1533516737" 
 	@${RM} ${OBJECTDIR}/_ext/1533516737/trap.o.d 
@@ -349,7 +337,7 @@ endif
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
 ${DISTDIR}/HSTNS-PD44.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk    
 	@${MKDIR} ${DISTDIR} 
-	${MP_CC} $(MP_EXTRA_LD_PRE)  -o ${DISTDIR}/HSTNS-PD44.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}      -mcpu=$(MP_PROCESSOR_OPTION)        -D__DEBUG=__DEBUG   -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled"  -mreserve=data@0x800:0x81F -mreserve=data@0x820:0x821 -mreserve=data@0x822:0x823 -mreserve=data@0x824:0x825 -mreserve=data@0x826:0x84F   -Wl,,,--defsym=__MPLAB_BUILD=1,--defsym=__MPLAB_DEBUG=1,--defsym=__DEBUG=1,-D__DEBUG=__DEBUG,,$(MP_LINKER_FILE_OPTION),--stack=16,--check-sections,--data-init,--pack-data,--handles,--isr,--no-gc-sections,--fill-upper=0,--stackguard=16,--no-force-link,--smart-io,-Map="${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map",--report-mem,--memorysummary,${DISTDIR}/memoryfile.xml$(MP_EXTRA_LD_POST)  -mdfp="${DFP_DIR}/xc16" 
+	${MP_CC} $(MP_EXTRA_LD_PRE)  -o ${DISTDIR}/HSTNS-PD44.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}      -mcpu=$(MP_PROCESSOR_OPTION)        -D__DEBUG=__DEBUG -D__MPLAB_DEBUGGER_SIMULATOR=1  -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -I"../decompiled"     -Wl,,,--defsym=__MPLAB_BUILD=1,--defsym=__MPLAB_DEBUG=1,--defsym=__DEBUG=1,-D__DEBUG=__DEBUG,--defsym=__MPLAB_DEBUGGER_SIMULATOR=1,$(MP_LINKER_FILE_OPTION),--stack=16,--check-sections,--data-init,--pack-data,--handles,--isr,--no-gc-sections,--fill-upper=0,--stackguard=16,--no-force-link,--smart-io,-Map="${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map",--report-mem,--memorysummary,${DISTDIR}/memoryfile.xml$(MP_EXTRA_LD_POST)  -mdfp="${DFP_DIR}/xc16" 
 	
 else
 ${DISTDIR}/HSTNS-PD44.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk   

@@ -1,0 +1,56 @@
+testbench for "dsPIC33FJ64GS606" is
+begin
+   -- Keep clock-switch/PLL lock status asserted.
+   process is
+   begin
+      OSCCON.COSC <= "011";
+      OSCCON.LOCK <= '1';
+      ACLKCON.APLLCK <= '1';
+      wait for 1 ic;
+   end process;
+
+   -- Digital gate inputs.
+   process is
+   begin
+      RD0 <= '1';
+      RD11 <= '1';
+      RD6 <= '0';
+      wait;
+   end process;
+
+   -- Static channels from the provided dump (non-vfb channels).
+   process is
+   begin
+      ADCBUF1  <= 674;
+      ADCBUF3  <= 890;
+      ADCBUF4  <= 200;
+      ADCBUF6  <= 158;
+      ADCBUF7  <= 974;
+      ADCBUF8  <= 1023;
+      ADCBUF9  <= 0;
+      ADCBUF10 <= 692;
+      ADCBUF11 <= 607;
+      ADCBUF12 <= 0;
+      ADCBUF13 <= 233;
+      ADCBUF14 <= 0;
+      ADCBUF15 <= 1019;
+      wait;
+   end process;
+
+   -- Vout feedback channels AN0/AN2/AN5: slow startup ramp to ~0x310.
+   process is
+      variable fb : integer := 560;
+   begin
+      loop
+         ADCBUF0 <= fb;
+         ADCBUF2 <= fb + 2;
+         ADCBUF5 <= fb + 5;
+
+         if fb < 784 then
+            fb := fb + 1;
+         end if;
+
+         wait for 150 ic;
+      end loop;
+   end process;
+end testbench;

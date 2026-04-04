@@ -5,7 +5,6 @@
  * ============================================================================ */
 #include <xc.h>
 #include "variables.h"
-#include "simulator.h"
 
 /* Configuration Bits */
 
@@ -33,8 +32,7 @@
 #pragma config WDTPOST = PS2048
 #pragma config WDTPRE  = PR32
 #pragma config WINDIS  = OFF
-// #pragma config FWDTEN  = ON
-#pragma config FWDTEN = OFF
+#pragma config FWDTEN  = OFF
 
 // FPOR - Power-on Reset
 #pragma config FPWRT  = PWR32
@@ -106,6 +104,9 @@ void initVars(void)
     /* Initialize state machine to IDLE */
     systemState = ST_IDLE;              /* 0x1E22 */
 
+    /* statusUpdate/currentLimit hysteresis seed (read as thermalFlags bit15 in asm). */
+    thermalFlags = 0x8000;              /* keep high-bit set until explicit updates */
+
     /* Output Compare 2 */
     OC2RS = 400;               /* 0x190 */
     oc2rs_shadow = 400;        /* 0x1E38 */
@@ -158,13 +159,7 @@ int main(void)
     statusFlags = 0;            /* CLR 0x125A */
 
     /* ---- Peripheral initialization sequence (while interrupts disabled) ---- */
-#ifdef SIM_MAIN_CHAIN_ONLY
-    /* Main-chain simulation only needs the algorithm/state RAM defaults.
-     * Skipping unrelated peripheral bring-up keeps the MPLAB simulator fast
-     * enough to reach T1/T2/T4/mainStateDispatch deterministically.
-     */
-    initVars();                /* 0x508E */
-#else
+    /* Firmware init sequence from assembly at 0x5A26..0x5A4A. */
     initClock();               /* 0x59CE: PLL Fosc=100MHz, APLL ~120MHz */
     initCMP4();                /* 0x5BD8: CMPCON4=0x101, CMPDAC4=0 */
     initCMP3();                /* 0x5BCC: CMPCON3=0x81, CMPDAC3=0x1A3 */
@@ -177,11 +172,6 @@ int main(void)
     initSPI2();                /* 0x38A6: Master ~1.56MHz */
     serialInit();              /* UART2 115200 for flash frame loader */
     initVars();                /* 0x508E: RAM variable initialization */
-#endif
-
-#ifdef SIMULATION_MODE
-    simInit();
-#endif
 
     /* Enable interrupts (IPL=0) */
     SRbits.IPL = 0;
@@ -189,19 +179,20 @@ int main(void)
     /* ---- Main loop ---- */
     while (1) {
         ClrWdt();                      /* 0x5A54 */
-#ifdef SIMULATION_MODE
-        simRunStep();
-#else
+        dbg_main_loop_calls++;
+        dbg_main_stage = 1;
         i2cService();                 /* 0x50C2: check I2C2 status */
+        dbg_main_stage = 2;
         startupControl();                /* 0x5522: startup/soft-start control */
+        dbg_main_stage = 3;
         mainStateDispatch();          /* 0x51FE: T1-driven main state machine */
-        flashPageProgramRead();         /* 0x41A2: Flash page program + read 256B */
-        flashPageReadWrite();           /* 0x41BE: Flash page read + writeback */
-        fwUpdateWriteVerify();          /* 0x425E: FW update 256B write + CRC verify */
-        flashReadPage6();               /* 0x4260: Read Flash page 6 (config) */
-        flashReadPage7();               /* 0x427E: Read Flash page 7 (calibration) */
-        flashProgramRead32();           /* 0x429C: Flash program + read 32B */
+        dbg_main_stage = 4;
+        //flashPageProgramRead();         /* 0x41A2: Flash page program + read 256B */
+        //flashPageReadWrite();           /* 0x41BE: Flash page read + writeback */
+        //fwUpdateWriteVerify();          /* 0x425E: FW update 256B write + CRC verify */
+        //flashReadPage6();               /* 0x4260: Read Flash page 6 (config) */
+        //flashReadPage7();               /* 0x427E: Read Flash page 7 (calibration) */
+        //flashProgramRead32();           /* 0x429C: Flash program + read 32B */
         //flashUart2LoaderService();      /* UART2: AA55+PageIndex+256B+CRC -> AT45DB page write */
-#endif
     }
 }

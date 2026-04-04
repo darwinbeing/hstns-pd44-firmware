@@ -1,0 +1,35 @@
+testbench for "dsPIC33FJ64GS606" is
+begin
+   -- Keep clock-switch/PLL lock status asserted for initClock().
+   process is
+   begin
+      OSCCON.COSC <= "011";
+      OSCCON.LOCK <= '1';
+      ACLKCON.APLLCK <= '1';
+      wait for 1 ic;
+   end process;
+
+   -- External digital inputs required by IDLE->STARTUP gate.
+   process is
+   begin
+      RD0 <= '1';   -- enable input
+      RD11 <= '1';  -- supply-good input
+      RD6 <= '0';   -- keep edge-fault path quiet
+      wait;
+   end process;
+
+   -- Nominal startup ADC profile (avoid immediate OVP fault in vout loop).
+   process is
+   begin
+      ADCBUF0  <= 700;
+      ADCBUF2  <= 700;
+      ADCBUF3  <= 700;
+      ADCBUF4  <= 64;
+      ADCBUF5  <= 700;
+      ADCBUF10 <= 256;
+      ADCBUF11 <= 256;
+      ADCBUF12 <= 0;
+      ADCBUF14 <= 320;
+      wait;
+   end process;
+end testbench;

@@ -19,33 +19,12 @@
 #include <stdint.h>
 #include <xc.h>        /* dsPIC SFR definitions (PORTD, LATD, LATF, ADCBUF5) */
 #include "variables.h"
-#ifdef SIMULATION_MODE
-#include "simulator.h"
-#endif
-
-#ifdef SIMULATION_MODE
-static inline uint8_t simPortdRd0(void)
-{
-    return (uint8_t)(sim_portd_input & 0x0001u);
-}
-
-static inline uint8_t simPortdRd6(void)
-{
-    return (sim_portd_input & (1u << 6)) ? 1u : 0u;
-}
-
-static inline uint8_t simPortdRd11(void)
-{
-    return (sim_portd_input & (1u << 11)) ? 1u : 0u;
-}
-#endif
-
 /* All RAM variables declared in ram_map.h.
  * Mapping from original addresses:
  *   0x121E → ssDebounce       0x1220 → ocpTimer        0x1222 → foldbackTimer
  *   0x1224 → oeTimer          0x1226 → edgeCount       0x1228 → portd6Cur
  *   0x122A → portd6Prev       0x122C → stableCount     0x122E → sampleCount
- *   0x1265 → protStatusByte       0x1BB4 → ioutAdcRaw      0x1BB6 → ocpThresholdHw
+ *   0x1265 → protectionStatus[15:8]  0x1BB4 → ioutAdcRaw   0x1BB6 → ocpThresholdHw
  *   0x1BE8 → adcLiveA         0x1D5A → voutLoThresh
  *   0x1264 → protectionStatus 0x1E20 → controlStatus
  */
@@ -62,12 +41,7 @@ static inline uint8_t simPortdRd11(void)
 void softStartRamp(void)
 {
     /* Read PORTD byte (SFR byte address 0x02DA) and isolate bit0. */
-    uint8_t portd_b0 =
-#ifdef SIMULATION_MODE
-        simPortdRd0();
-#else
-        PORTDbits.RD0;
-#endif
+    uint8_t portd_b0 = PORTDbits.RD0;
 
     /* Extract bit1 from auxFlags, then shift it down to bit0 so both
      * values occupy the same bit position for comparison.               */
@@ -108,30 +82,25 @@ void softStartRamp(void)
  * Phase-2 soft-start ramp: controls freqSetpoint during the startup ramp.
  *
  * Compares bit3 of a PORTD-adjacent byte (0x02DB) against bit3 of
- * startupFlags.  When they differ the function drives freqSetpoint toward
+ * auxFlags high-byte startup tick bits (0x1E1D).  When they differ the function drives freqSetpoint toward
  * its target:
  *   - If freqSetpoint == 0 the function reads bit3 of byte 0x02DB, places
  *     it in bit11 of auxFlags (overwriting the previous bit11), then returns.
  *   - Otherwise freqSetpoint is decremented by 1 each ISR tick until it
  *     reaches 0.
  *
- * When bit3 of the PORTD byte matches bit3 of startupFlags the function
+ * When bit3 of the PORTD byte matches bit3 of auxFlags high byte (0x1E1D) the function
  * ensures freqSetpoint is sensible:
- *   - If bit3 of startupFlags is clear  → load the nominal value 0x15E (350).
- *   - If bit3 of startupFlags is set    → keep freqSetpoint at 3 (minimum).
+ *   - If auxFlags bit11 (0x1E1D bit3) is clear  → load the nominal value 0x15E (350).
+ *   - If auxFlags bit11 (0x1E1D bit3) is set    → keep freqSetpoint at 3 (minimum).
  *   In both cases the result is written to freqSetpoint.
  * ============================================================================ */
 void softStartRamp2(void)
 {
     /* Bit3 of the byte at 0x02DB (second byte of PORTD word / high byte). */
-    uint8_t portd_b3 =
-#ifdef SIMULATION_MODE
-        simPortdRd11() ? 0x08u : 0x00u;
-#else
-        PORTDbits.RD11 ? 0x08u : 0x00u;
-#endif
+    uint8_t portd_b3 = PORTDbits.RD11 ? 0x08u : 0x00u;
 
-    /* Bit3 of startupFlags. */
+    /* Bit3 of auxFlags high byte (0x1E1D). */
     uint8_t flag_b3  = (auxFlags & (1u << 11)) ? 0x08u : 0x00u;
 
     if (portd_b3 == flag_b3) {
@@ -148,12 +117,7 @@ void softStartRamp2(void)
     int16_t fs = freqSetpoint;
     if (fs == 0) {
         /* Ramp complete: copy bit3 of 0x02DB into bit11 of auxFlags. */
-        uint16_t bit11 =
-#ifdef SIMULATION_MODE
-            (uint16_t)simPortdRd11() << 11;
-#else
-            (uint16_t)PORTDbits.RD11 << 11;
-#endif
+        uint16_t bit11 = (uint16_t)PORTDbits.RD11 << 11;
         uint16_t f     = auxFlags;
         f &= ~(1u << 11);
         f |= bit11;
@@ -201,7 +165,7 @@ void stateControlMachine(void)
  *     protectionStatus bit7.
  *   - Checks a second threshold 0x1781 (6017):
  *       - If Imeas_scaled <= 0x1781 and LATD bit4 is clear and
- *         protStatusByte bit2 is clear → return without fault.
+ *         protectionStatus bit10 (0x1265 bit2) is clear → return without fault.
  *       - Otherwise (Imeas_scaled > 0x1781 or gate conditions fail):
  *         set protectionStatus bit7 (OCP fault latch) and return.
  *   - If Imeas_scaled <= 0x1401: reload OCP timer with controlStatus bit0
@@ -211,7 +175,7 @@ void stateControlMachine(void)
  *   - Still checks Imeas_scaled vs p_ocp_thresh (0x1BB4).
  *   - If Imeas_scaled <= p_ocp_thresh and vrefOcpAdj <= 0: skip.
  *   - Otherwise: increment p_foldback_timer; if >= 0x225 (549) set
- *     protStatusByte bit0 (foldback active flag).
+ *     protectionStatus bit8 (0x1265 bit0, foldback active flag).
  * ============================================================================ */
 void stateInit(void)
 {
@@ -246,7 +210,7 @@ void stateInit(void)
         foldbackTimer = ft;
 
         if (ft > 0x0225u) {         /* 549 ticks */
-            protStatusByte |= (1u << 0);  /* set bit0: foldback active */
+            protectionStatus |= (1u << 8);  /* set bit0: foldback active */
         }
         return;
     }
@@ -269,8 +233,8 @@ void stateInit(void)
         /* Between 0x1401 and 0x1781: check LATD bit4 and inhibit flag. */
         if (!LATDbits.LATD4) {
             /* LATD bit4 clear */
-            if (!(protStatusByte & (1u << 2))) {
-                /* protStatusByte bit2 clear: no inhibit — return without fault */
+            if (!(protectionStatus & (1u << 10))) {
+                /* protectionStatus bit10 clear: no inhibit — return without fault */
                 return;
             }
         }
@@ -297,7 +261,7 @@ void stateInit(void)
  *   Compares Imeas_scaled (0x1D42) against p_ocp_thresh (0x1BB4).
  *   If Imeas_scaled > p_ocp_thresh OR vrefOcpAdj > 0:
  *     Increment p_foldback_timer (0x1222).
- *     If >= 0x225 (549): set protStatusByte bit0 (foldback active).
+ *     If >= 0x225 (549): set protectionStatus bit8 (0x1265 bit0, foldback active).
  *   Else: reset foldback timer to W2 (0 from the AND mask).
  *
  * When droopMode != 3:
@@ -340,7 +304,7 @@ void voltageRegulation(void)
     foldbackTimer = ft;
 
     if (ft > 0x0225u) {                 /* 549 ticks (~549 × T1 period) */
-        protStatusByte |= (1u << 0);        /* set foldback-active flag */
+        protectionStatus |= (1u << 8);        /* set foldback-active flag */
     }
 }
 
@@ -373,7 +337,7 @@ void voltageRegulation(void)
  *       Then check ADCBUF5 vs 0x16B (363): if <= 363 jump to de-assert.
  *       Check llcPeriodCmd vs p_vout_lo_thresh:
  *         if llcPeriodCmd <= threshold: jump to de-assert.
- *         Check protStatusByte bit3: if clear → jump to de-assert.
+ *         Check protectionStatus bit11 (0x1265 bit3): if clear → jump to de-assert.
  *         Else: assert LATF bit0 and return.
  *
  * De-assert path (label ~0x2EFC):
@@ -442,8 +406,8 @@ void outputEnable(void)
             goto deassert;
         }
 
-        /* Check output-ready flag (protStatusByte bit3). */
-        if (!(protStatusByte & (1u << 3))) {
+        /* Check output-ready flag (protectionStatus bit11 / 0x1265 bit3). */
+        if (!(protectionStatus & (1u << 11))) {
             goto deassert;
         }
 
@@ -555,17 +519,12 @@ void countdownTick(void)
  *      b.  If systemState != 2: clear p_stable_cnt.
  *      c.  Compute: outputVoltage = p_edge_cnt * 150.
  *      d.  Clear p_edge_cnt and p_sample_cnt.
- *      e.  Set startupFlags bit0 (measurement-complete flag).
+ *      e.  Set auxFlags bit8 (0x1E1D bit0, measurement-complete flag).
  * ============================================================================ */
 void portdSample(void)
 {
     /* Step 1: sample PORTD bit6 */
-    uint16_t bit6 =
-#ifdef SIMULATION_MODE
-        (uint16_t)simPortdRd6();
-#else
-        (uint16_t)PORTDbits.RD6;
-#endif
+    uint16_t bit6 = (uint16_t)PORTDbits.RD6;
     portd6Cur = bit6;
 
     /* Step 2: edge detection */
@@ -623,7 +582,7 @@ void portdSample(void)
     sampleCount = 0;
 
     /* Signal that a fresh measurement is available. */
-    startupFlags |= (1u << 0);
+    auxFlags |= (1u << 8);
 }
 
 #endif /* UNIT_TEST_MINIMAL */

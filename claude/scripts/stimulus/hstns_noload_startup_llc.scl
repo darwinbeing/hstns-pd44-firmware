@@ -1,0 +1,68 @@
+testbench for "dsPIC33FJ64GS606" is
+begin
+   -- Keep oscillator lock for firmware init path.
+   process is
+   begin
+      OSCCON.COSC <= "011";
+      OSCCON.LOCK <= '1';
+      ACLKCON.APLLCK <= '1';
+      wait for 1 ic;
+   end process;
+
+   -- Startup digital enables.
+   process is
+   begin
+      RD0 <= '1';
+      RD11 <= '1';
+      RD6 <= '0';
+      wait;
+   end process;
+
+   -- Fixed non-vout ADC channels (no-load case).
+   process is
+   begin
+      ADCBUF1  <= 688;
+      ADCBUF3  <= 917;
+      ADCBUF4  <= 10;    -- AN4 current sense: no-load
+      ADCBUF6  <= 158;
+      ADCBUF7  <= 974;
+      ADCBUF8  <= 1023;
+      ADCBUF9  <= 0;
+      ADCBUF10 <= 692;
+      ADCBUF11 <= 607;
+      ADCBUF12 <= 0;
+      ADCBUF13 <= 233;
+      ADCBUF14 <= 0;
+      ADCBUF15 <= 1019;
+      wait;
+   end process;
+
+   -- No-load startup: AN0/AN2/AN5 slowly rise to no-load point.
+   process is
+   begin
+      ADCBUF0 <= 560;
+      ADCBUF2 <= 562;
+      ADCBUF5 <= 565;
+      wait for 150000 ic;
+
+      ADCBUF0 <= 620;
+      ADCBUF2 <= 622;
+      ADCBUF5 <= 625;
+      wait for 150000 ic;
+
+      ADCBUF0 <= 690;
+      ADCBUF2 <= 692;
+      ADCBUF5 <= 695;
+      wait for 150000 ic;
+
+      ADCBUF0 <= 740;
+      ADCBUF2 <= 742;
+      ADCBUF5 <= 745;
+      wait for 150000 ic;
+
+      ADCBUF0 <= 777;   -- no-load snapshot
+      ADCBUF2 <= 778;
+      ADCBUF5 <= 791;
+      wait;
+   end process;
+end testbench;

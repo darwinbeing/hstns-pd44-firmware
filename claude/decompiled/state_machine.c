@@ -38,7 +38,7 @@ extern void flashCalibrationLoad(void);     /* 0x3B5E */
 extern void voltageErrorTracking(void);     /* 0x40C2 */
 extern void currentRegulation(void);        /* 0x3F0E */
 extern void flashReadbackHandler(void);     /* 0x42C8 */
-extern void uptimeCounter(void);            /* 0x50D4 */
+extern void uptimeCounterUpdate(void);      /* 0x50D4 */
 extern void vinUvpCheck(void);              /* 0x512C */
 extern void powerGoodCheck(void);           /* 0x514A */
 
@@ -107,10 +107,10 @@ void i2cService(void)
  * ============================================================================ */
 void startupControl(void)
 {
-    if (!(startupFlags & 0x0001))
+    if (!(auxFlags & (1u << 8)))
         return;
 
-    startupFlags &= ~0x0001;         /* clear tick flag */
+    auxFlags &= ~(1u << 8);         /* clear tick flag */
 
     uint16_t vout = outputVoltage;       /* 0x1BD4 */
 
@@ -185,9 +185,11 @@ void startupControl(void)
  * ============================================================================ */
 void mainStateDispatch(void)
 {
-    /* Check T4 timer trigger flag (BCLR/BTST 0x87 bit3 = IFS1 high byte bit3 = T4IF) */
-    if (!IFS1bits.T4IF)
+    /* Check T4 timer trigger flag (0x87 bit3 -> IFS1 bit11). */
+    if ((IFS1 & 0x0800u) == 0u)
         return;
+
+    dbg_main_stage = 30;
 
     /* ---- State dispatch ---- */
     switch (systemState) {
@@ -201,9 +203,13 @@ void mainStateDispatch(void)
     }
 
     /* ---- Common monitoring ---- */
+    dbg_main_stage = 31;
     monitorVin();                   /* 0x4DBC */
+    dbg_main_stage = 32;
     monitorVout();                  /* 0x4DEA */
+    dbg_main_stage = 33;
     monitorIout();                  /* 0x4EFC */
+    dbg_main_stage = 34;
     monitorTemperature();           /* 0x4F92 */
 
     /* Compute "fault present" bit -> controlStatus bit1 */
@@ -211,30 +217,33 @@ void mainStateDispatch(void)
     controlStatus = (controlStatus & ~0x0002) | ((fault_bit << 1) & 0x0002);
 
     /* ---- Common services ---- */
-#ifndef SIMULATION_MODE
+    dbg_main_stage = 40;
     updateStatusLeds();             /* 0x571E */
+    dbg_main_stage = 41;
     t1IsrI2cBody();                 /* 0x29FA */
+    dbg_main_stage = 42;
     checkFanControl();              /* 0x4FBC */
+    dbg_main_stage = 43;
     checkStandbyRail();             /* 0x4FEE */
+    dbg_main_stage = 44;
     checkEnablePin();               /* 0x5108 */
+    dbg_main_stage = 45;
     updatePmbusStatus();            /* 0x546C */
+    dbg_main_stage = 46;
     checkOtp();                     /* 0x4D94 */
-#ifndef SIMULATION_MODE
-    //flashCalibrationLoad();         /* 0x3B5E */
-#endif
+    /* flashCalibrationLoad(); */   /* 0x3B5E: keep disabled in SIM (SPI Flash wait loop blocks main dispatch) */
+    dbg_main_stage = 47;
     voltageErrorTracking();         /* 0x40C2 */
+    dbg_main_stage = 48;
     currentRegulation();            /* 0x3F0E */
-#ifndef SIMULATION_MODE
-    flashReadbackHandler();         /* 0x42C8 */
-#endif
-    uptimeCounter();                /* 0x50D4 */
+    /* flashReadbackHandler(); */   /* 0x42C8: keep disabled in SIM */
+    dbg_main_stage = 49;
+    uptimeCounterUpdate();                /* 0x50D4 */
+    dbg_main_stage = 50;
     vinUvpCheck();                 /* 0x512C */
+    dbg_main_stage = 51;
     powerGoodCheck();              /* 0x514A */
-#else
-    uptimeCounter();                /* keep basic timebase alive */
-    powerGoodCheck();               /* keep power-good evaluation */
-#endif
 
     ClrWdt();
-    IFS1bits.T4IF = 0;              /* clear T4 trigger flag */
+    IFS1 &= (uint16_t)~0x0800u;     /* clear T4 trigger flag */
 }

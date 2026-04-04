@@ -1,0 +1,29 @@
+testbench for "dsPIC33FJ64GS606" is
+begin
+   -- Emulate oscillator lock indications so firmware initClock() can proceed
+   -- in simulator without source-code bypasses.
+   process is
+   begin
+      OSCCON.COSC <= "011";
+      OSCCON.LOCK <= '1';
+      ACLKCON.APLLCK <= '1';
+      wait for 1 ic;
+   end process;
+
+   -- External digital hardware inputs.
+   process is
+   begin
+      RD0 <= '1';   -- PSU enable input
+      RD11 <= '1';  -- supply-good input
+      wait;
+   end process;
+
+   -- Optional edge activity on RD6 (telemetry/edge-count path).
+   process is
+   begin
+      RD6 <= '0';
+      wait for 100 us;
+      RD6 <= '1';
+      wait for 100 us;
+   end process;
+end testbench;

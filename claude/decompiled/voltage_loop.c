@@ -13,10 +13,6 @@
  * ============================================================================ */
 #include <xc.h>
 #include "variables.h"
-#ifdef SIMULATION_MODE
-#include "simulator.h"
-#endif
-
 /* Forward declaration */
 void pwmOverrideEnable(void);
 
@@ -88,12 +84,7 @@ VLOOP_LOCAL uint16_t latchCounter430C(uint16_t new_level, uint16_t limit,
  * ============================================================================ */
 void adcBuf12OvercurrentLatch(void)
 {
-    uint16_t adc12 =
-#ifdef SIMULATION_MODE
-        (uint16_t)sim_debug.adcbuf12;
-#else
-        (uint16_t)ADCBUF12;
-#endif
+    uint16_t adc12 = (uint16_t)ADCBUF12;
 
     /* 433E..4362: comparator + latch update for pwmRunning.bit3 */
     {
@@ -182,12 +173,7 @@ void adcBuf12OvercurrentLatch(void)
  * ============================================================================ */
 void adcBuf4FastAverage(void)
 {
-    int16_t adc4 =
-#ifdef SIMULATION_MODE
-        sim_debug.adcbuf4;
-#else
-        ADCBUF4;
-#endif
+    int16_t adc4 = ADCBUF4;
     adcBuf4Raw = adc4;                               /* save raw */
 
     int16_t idx = ioutRingIdx8pt;
@@ -287,12 +273,7 @@ void voutCalibrationAndOvpDetect(void)
     int16_t vavg_div4 = vout_avg_sum >> 2;           /* W8 */
 
     /* Calibrate ADCBUF5: (ADCBUF5 * cal_va2) >> 13 + ofs_va2 */
-    int16_t adc5 =
-#ifdef SIMULATION_MODE
-        sim_debug.adcbuf5;
-#else
-        ADCBUF5;
-#endif
+    int16_t adc5 = ADCBUF5;
     int32_t prod = __mulsi3((int32_t)adc5, (int32_t)cal_va2);
     int16_t cal_result = (int16_t)(prod >> 13) + ofs_va2;
     voutCalibrated = cal_result;                           /* 0x1D66 */

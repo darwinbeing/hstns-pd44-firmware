@@ -1,0 +1,94 @@
+testbench for "dsPIC33FJ64GS606" is
+begin
+   process is
+   begin
+      OSCCON.COSC <= "011";
+      OSCCON.LOCK <= '1';
+      ACLKCON.APLLCK <= '1';
+      wait for 1 ic;
+   end process;
+
+   process is
+   begin
+      RD0 <= '1';
+      RD11 <= '1';
+      RD6 <= '0';
+      wait;
+   end process;
+
+   process is
+   begin
+      ADCBUF1  <= 688;
+      ADCBUF3  <= 917;
+      ADCBUF4  <= 10;
+      ADCBUF6  <= 158;
+      ADCBUF7  <= 974;
+      ADCBUF8  <= 1023;
+      ADCBUF9  <= 0;
+      ADCBUF10 <= 692;
+      ADCBUF11 <= 607;
+      ADCBUF12 <= 0;
+      ADCBUF13 <= 233;
+      ADCBUF14 <= 0;
+      ADCBUF15 <= 1019;
+      wait;
+   end process;
+
+   process is
+   begin
+      ADCBUF0 <= 0;
+      ADCBUF2 <= 0;
+      ADCBUF5 <= 0;
+      wait for 120000 ic;
+
+      ADCBUF0 <= 80;
+      ADCBUF2 <= 82;
+      ADCBUF5 <= 84;
+      wait for 120000 ic;
+
+      ADCBUF0 <= 160;
+      ADCBUF2 <= 162;
+      ADCBUF5 <= 165;
+      wait for 120000 ic;
+
+      ADCBUF0 <= 240;
+      ADCBUF2 <= 242;
+      ADCBUF5 <= 246;
+      wait for 120000 ic;
+
+      ADCBUF0 <= 320;
+      ADCBUF2 <= 322;
+      ADCBUF5 <= 327;
+      wait for 120000 ic;
+
+      ADCBUF0 <= 420;
+      ADCBUF2 <= 422;
+      ADCBUF5 <= 430;
+      wait for 120000 ic;
+
+      ADCBUF0 <= 520;
+      ADCBUF2 <= 522;
+      ADCBUF5 <= 530;
+      wait for 120000 ic;
+
+      ADCBUF0 <= 620;
+      ADCBUF2 <= 622;
+      ADCBUF5 <= 628;
+      wait for 120000 ic;
+
+      ADCBUF0 <= 700;
+      ADCBUF2 <= 702;
+      ADCBUF5 <= 708;
+      wait for 120000 ic;
+
+      ADCBUF0 <= 760;
+      ADCBUF2 <= 762;
+      ADCBUF5 <= 768;
+      wait for 120000 ic;
+
+      ADCBUF0 <= 777;
+      ADCBUF2 <= 778;
+      ADCBUF5 <= 791;
+      wait;
+   end process;
+end testbench;

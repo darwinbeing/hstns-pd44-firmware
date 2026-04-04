@@ -95,6 +95,10 @@ static inline void pwmOverrideEnableInline(void)
  * ============================================================================ */
 void state0Idle(void)
 {
+    uint16_t fail = 0;
+
+    dbg_state0_calls++;
+
     /* Disable PWM outputs */
     pwmOverrideEnable();   /* RCALL 0x4B50 */
 
@@ -115,7 +119,7 @@ void state0Idle(void)
     IOCON2bits.PENL = 1;
 
     /* Clear droop / regulation flags */
-    ovpDebounceFlags &= ~(1u << 5);  /* BCLR 0x1263 #5 */
+    statusFlags2 &= ~(1u << 13);  /* BCLR 0x1263 #5 */
     droopMode = 0;              /* 0x1268 */
 
     /* Initialise PID coefficient */
@@ -141,23 +145,20 @@ void state0Idle(void)
 
     /* ---------- Evaluate transition to STARTUP ---------- */
 
-    /* Stay in IDLE until marginThreshold counts down to zero. */
-    if (marginThreshold != 0)
-        goto done;
-
     {
         uint16_t f1e1c = auxFlags;
 
-        /* Require auxFlags bit11 set (supply-good indicator) */
+        if (marginThreshold != 0)
+            fail |= 0x0001u;
         if (!(f1e1c & (1u << 11)))
-            goto done;
-
-        /* Require Vin-present flag (flags_1BF2 bit3) */
+            fail |= 0x0002u;
         if (!(pwmRunning & (1u << 3)))
-            goto done;
-
-        /* Require enable signal (auxFlags bit1) */
+            fail |= 0x0004u;
         if (!(f1e1c & (1u << 1)))
+            fail |= 0x0008u;
+
+        dbg_state0_fail = fail;
+        if (fail != 0)
             goto done;
 
         /* Handle restart latches */
@@ -173,6 +174,7 @@ void state0Idle(void)
             droopEnableFlags &= ~(1u << 2);
         }
 
+        dbg_state0_passes++;
         /* Reset startup tick counter and advance to STARTUP */
         startupTickCnt  = 0;
         systemState  = 1;           /* → STARTUP */
@@ -180,7 +182,7 @@ void state0Idle(void)
 
 done:
     /* Clear active flag */
-    ovpDebounceFlags &= ~(1u << 6);  /* BCLR 0x1263 #6 */
+    statusFlags2 &= ~(1u << 14);  /* BCLR 0x1263 #6 */
 }
 
 /* ============================================================================
@@ -209,7 +211,7 @@ void state1Startup(void)
 
     /* ----- Non-timeout tick: re-initialise soft timer and clear flags ----- */
     faultResetTimer = 0xA0;                          /* fault soft-reset timer = 160 */
-    protStatusByte &= ~(1u << 5); /* BCLR 0x1265 #5 */
+    protectionStatus &= ~(1u << 13); /* BCLR 0x1265 #5 */
     auxFlags &= ~(1u << 2);                   /* BCLR 0x1E1C #2 */
     controlStatus = 0;                             /* clear controlStatus */
     startupResetLatch2 = 0;
@@ -220,7 +222,7 @@ void state1Startup(void)
     {
         uint16_t vref;
 
-        if (internalStatusFlags & (1u << 3)) {
+        if (currentLimitFlags & (1u << 11)) {
             /* Droop mode 3 active: use high-droop Vref 0x6B3 = 1715 */
             vref = 0x06B3;
         } else {
@@ -238,10 +240,10 @@ void state1Startup(void)
     systemState = ST_ACTIVE;                            /* → ACTIVE */
 
     /* Set active flag */
-    ovpDebounceFlags |= (1u << 6); /* BSET 0x1263 #6 */
+    statusFlags2 |= (1u << 14); /* BSET 0x1263 #6 */
 
     /* Clear OT shutdown flag */
-    internalStatusFlags &= ~(1u << 7);
+    currentLimitFlags &= ~(1u << 15);
 
 arm_stage:
     /* Set OC2RS to 400 and update shadow */
@@ -275,11 +277,11 @@ arm_stage:
 void state3Fault(void)
 {
     /* ---- Sub-path 1: active run-down ---- */
-    if ((protStatusByte & (1u << 5)) &&
+    if ((protectionStatus & (1u << 13)) &&
         (controlStatus != 0)) {
 
         /* Clear run flag */
-        protStatusByte &= ~(1u << 5);
+        protectionStatus &= ~(1u << 13);
 
         /* Arm restart latches if OVP (bit1) or OCP (bit3) caused the fault */
         {
@@ -303,9 +305,9 @@ void state3Fault(void)
     /* ---- Sub-path 2: evaluate droop-mode current-limit flag ---- */
     if (currentLimitFlags >= 0) {   /* CP0 0x1E18 then BRA LT → skip if negative */
         /* Set OT-shutdown latch */
-        internalStatusFlags |= (1u << 7);
+        currentLimitFlags |= (1u << 15);
 
-        if (internalStatusFlags & (1u << 3)) {
+        if (currentLimitFlags & (1u << 11)) {
             /* Droop mode 3: check droopMode == 3 AND LATD bit4 == 0 */
             uint16_t dm = droopMode;
             if ((dm - 3u) != 0)
@@ -316,10 +318,10 @@ void state3Fault(void)
             }
         }
         /* Set droop-active flag */
-        internalStatusFlags |= (1u << 6);
+        currentLimitFlags |= (1u << 14);
         goto after_droop;
 clear_droop_bit:
-        internalStatusFlags &= ~(1u << 6);
+        currentLimitFlags &= ~(1u << 14);
     }
 after_droop:
 
@@ -327,7 +329,7 @@ after_droop:
     statusFlags = 0;
     runtimeFlags = 0;
     droopMode = 0;
-    ovpDebounceFlags &= ~(1u << 6);
+    statusFlags2 &= ~(1u << 14);
 
     pwmOverrideEnable();   /* RCALL 0x4B50 */
 
@@ -356,14 +358,14 @@ after_droop:
 
             /* OT-shutdown latch (bit6): need droop active to recover */
             if (f1262 & (1u << 6)) {
-                if (internalStatusFlags & (1u << 6))
+                if (currentLimitFlags & (1u << 14))
                     goto go_idle;
                 /* Else fall through to further checks */
             }
 
             /* Vin-UV latch (bit3): need droop active to recover */
             if (f1262 & (1u << 3)) {
-                if (internalStatusFlags & (1u << 6))
+                if (currentLimitFlags & (1u << 14))
                     goto go_idle;
                 goto stay_fault;
             }
@@ -424,14 +426,14 @@ stay_fault:
 void state5Handler(void)
 {
     /* On first entry (init flag not yet set) reset the timers */
-    if (!(internalStatusFlags & (1u << 0))) {
-        internalStatusFlags &= ~(1u << 0);   /* already clear, kept for symmetry */
+    if (!(currentLimitFlags & (1u << 8))) {
+        currentLimitFlags &= ~(1u << 8);   /* already clear, kept for symmetry */
         state5SecCounter   = 0;
         state5MsCounter   = 0;
         voutTargetCode   = (int16_t)0xFFB0;  /* reset integrator bound */
     }
     /* Set init-done flag for subsequent calls */
-    internalStatusFlags &= ~(1u << 0);   /* ensure clear (redundant but matches asm) */
+    currentLimitFlags &= ~(1u << 8);   /* ensure clear (redundant but matches asm) */
 
     /* Increment ms sub-counter */
     {
@@ -569,7 +571,7 @@ void monitorVin(void)
  *
  *   3. If vcal_diff (0x126C) > 19 AND LATF bit0 clear AND droopMode in
  *      [0,3]: run a debounce timer (ovpDebounceCnt) and optionally scale a product
- *      (ovpMultResultLo:ovpMultResultHi) against Imeas_cal_a.  If the product exceeds 0x2183
+ *      (ovpMultResult) against Imeas_cal_a.  If the product exceeds 0x2183
  *      increment ovpTripCounter; if ovpTripCounter > 0x4B0 set OCP flag (0x1E21 bit2).
  *
  *   4. Compare voutOvpThreshold against W9 (ADCBUF1 clamped) and vinCooldownTimer against
@@ -716,8 +718,7 @@ cap_55:
             int32_t product = (int32_t)(int16_t)ovpDebounceCnt *
                               (int32_t)(int16_t)Imeas_cal_a;
             /* Store 32-bit result */
-            ovpMultResultLo = (uint16_t)(product & 0xFFFF);
-            ovpMultResultHi = (uint16_t)((uint32_t)product >> 16);
+            ovpMultResult = (uint32_t)product;
 
             /* Compare product against 0x2183 */
             if (product <= (int32_t)0x00002183) {
@@ -733,7 +734,7 @@ cap_55:
                 if (dfc > 0x04B0u) {
                     /* Trip OCP */
                     ovpTripCounter = 0x04B0u;
-                    ocpTripFlags |= (1u << 2);   /* BSET 0x1E21 #2 */
+                    controlStatus |= (1u << 10);   /* BSET 0x1E21 #2 */
                     goto check_threshold;
                 }
             }
@@ -759,7 +760,7 @@ check_threshold:
             goto done_vout;
         }
         /* Both conditions met – set OCP flag */
-        ocpTripFlags |= (1u << 2);
+        controlStatus |= (1u << 10);
     }
 
 done_vout:
@@ -828,7 +829,7 @@ void monitorIout(void)
             if (adc11_avg > 0x00F5u)
                 return;   /* adc value too high – no fault */
             /* Recovery: clear OCP flags */
-            fwUpdateFlags &= ~(1u << 7);
+            systemFlags &= ~(1u << 15);
             systemFlags &= ~(1u << 7);
             return;
         }
@@ -840,7 +841,7 @@ void monitorIout(void)
 
             if (lut_val2 > 0x0055u) {
                 if (adc11_avg > 0x00F5u) {
-                    fwUpdateFlags &= ~(1u << 7);
+                    systemFlags &= ~(1u << 15);
                     systemFlags &= ~(1u << 7);
                     return;
                 }
@@ -853,7 +854,7 @@ void monitorIout(void)
                     /* droopMode 4 */
                     if (lut_val2 > 0x006Au) {
                         if (adc11_avg <= 0x00F9u) {
-                            fwUpdateFlags |= (1u << 7);
+                            systemFlags |= (1u << 15);
                             return;
                         }
                     }
@@ -865,7 +866,7 @@ check_dm3_path:
                 if ((dm - 3u) == 0) {
                     if (lut_val2 > 0x006Au) {
                         if (adc11_avg <= 0x00F9u) {
-                            fwUpdateFlags |= (1u << 7);
+                            systemFlags |= (1u << 15);
                             return;
                         }
                     }
@@ -894,7 +895,7 @@ check_dm3_path:
             if ((dm - 4u) == 0) {
                 if (lut_val2 > 0x006Au) {
                     if (adc11_avg > 0x00F9u) {
-                        fwUpdateFlags |= (1u << 7);
+                        systemFlags |= (1u << 15);
                         return;
                     }
                 }
@@ -909,20 +910,20 @@ check_dm3_path:
  *
  * Called each tick.  Reads tempAdcValue (temperature ADC value).
  * If the over-temperature flag (systemFlags bit5) is already set AND
- * bit6 of protStatusByte is set (active run flag), set restart latch 0x1E1E bit2.
+ * protectionStatus bit14 (0x1265 bit6, active run flag) is set, set restart latch 0x1E1E bit2.
  *
  * Regardless, if tempAdcValue > 85 (0x55) → no action (temperature OK).
  *
- * Otherwise if protStatusByte bit6 is clear (not running):
+ * Otherwise if protectionStatus bit14 (0x1265 bit6) is clear (not running):
  *   If droopMode == 3 AND tempAdcValue > 102 (0x66): set PMBus alert and
  *   systemFlags bit5 (OT warning).
  *
- * If protStatusByte bit6 is set (running):
+ * If protectionStatus bit14 (0x1265 bit6) is set (running):
  *   The check passes without further action.
  * ============================================================================ */
 void monitorTemperature(void)
 {
-    uint8_t running = (uint8_t)(protStatusByte >> 6) & 1u;
+    uint8_t running = (uint8_t)((protectionStatus >> 14) & 1u);
 
     if (!running) {
         /* Not running: check for OT warning via systemFlags bit5 */
@@ -1064,7 +1065,7 @@ void checkStandbyRail(void)
                     /* OT/fault active */
                     if ((dm1 - 4u) == 0) {
                         /* droopMode == 4: check 0x1E19 bit3 */
-                        if (!(internalStatusFlags & (1u << 3)))
+                        if (!(currentLimitFlags & (1u << 11)))
                             goto force_relay_on;
                     }
                 }
@@ -1188,33 +1189,29 @@ set_pwm_flag:
  * uptimeCounter — 32-bit uptime counter with flash-write trigger
  * Assembly: 0x50D4 – 0x5106
  *
- * If fwUpdateFlags bit1 is clear the 32-bit counter at uptimeCounterLo:uptimeCounterHi is
+ * If systemFlags bit9 (0x1E1B bit1) is clear the 32-bit uptimeCounter is
  * zeroed, otherwise:
- *   - Increments uptimeCounterLo:uptimeCounterHi (32-bit add with carry)
+ *   - Increments uptimeCounter (32-bit add with carry)
  *   - If the counter exceeds 0x001B_773F (1,800,511) it clears bit1 of
- *     fwUpdateFlags, prepares flash-write parameters and calls two flash
+ *     systemFlags bit9, prepares flash-write parameters and calls two flash
  *     service routines (5A88 = flash write, 5AB8 = flash CRC), storing
  *     the result in flashUpdateResult.
  * ============================================================================ */
-void uptimeCounter(void)
+void uptimeCounterUpdate(void)
 {
-    if (!(fwUpdateFlags & (1u << 1))) {
+    if (!(systemFlags & (1u << 9))) {
         /* Counter not running – reset */
-        uptimeCounterLo = 0;
-        uptimeCounterHi = 0;
+        uptimeCounter = 0;
         return;
     }
 
     /* Increment 32-bit counter */
     {
-        uint32_t cnt = ((uint32_t)uptimeCounterHi << 16) | uptimeCounterLo;
-        cnt++;
-        uptimeCounterLo = (uint16_t)(cnt & 0xFFFFu);
-        uptimeCounterHi = (uint16_t)(cnt >> 16);
+        uptimeCounter++;
 
         /* Check against threshold 0x001B_773F */
-        if (cnt > 0x001B773Fu) {
-            fwUpdateFlags &= ~(1u << 1);    /* clear "counter running" flag */
+        if (uptimeCounter > 0x001B773Fu) {
+            systemFlags &= ~(1u << 9);    /* clear "counter running" flag */
 
             /* Prepare flash write: page data W2=0, W1=0xFF */
             {
@@ -1282,7 +1279,7 @@ void checkEnablePin(void)
  *
  * If vcal_b > 0x13E (318):  set auxFlags bit5 (Vin OK) → return
  * If vcal_b <= 0xFF (255):  clear auxFlags bit5 (Vin UV)
- *   - If LATF bit1 is set: clear bit3 of i2cStatusByte (fan enable)
+ *   - If LATF bit1 is set: clear droopEnableFlags bit11 (0x1BEB bit3, fan enable)
  * If vcal_b in (255, 318]:  no change (hysteresis band)
  * ============================================================================ */
 void vinUvpCheck(void)
@@ -1305,7 +1302,7 @@ void vinUvpCheck(void)
 
     /* If output relay is on (LATF bit1), disable fan */
     if (LATFbits.LATF1) {
-        i2cStatusByte &= ~(1u << 3);   /* clear fan enable bit */
+        droopEnableFlags &= ~(1u << 11);   /* clear fan enable bit */
     }
 }
 
@@ -1450,7 +1447,7 @@ no_fault:
 
         if (cl != 0) {
             /* Current limiting is active */
-            protStatusByte |= (1u << 4);
+            protectionStatus |= (1u << 12);
 
             /* If auxFlags bit1 is clear → transition to state 5 */
             if (!(auxFlags & (1u << 1))) {
@@ -1460,11 +1457,11 @@ no_fault:
                 pmbusAlertFlags  |= (1u << 0);
                 pwmOverrideEnable();     /* RCALL 0x4B50 */
                 systemState = ST_HOLDOFF;      /* → STATE5 */
-                protStatusByte &= ~(1u << 4);
+                protectionStatus &= ~(1u << 12);
             }
         } else {
             /* Not limiting */
-            protStatusByte &= ~(1u << 4);
+            protectionStatus &= ~(1u << 12);
         }
     }
 

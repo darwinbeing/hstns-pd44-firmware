@@ -264,7 +264,7 @@ void flashPageProgramRead(void)
     if (!(flashCmdFlags & (1u << 1))) return;
 
     at45dbPageRead(flash_buf_181E, 256,
-                   i2cRxDataHi, i2cRxDataLo);
+                   (uint8_t)(i2cRxData >> 8), (uint8_t)i2cRxData);
 
     I2C2CONbits.SCLREL = 1;
     flashCmdFlags &= ~(1u << 1);
@@ -306,12 +306,12 @@ void flashPageReadWrite(void)
  * ============================================================================ */
 void fwUpdateWriteVerify(void)
 {
-    if (!(fwUpdateFlags & (1u << 0))) return;
+    if (!(systemFlags & (1u << 8))) return;
 
     if (flash_write_offset <= 0x9FFF) {
         /* ---- Write phase ---- */
         at45dbPageRead(flash_buf_256, 256,
-                       flash_write_page_hi, 0);
+                       (uint8_t)(flash_write_offset >> 8), 0);
 
         uint16_t new_offset = flash_write_offset + 256;
         uint16_t crc_len = (new_offset <= 0x9FFF) ? 256 : 252;
@@ -335,7 +335,7 @@ void fwUpdateWriteVerify(void)
             eepromSetConfig(0xFF, 2, 0xFF);   /* status = FAIL */
         }
 
-        fwUpdateFlags &= ~(1u << 0);
+        systemFlags &= ~(1u << 8);
     }
 }
 
@@ -369,7 +369,7 @@ void flashReadPage7(void)
 
     if (!(LATF & (1u << 1))) {
         at45dbPageErase(7);
-        at45dbBufferWrite(flash_read_buf_15E6, 32);
+        at45dbBufferWrite((uint8_t *)(void *)flash_read_buf_15E6, 32);
         at45dbBufferProgramToPage(7);
     }
 

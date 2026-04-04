@@ -5,7 +5,6 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>../decompiled/variables.h</itemPath>
-      <itemPath>../decompiled/simulator.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -37,7 +36,6 @@
       <itemPath>../decompiled/variables.c</itemPath>
       <itemPath>../decompiled/stubs.c</itemPath>
       <itemPath>../decompiled/serial.c</itemPath>
-      <itemPath>../decompiled/simulator.c</itemPath>
       <itemPath>../decompiled/trap.c</itemPath>
     </logicalFolder>
   </logicalFolder>
@@ -52,7 +50,7 @@
         <targetDevice>dsPIC33FJ64GS606</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>PK5Tool</platformTool>
+        <platformTool>Simulator</platformTool>
         <languageToolchain>XC16</languageToolchain>
         <languageToolchainVersion>2.10</languageToolchainVersion>
         <platform>4</platform>
@@ -256,7 +254,7 @@
         <property key="communication.speed" value="${communication.speed.default}"/>
         <property key="debugoptions.debug-startup" value="Use system settings"/>
         <property key="debugoptions.reset-behaviour" value="Use system settings"/>
-        <property key="debugoptions.useswbreakpoints" value="true"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
         <property key="event.recorder.debugger.behavior" value="Running"/>
         <property key="event.recorder.enabled" value="false"/>
         <property key="event.recorder.scvd.files" value=""/>

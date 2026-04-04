@@ -33,10 +33,6 @@ static void trapRecordAndHalt(uint16_t cause)
     /* Stop PWM timebase if enabled. */
     PTCONbits.PTEN = 0;
 
-#ifdef SIMULATION_MODE
-    __builtin_software_breakpoint();
-#endif
-
     for (;;) {
         Nop();
     }

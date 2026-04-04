@@ -24,10 +24,6 @@
  * ============================================================================ */
 #include <xc.h>
 #include "variables.h"
-#ifdef SIMULATION_MODE
-#include "simulator.h"
-#endif
-
 /* Sub-routine declarations */
 extern void adcBuf12OvercurrentLatch(void);            /* 0x433C - ADC trigger+wait */
 extern void adcBuf4FastAverage(void);             /* 0x43D4 - apply PWM shadow regs */
@@ -76,18 +72,8 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
     /* 0x45A0-0x45C0 */
     adcBuf12OvercurrentLatch();                               /* 0x433C */
 
-    int16_t va =
-#ifdef SIMULATION_MODE
-        sim_debug.adcbuf0;
-#else
-        ADCBUF0;
-#endif
-    int16_t vb =
-#ifdef SIMULATION_MODE
-        sim_debug.adcbuf2;
-#else
-        ADCBUF2;
-#endif
+    int16_t va = ADCBUF0;
+    int16_t vb = ADCBUF2;
     adcAn0Raw = va;               /* save AN0 raw */
     adcAn2Raw = vb;               /* save AN2 raw */
 
@@ -166,7 +152,7 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
     /* ==== Section 6: Droop compensation + transient gain boost ==== */
     /* 0x467A-0x46C4 */
     if (voltageError > 20 && (statusFlags & (1u << 9)) &&
-        !(droopBoostFlags & (1u << 1))) {
+        !(runtimeFlags & (1u << 9))) {
         /* Transient detected: set droopPeriod = 1500, cap error to 50 */
         droopKffFactor = 0x5DC;                     /* 1500 */
         voltageError = 50;                         /* 0x32 */
@@ -183,7 +169,7 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
         yn2 = __mulsi3(yn2, 0x73) >> 7;
         compY_n2 = (int32_t)(int16_t)yn2;           /* sign-extend 16-bit result */
 
-        droopBoostFlags |= (1u << 1);  /* set droop boost active */
+        runtimeFlags |= (1u << 9);     /* 0x126B bit1 */
     }
 
     /* ==== Section 6b: OVP debounce (runtimeFlags bit8) ==== */
@@ -193,7 +179,7 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
         if (droopPeriod > 19) {
             droopPeriod = 0;
             droopKffFactor = 0x400;                 /* restore normal gain */
-            droopBoostFlags &= ~(1u << 0);
+            runtimeFlags &= ~(1u << 8); /* 0x126B bit0 */
         }
     } else {
         /* 0x46DE: MOV W0,0x1DD6 with W0=0 when bit8 is clear */
@@ -207,12 +193,12 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
         if (voltageError < -25) {                  /* error + 0x19 < 0 */
             if (!(runtimeFlags & 0x100)) {            /* OVP not active */
                 droopKffFactor = 0x5DC;             /* transient boost */
-                droopBoostFlags |= (1u << 1);
-                droopBoostFlags |= (1u << 0);
+                runtimeFlags |= (1u << 9); /* 0x126B bit1 */
+                runtimeFlags |= (1u << 8); /* 0x126B bit0 */
                 uvpDebounce = runtimeFlags & 0x100;  /* save OVP state */
             }
         } else if (voltageError > 25) {            /* error > 0x19 */
-            droopBoostFlags |= (1u << 0);
+            runtimeFlags |= (1u << 8);             /* 0x126B bit0 */
             droopPeriod = 0;
         }
     }
@@ -223,7 +209,7 @@ void __attribute__((interrupt, no_auto_psv)) _T2Interrupt(void)
         if (uvpDebounce > 19) {
             uvpDebounce = 0;
             droopKffFactor = 0x400;
-            droopBoostFlags &= ~(1u << 1);
+            runtimeFlags &= ~(1u << 9);            /* 0x126B bit1 */
         }
     } else {
         /* 0x471E: MOV W0,0x1DD4 with W0=0 when bit9 is clear */

@@ -1,0 +1,56 @@
+testbench for "dsPIC33FJ64GS606" is
+begin
+   -- Clock lock for firmware init.
+   process is
+   begin
+      OSCCON.COSC <= "011";
+      OSCCON.LOCK <= '1';
+      ACLKCON.APLLCK <= '1';
+      wait for 1 ic;
+   end process;
+
+   -- Enable inputs.
+   process is
+   begin
+      RD0 <= '1';
+      RD11 <= '1';
+      RD6 <= '0';
+      wait;
+   end process;
+
+   -- Load -> no-load profile.
+   process is
+   begin
+      -- Phase A: loaded snapshot (2026-03-15)
+      ADCBUF0  <= 751;
+      ADCBUF1  <= 674;
+      ADCBUF2  <= 754;
+      ADCBUF3  <= 890;
+      ADCBUF4  <= 200;   -- AN4 current (loaded)
+      ADCBUF5  <= 758;
+      ADCBUF6  <= 158;
+      ADCBUF7  <= 974;
+      ADCBUF8  <= 1023;
+      ADCBUF9  <= 0;
+      ADCBUF10 <= 692;
+      ADCBUF11 <= 607;
+      ADCBUF12 <= 0;
+      ADCBUF13 <= 233;
+      ADCBUF14 <= 0;
+      ADCBUF15 <= 1019;
+
+      wait for 600000 ic;
+
+      -- Phase B: no-load snapshot (2026-02-19 partial)
+      ADCBUF0 <= 777;
+      ADCBUF1 <= 688;
+      ADCBUF2 <= 778;
+      ADCBUF3 <= 917;
+      ADCBUF4 <= 10;     -- AN4 current (no-load)
+      ADCBUF5 <= 791;
+      ADCBUF6 <= 158;
+      ADCBUF7 <= 974;
+
+      wait;
+   end process;
+end testbench;

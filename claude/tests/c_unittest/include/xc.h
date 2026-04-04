@@ -19,5 +19,20 @@ extern uint16_t ADCBUF14;
 extern uint16_t ADCBUF15;
 
 extern uint16_t PDC5;
+extern uint16_t PORTD;
+
+typedef struct {
+    uint16_t RD0;
+    uint16_t RD6;
+    uint16_t RD11;
+} portd_bits_t;
+
+extern volatile portd_bits_t PORTDbits;
+
+typedef struct {
+    uint16_t LATG9;
+} latg_bits_t;
+
+extern volatile latg_bits_t LATGbits;
 
 #endif /* XC_H_UNIT_TEST_STUB */

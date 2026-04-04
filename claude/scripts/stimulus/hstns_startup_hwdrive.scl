@@ -1,0 +1,32 @@
+testbench for "dsPIC33FJ64GS606" is
+begin
+   process is
+   begin
+      OSCCON.COSC <= "011";
+      OSCCON.LOCK <= '1';
+      ACLKCON.APLLCK <= '1';
+      wait for 1 ic;
+   end process;
+
+   process is
+   begin
+      RD0 <= '1';
+      RD11 <= '1';
+      RD6 <= '0';
+      wait;
+   end process;
+
+   process is
+   begin
+      ADCBUF0 <= 900;
+      ADCBUF2 <= 900;
+      ADCBUF3 <= 900;
+      ADCBUF4 <= 64;
+      ADCBUF5 <= 900;
+      ADCBUF10 <= 256;
+      ADCBUF11 <= 256;
+      ADCBUF12 <= 300;
+      ADCBUF14 <= 320;
+      wait;
+   end process;
+end testbench;

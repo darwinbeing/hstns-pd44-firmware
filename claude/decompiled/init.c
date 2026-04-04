@@ -83,7 +83,6 @@ void initClock(void)
      * Sets OSWEN=1 in OSCCONL to initiate the clock switch.               */
     __builtin_write_OSCCONL(0x01);      /* OSWEN = 1 -> start oscillator switch */
 
-#ifndef SIMULATION_MODE
     /* ---- Wait for oscillator switch to complete ----
      * Poll OSCCON[6:4] (COSC field) until it matches NOSC (0x03 << 4 = 0x30)
      * Bits [6:4] of OSCCONL are the COSC field.                           */
@@ -101,13 +100,6 @@ void initClock(void)
     ACLKCONbits.ENAPLL   = 1;          /* Enable auxiliary PLL                */
 
     while (!ACLKCONbits.APLLCK);       /* wait for auxiliary PLL lock         */
-#else
-    ACLKCONbits.ASRCSEL  = 0;
-    ACLKCONbits.FRCSEL   = 1;
-    ACLKCONbits.SELACLK  = 1;
-    ACLKCONbits.APSTSCLR = 7;
-    ACLKCONbits.ENAPLL   = 1;
-#endif
 }
 
 /* ============================================================================
@@ -139,9 +131,9 @@ void initIOPorts(void)
     TRISD = 0x0FC3;
     LATD  = 0x0008;
 
-    /* ODCD = 0x8001: open-drain on RD15 and RD0
+    /* ODCD = 0x0801: open-drain on RD11 and RD0
      * RD0 open-drain likely used for I2C or wired-OR bus signal          */
-    ODCD  = 0x8001;
+    ODCD  = 0x0801;
 
     /* ---- Port E ----
      * TRISE = 0x0000: all Port E pins are outputs
@@ -195,13 +187,7 @@ void initTIMER(void)
     /* ---- Timer 1 ---- */
     T1CON = 0x0000;                     /* stop Timer1, clear all settings     */
     TMR1  = 0x0000;                     /* clear Timer1 counter                */
-#if defined(SIM_FAST_TIMER_PERIODS)
-    /* Optional speed-up for interactive simulator stepping.
-     * Keep disabled by default so initTIMER stays assembly-faithful (0x5AF6). */
-    PR1   = 0x0400;
-#else
     PR1   = TIMER1_PERIOD_COUNTS;
-#endif
 
     /* 5B00..5B08: IPC0H = (IPC0H & 0x8F) | 0x20 -> T1IP = 2 */
     IPC0bits.T1IP = 2;
@@ -214,11 +200,7 @@ void initTIMER(void)
     /* ---- Timer 2 ---- */
     T2CON = 0x0000;                     /* stop Timer2, clear all settings     */
     TMR2  = 0x0000;                     /* clear Timer2 counter                */
-#if defined(SIM_FAST_TIMER_PERIODS)
-    PR2   = 0x0020;
-#else
     PR2   = TIMER2_PERIOD_COUNTS;
-#endif
 
     /* 5B18..5B1E: IPC1H = (IPC1H & 0x8F) | 0x40 -> T2IP = 4 */
     IPC1bits.T2IP = 4;
@@ -231,11 +213,7 @@ void initTIMER(void)
     /* ---- Timer 4 ---- */
     T4CON = 0x0000;                     /* stop Timer4, clear all settings     */
     TMR4  = 0x0000;                     /* clear Timer4 counter                */
-#if defined(SIM_FAST_TIMER_PERIODS)
-    PR4   = 0x0800;
-#else
     PR4   = TIMER4_PERIOD_COUNTS;
-#endif
 
     /* 5B2E/5B30: clear T4 interrupt flag and keep T4 interrupt disabled */
     IFS1bits.T4IF = 0;

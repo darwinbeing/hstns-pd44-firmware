@@ -3,24 +3,12 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define SIMULATION_MODE 1
 #define UNIT_TEST_MINIMAL 1
 
+#include <xc.h>
 #include "../../decompiled/variables.h"
-#include "../../decompiled/simulator.h"
 
 /* ---- Minimal global definitions used by the tested decompiled functions ---- */
-volatile sim_debug_t sim_debug;
-volatile uint16_t sim_portd_input;
-volatile uint16_t sim_trace_mode;
-volatile uint16_t sim_trace_count;
-volatile uint16_t sim_test_status;
-volatile uint16_t sim_test_failure_count;
-volatile int16_t sim_test_min_vout_reference;
-volatile int16_t sim_test_max_vout_reference;
-volatile int16_t sim_test_max_imeas;
-volatile int32_t sim_test_final_comp_out;
-
 uint16_t ADCBUF0;
 uint16_t ADCBUF1;
 uint16_t ADCBUF2;
@@ -34,6 +22,9 @@ uint16_t ADCBUF13;
 uint16_t ADCBUF14;
 uint16_t ADCBUF15;
 uint16_t PDC5;
+uint16_t PORTD;
+volatile portd_bits_t PORTDbits;
+volatile latg_bits_t LATGbits;
 
 volatile int16_t cal_vb;
 volatile int16_t ofs_vb;
@@ -52,6 +43,7 @@ volatile int16_t vcal_diff;
 volatile int16_t vraw_sum_b;
 volatile uint16_t vbuf_a[64];
 volatile uint16_t vbuf_b[64];
+volatile uint32_t tick_counter;
 
 volatile int16_t Imeas;
 volatile int16_t Imeas_scaled;
@@ -89,7 +81,7 @@ volatile int16_t vrefModeSelect;
 volatile int16_t vref_ls;
 volatile int16_t vrefOcpAdj;
 
-uint8_t flash_read_buf_15E6[32];
+int8_t flash_read_buf_15E6[32];
 
 volatile uint16_t pwmRunning;
 volatile uint16_t thermalFlags;
@@ -294,11 +286,14 @@ static int run_ocp_sweep_mode(int argc, char **argv)
 
 static void reset_state(void)
 {
-    memset((void *)&sim_debug, 0, sizeof(sim_debug));
-    sim_portd_input = 0;
     ADCBUF0 = ADCBUF1 = ADCBUF2 = ADCBUF3 = ADCBUF4 = ADCBUF5 = 0;
     ADCBUF10 = ADCBUF11 = ADCBUF12 = ADCBUF13 = ADCBUF14 = ADCBUF15 = 0;
     PDC5 = 0;
+    PORTD = 0;
+    PORTDbits.RD0 = 0;
+    PORTDbits.RD6 = 0;
+    PORTDbits.RD11 = 0;
+    tick_counter = 0;
 
     pwmRunning = 0;
     thermalFlags = 0;
@@ -422,7 +417,7 @@ static void test_adcBuf4FastAverage_medium(void)
     reset_state();
 
     for (i = 0; i < (sizeof(samples) / sizeof(samples[0])); i++) {
-        sim_debug.adcbuf4 = samples[i];
+        ADCBUF4 = (uint16_t)samples[i];
         adcBuf4FastAverage();
         model_adcbuf4_step(samples[i], model_ring, &model_idx, &model_sum, &model_avg);
         ASSERT_EQ_I32(model_idx, ioutRingIdx8pt, "ring index mismatch");
@@ -444,7 +439,7 @@ static void test_adcBuf4FastAverage_random_medium(void)
     srand(1234);
     for (i = 0; i < 128; i++) {
         int16_t s = (int16_t)(rand() % 200);
-        sim_debug.adcbuf4 = s;
+        ADCBUF4 = (uint16_t)s;
         adcBuf4FastAverage();
         model_adcbuf4_step(s, model_ring, &model_idx, &model_sum, &model_avg);
         ASSERT_EQ_I32(model_idx, ioutRingIdx8pt, "random ring index mismatch");
@@ -457,11 +452,11 @@ static void test_protection_helpers_medium(void)
 {
     volatile uint16_t cnt = 0;
 
-    /* thresholdCompare (0x30E2): below low -> 1; above high -> 0; inside band -> prev */
+    /* thresholdCompare (0x30E2): below low -> 1; <=high -> 0; above high -> prev */
     ASSERT_EQ_I32(1, thresholdCompare(90, 100, 200, 0), "thresholdCompare below low");
-    ASSERT_EQ_I32(0, thresholdCompare(210, 100, 200, 1), "thresholdCompare above high");
-    ASSERT_EQ_I32(1, thresholdCompare(150, 100, 200, 1), "thresholdCompare band keep prev=1");
-    ASSERT_EQ_I32(0, thresholdCompare(150, 100, 200, 0), "thresholdCompare band keep prev=0");
+    ASSERT_EQ_I32(1, thresholdCompare(210, 100, 200, 1), "thresholdCompare above high keep prev=1");
+    ASSERT_EQ_I32(0, thresholdCompare(210, 100, 200, 0), "thresholdCompare above high keep prev=0");
+    ASSERT_EQ_I32(0, thresholdCompare(150, 100, 200, 1), "thresholdCompare mid band forced 0");
 
     /* clampToward (0x3242): one-step toward target */
     ASSERT_EQ_I32(9, clampToward(10, 3), "clampToward down");
@@ -587,8 +582,8 @@ static void test_adc_misc_voltage_current_medium(void)
     cal_vb = 0x1FB7;
     ofs_vb = -1;
     adcVoltageSample();
-    expected_a = (int16_t)(((int32_t)ADCBUF5 * (int32_t)cal_va2) >> 13) + ofs_va2;
-    expected_b = (int16_t)(((int32_t)ADCBUF3 * (int32_t)cal_vb) >> 13) + ofs_vb;
+    expected_a = (int16_t)((((int32_t)(ADCBUF5 >> 6)) * (int32_t)cal_va2) >> 13) + ofs_va2;
+    expected_b = (int16_t)((((int32_t)(ADCBUF3 >> 6)) * (int32_t)cal_vb) >> 13) + ofs_vb;
     ASSERT_EQ_I32(expected_a, vcal_a, "adcVoltageSample vcal_a");
     ASSERT_EQ_I32(expected_b, vcal_b, "adcVoltageSample vcal_b");
     ASSERT_EQ_I32((int16_t)(expected_a - expected_b), vcal_diff, "adcVoltageSample vcal_diff");
@@ -597,7 +592,9 @@ static void test_adc_misc_voltage_current_medium(void)
     cal_a_gain = 0x2030;
     cal_a_offset = 1;
     adcCurrentSample();
-    ASSERT_EQ_I32(120, iout_avg, "adcCurrentSample iout_avg in SIM path");
+    ASSERT_EQ_I32(120, (int16_t)iout_4buf[0], "adcCurrentSample stores ADCBUF4 into 64-ring");
+    ASSERT_EQ_I32(2, Imeas_cal_a, "adcCurrentSample Imeas_cal_a");
+    ASSERT_EQ_I32(1, Imeas, "adcCurrentSample Imeas from iout_avg path");
     ASSERT_TRUE(Imeas >= 0, "adcCurrentSample Imeas non-negative");
     ASSERT_TRUE(Imeas_scaled >= 0, "adcCurrentSample Imeas_scaled non-negative");
 }
@@ -649,7 +646,7 @@ static void configure_oc_flag_zero_inputs(void)
 {
     /* cmp -> 1, new_level -> 0, prev_bit3==0 => latched bit3 stays 0 */
     thermalFlags = (1u << 1);
-    sim_debug.adcbuf12 = 0x026C;
+    ADCBUF12 = 0x026C;
     pwmRunning &= (uint16_t)~(1u << 3);
 }
 
@@ -657,7 +654,7 @@ static void configure_oc_flag_one_inputs(void)
 {
     /* cmp -> 0, new_level -> 1, prev_bit3==1 => latched bit3 stays 1 */
     thermalFlags = 0;
-    sim_debug.adcbuf12 = 0x0136;
+    ADCBUF12 = 0x0136;
     pwmRunning |= (1u << 3);
 }
 
@@ -667,7 +664,7 @@ static void test_softStartRamp2_complex(void)
 
     /* mismatch, freqSetpoint > 0 => decrement */
     auxFlags = 0;
-    sim_portd_input = (1u << 11);
+    PORTDbits.RD11 = 1;
     freqSetpoint = 10;
     softStartRamp2();
     ASSERT_EQ_I32(9, freqSetpoint, "freqSetpoint should decrement on mismatch");
@@ -676,20 +673,20 @@ static void test_softStartRamp2_complex(void)
     /* mismatch, freqSetpoint == 0 => copy RD11 to auxFlags bit11 */
     freqSetpoint = 0;
     auxFlags = 0;
-    sim_portd_input = (1u << 11);
+    PORTDbits.RD11 = 1;
     softStartRamp2();
     ASSERT_EQ_I32(1, (auxFlags >> 11) & 1, "bit11 should copy RD11");
 
     /* match, bit11 clear => 0x15E */
     auxFlags &= (uint16_t)~(1u << 11);
-    sim_portd_input &= (uint16_t)~(1u << 11);
+    PORTDbits.RD11 = 0;
     freqSetpoint = 123;
     softStartRamp2();
     ASSERT_EQ_I32(0x015E, freqSetpoint, "match+bit11=0 should set nominal 0x15E");
 
     /* match, bit11 set => 3 */
     auxFlags |= (1u << 11);
-    sim_portd_input |= (1u << 11);
+    PORTDbits.RD11 = 1;
     freqSetpoint = 123;
     softStartRamp2();
     ASSERT_EQ_I32(3, freqSetpoint, "match+bit11=1 should set 3");
@@ -701,14 +698,14 @@ static void test_softStartRamp_complex(void)
 
     /* Match path: debounce clears immediately. */
     auxFlags = 0;
-    sim_portd_input = 0;
+    PORTDbits.RD0 = 0;
     ssDebounce = 5;
     softStartRamp();
     ASSERT_EQ_I32(0, ssDebounce, "match should clear debounce counter");
 
     /* Mismatch path: first two calls only count. */
     auxFlags = 0;
-    sim_portd_input = 1u;
+    PORTDbits.RD0 = 1;
     ssDebounce = 0;
     softStartRamp();
     ASSERT_EQ_I32(1, ssDebounce, "first mismatch increments");
@@ -855,7 +852,7 @@ static void test_adcBuf12_bit3_debounce_complex(void)
     reset_state();
     systemState = ST_STARTUP;
     thermalFlags = 0;
-    sim_debug.adcbuf12 = 0x0136; /* cmp=0 -> new_level=1 */
+    ADCBUF12 = 0x0136; /* cmp=0 -> new_level=1 */
 
     for (i = 0; i < 2; i++) {
         adcBuf12OvercurrentLatch();

@@ -33,7 +33,7 @@ extern void at45dbPageRead(uint8_t *buf, uint16_t len,
 extern void t1IsrI2cBody(void);     /* 0x29FA in i2c_protocol.c */
 
 /* Forward declarations for functions in this file */
-void fanUpdateSpeed(void);
+void flashSaveStatusPage(void);
 
 /* ============================================================================
  * flashVerifyChecksum (0x3B3A) — Verify additive checksum over buffer region
@@ -109,10 +109,10 @@ static void at45dbSetBinaryPage256(void)
 }
 
 /* ============================================================================
- * flashEraseAndRewrite (0x3ABA) — Page refresh loop over pages 0..7
+ * flashClearCalibrationPages (0x3ABA) — Page refresh loop over pages 0..7
  * (called after chip erase in flashCalibrationLoad fallback path)
  * ============================================================================ */
-static void flashEraseAndRewrite(void)
+static void flashClearCalibrationPages(void)
 {
     memset(flash_sector_buf_1498, 0, 256);
     for (uint16_t page = 0; page < 8; page++) {
@@ -221,7 +221,7 @@ void pwmDisable(void) {
         IOCON3 &= ~(1u << 0);
         asm("NOP"); asm("NOP"); asm("NOP");
         pwmSoftStartCnt = 4;
-        ovpDebounceFlags |= (1u << 5);
+        statusFlags2 |= (1u << 13);
     }
 }
 
@@ -251,7 +251,7 @@ static void setFaultStateImpl(void) {
         pwmRunRequest &= ~(1u << 4);
     } else {
         pwmRunning &= ~(1u << 1);
-        if (!(i2cStatusByte & (1u << 3))) {
+        if (!(droopEnableFlags & (1u << 11))) {
             pwmRunRequest |= (1u << 4);
         }
     }
@@ -305,7 +305,7 @@ void updateLatf6Gate(void)
  * checkOtp (0x4D94) — Over-temperature protection LED control
  * ============================================================================ */
 void checkOtp(void) {
-    if ((i2cStatusByte & (1u << 3)) && (thermalFlags & (1u << 7))) {
+    if ((droopEnableFlags & (1u << 11)) && (thermalFlags & (1u << 7))) {
         LATF |= (1u << 1);
     } else {
         LATF &= ~(1u << 1);
@@ -317,7 +317,7 @@ void checkOtp(void) {
  * ============================================================================ */
 void updatePmbusStatus(void) {
     if (!(currentLimitFlags & 1))
-        internalStatusFlags &= ~(1u << 5);
+        currentLimitFlags &= ~(1u << 13);
 
     uint16_t latd = LATD;
     int do_fan = 0;
@@ -330,7 +330,7 @@ void updatePmbusStatus(void) {
     if (!do_fan) {
         if (runtimeFlags & (1u << 5)) goto end_section;
         if (flash_read_buf_15E6[0x10] != 0) goto end_section;
-        if (internalStatusFlags & (1u << 5)) {
+        if (currentLimitFlags & (1u << 13)) {
             if ((int16_t)ioutDefault > 0x3E) {
                 if ((int16_t)ioutDefault > 0x56) goto turn_on;
                 goto end_section;
@@ -553,9 +553,16 @@ transmit_phase:
 }
 
 /* ============================================================================
- * fanSpeedCalc (0x3E48) — Read flash page data into sector buffer
+ * flashCollectStatusData (0x3E48) — Read flash page sector data into status buffer
+ *
+ * Assembly 0x3E48 – 0x3EAA:
+ *   - Copies flash_verify_flags[0..2] and flash_crc_accum to 1598[0..3]
+ *   - Loop 1 (W9=1..7): reads page 1, byte_offset = W9*32 (sectors 1-7),
+ *     extracts local_buf[8:9] into 1598[4..17]
+ *   - Loop 2 (W8=0..2): reads page 2, byte_offset = W8*32 (sectors 0-2),
+ *     extracts local_buf[8:9] into 1598[18..23]
  * ============================================================================ */
-static void fanSpeedCalc(void) {
+static void flashCollectStatusData(void) {
     flash_sector_buf_1598[0] = flash_verify_flags[0];
     flash_sector_buf_1598[1] = flash_verify_flags[1];
     flash_sector_buf_1598[2] = flash_verify_flags[2];
@@ -563,63 +570,55 @@ static void fanSpeedCalc(void) {
 
     uint8_t local_buf[32];
 
-    /* Read pages 1..7, store 2 bytes each */
+    /* Read 7 sectors from page 1 (byte offsets 32,64,...,224), extract bytes 8-9 */
     uint16_t idx = 0;
-    for (uint16_t page = 1; page < 8; page++) {
-        at45dbPageRead(local_buf, 32, page, 0);
-        flash_sector_buf_1598[idx + 4] = local_buf[0];
-        flash_sector_buf_1598[idx + 5] = local_buf[1];
+    for (uint16_t i = 1; i < 8; i++) {
+        at45dbPageRead(local_buf, 32, 1, i * 32);
+        flash_sector_buf_1598[idx + 4] = local_buf[8];
+        flash_sector_buf_1598[idx + 5] = local_buf[9];
         idx += 2;
     }
 
-    /* Read pages 0..2, store 2 bytes each at offsets 18..23 */
+    /* Read 3 sectors from page 2 (byte offsets 0,32,64), extract bytes 8-9 */
     for (uint16_t i = 0; i < 3; i++) {
-        at45dbPageRead(local_buf, 32, i, 0);
-        flash_sector_buf_1598[i * 2 + 18] = local_buf[0];
-        flash_sector_buf_1598[i * 2 + 19] = local_buf[1];
+        at45dbPageRead(local_buf, 32, 2, i * 32);
+        flash_sector_buf_1598[i * 2 + 18] = local_buf[8];
+        flash_sector_buf_1598[i * 2 + 19] = local_buf[9];
     }
 }
 
 /* ============================================================================
- * fanUpdateSpeed (0x3EAC) — Read fan data, write to flash page 5
+ * flashSaveStatusPage (0x3EAC) — Read fan data, write to flash page 5
  * ============================================================================ */
-void fanUpdateSpeed(void) {
-    fanSpeedCalc();
+void flashSaveStatusPage(void) {
+    flashCollectStatusData();
     at45dbPageErase(5);
     at45dbBufferWrite(flash_sector_buf_1598, 24);
     at45dbBufferProgramToPage(5);
 }
 
 /* ============================================================================
- * fanTickHandler (0x3EBC) — Fan tick counter and periodic flash update
+ * flashPeriodicSave (0x3EBC) — Fan tick counter and periodic flash update
  * ============================================================================ */
-void fanTickHandler(void) {
+void flashPeriodicSave(void) {
     if (!(pwmRunning & 0x01)) return;
     if (llcStatus & 0x100) return;
     if (LATF & (1u << 1)) return;
 
-    uint32_t ticks = ((uint32_t)fanTickCounterHi << 16) | fanTickCounterLo;
-    ticks++;
-    fanTickCounterLo = (uint16_t)ticks;
-    fanTickCounterHi = (uint16_t)(ticks >> 16);
+    fanTickCounter++;
 
-    if (ticks <= 0x000493DFUL) return;    /* ~300,000 = ~5 min at 1ms tick */
+    if (fanTickCounter <= 0x000493DFUL) return;    /* ~300,000 = ~5 min at 1ms tick */
 
-    fanTickCounterLo = 0;
-    fanTickCounterHi = 0;
+    fanTickCounter = 0;
 
-    uint32_t verify = ((uint32_t)fanVerifyCountHi << 16) | fanVerifyCountLo;
-    if (verify <= 0x00FFFFFEUL) {
-        verify++;
-        fanVerifyCountLo = (uint16_t)verify;
-        fanVerifyCountHi = (uint16_t)(verify >> 16);
-    }
+    if (fanVerifyCount <= 0x00FFFFFEu)
+        fanVerifyCount++;
 
     fanSpeedAccum++;
-    if (fanSpeedAccum > 0x59F)
+    if (fanSpeedAccum > 0x59F) {
         fanSpeedAccum = 0;
-
-    fanUpdateSpeed();
+        flashSaveStatusPage();
+    }
 }
 
 /* ============================================================================
@@ -650,7 +649,7 @@ void flashCalibrationLoad(void) {
     /* Read calibration pages */
     at45dbPageRead(flash_read_buf_15D0, 0x16, 0, 0);
     at45dbPageRead(flash_sector_buf_1598, 0x18, 5, 0);
-    at45dbPageRead(flash_read_buf_15E6, 0x20, 7, 0);
+    at45dbPageRead((uint8_t *)(void *)flash_read_buf_15E6, 0x20, 7, 0);
 
     /* Copy verify flags */
     flash_verify_flags[0] = flash_sector_buf_1598[0];
@@ -668,7 +667,7 @@ void flashCalibrationLoad(void) {
     if (flash_read_buf_15E6[0x10] == 0x01) {
         outputCurrent = (int16_t)0x8000;
         currentLimitFlags |= (1u << 0);
-        i2cStatusByte |= (1u << 2);
+        droopEnableFlags |= (1u << 10);
         droopEnableFlags |= (1u << 3);
     }
 
@@ -720,7 +719,7 @@ void flashCalibrationLoad(void) {
 
             flashChecksumResult = vr;
 
-            if ((c & 1) == 0) break;   /* last region OK => done */
+            if (vr == 0) break;   /* all 13 checksums passed => done */
 
             at45dbPageRead(flash_read_buf_160E, 0x100, 6, 0);
             retry++;
@@ -730,10 +729,8 @@ void flashCalibrationLoad(void) {
     goto epilogue;
 
 flash_not_present:
-#ifndef SIMULATION_MODE
-    //at45dbSetBinaryPage256();
-    //flashEraseAndRewrite();
-#endif
+    //at45dbSetBinaryPage256();       /* 0x38DC */
+    //flashClearCalibrationPages();         /* 0x3ABA */
 
     flash_verify_flags[0] = 0;
     flash_verify_flags[1] = 0;
@@ -760,9 +757,9 @@ void voltageErrorTracking(void) {
         memset(flash_read_buf_15D0, 0, 0x16);
 
         loadCalibrationFromFlash();
-        at45dbPageErase(0);
-        at45dbBufferWrite(flash_read_buf_15D0, 0x16);
-        at45dbBufferProgramToPage(0);
+        /* at45dbPageErase(0); */
+        /* at45dbBufferWrite(flash_read_buf_15D0, 0x16); */
+        /* at45dbBufferProgramToPage(0); */
         return;
     }
 
@@ -801,11 +798,11 @@ void voltageErrorTracking(void) {
 
 done:
     if (updated) {
-        ovpDebounceFlags &= ~(1u << 4);
+        statusFlags2 &= ~(1u << 12);
         copyPeaksToFlashBuf();
-        at45dbPageErase(0);
-        at45dbBufferWrite(flash_read_buf_15D0, 0x16);
-        at45dbBufferProgramToPage(0);
+        /* at45dbPageErase(0); */
+        /* at45dbBufferWrite(flash_read_buf_15D0, 0x16); */
+        /* at45dbBufferProgramToPage(0); */
     }
 }
 
@@ -832,7 +829,7 @@ static void snapshotStatusToSectorBuf(void) {
     flash_sector_buf_1498[16] = (uint8_t)eepromPageShadow;
     flash_sector_buf_1498[17] = (uint8_t)(eepromPageShadow >> 8);
     flash_sector_buf_1498[18] = (uint8_t)droopEnableFlags;
-    flash_sector_buf_1498[19] = i2cStatusByte;
+    flash_sector_buf_1498[19] = (uint8_t)(droopEnableFlags >> 8);
     flash_sector_buf_1498[20] = (uint8_t)ioutScaleConst;
     flash_sector_buf_1498[21] = (uint8_t)(ioutScaleConst >> 8);
     flash_sector_buf_1498[22] = (uint8_t)ocpThresholdHw;
@@ -930,7 +927,7 @@ void currentRegulation(void) {
     at45dbPageErase(3);
     at45dbBufferWrite(flash_sector_buf_1498, 256);
     at45dbBufferProgramToPage(3);
-    fanUpdateSpeed();
+    flashSaveStatusPage();
 }
 
 /* ============================================================================
@@ -962,8 +959,8 @@ void flashReadbackHandler(void) {
  * runNormalOc2rsUpdate5522 (0x5522) — LLC normal run: compute OC2RS, write HW register
  * ============================================================================ */
 static void runNormalOc2rsUpdate5522(void) {
-    if (!(startupFlags & 0x01)) return;
-    startupFlags &= ~0x01;
+    if (!(auxFlags & (1u << 8))) return;
+    auxFlags &= ~(1u << 8);
 
     uint16_t vout = outputVoltage;
     if (vout <= 0xC7) {
@@ -1084,7 +1081,7 @@ void i2cIoutScaling(void) { }            /* 0x231C */
 void i2cTempBandSelect(void) { }         /* 0x2378 */
 void i2cTempHysteresis(void) { }         /* 0x2382 */
 void i2cPeakCurrentTrack(void) { }       /* 0x2466 */
-void i2cStatusByteUpdate(void) { }       /* 0x249C */
+void statusByteSync249c(void) { }        /* 0x249C */
 void i2cStatusFlagSync(void) { }         /* 0x255A */
 void i2cPowerEnableCtrl(void) { }        /* 0x25D4 */
 void i2cTargetPeriodUpdate(void) { }     /* 0x25FC */
@@ -1096,13 +1093,18 @@ uint16_t thresholdCompare(int16_t adc_val, int16_t lo_thresh,
 {
     uint16_t result = (uint8_t)prev_state;
 
-    if ((uint16_t)adc_val > (uint16_t)hi_thresh) {
+    /* 0x30E2..0x30F6:
+     *   value <  low  -> 1
+     *   value <= high -> 0
+     *   value >  high -> prev_state
+     */
+    if ((uint16_t)adc_val < (uint16_t)lo_thresh) {
         result = 1u;
-    } else if ((uint16_t)adc_val >= (uint16_t)lo_thresh) {
+    } else if ((uint16_t)adc_val <= (uint16_t)hi_thresh) {
         result = 0u;
     }
 
-    return result;
+    return (uint16_t)((uint8_t)result);
 }
 
 uint16_t debounceCounter(int16_t new_val, int16_t limit,
@@ -1111,12 +1113,18 @@ uint16_t debounceCounter(int16_t new_val, int16_t limit,
     if (new_val != prev_val) {
         int16_t next = (int16_t)(*cnt + 1);
         *cnt = next;
-        if (next > limit) {
+
+        /* 0x31B2..0x31CA:
+         *   cnt < limit  -> clear counter and latch new value immediately
+         *   cnt >= limit -> keep previous value and keep counter
+         */
+        if (next < limit) {
             *cnt = 0;
             prev_val = new_val;
         }
     } else {
         *cnt = 0;
+        prev_val = new_val;
     }
 
     return (uint16_t)((uint8_t)prev_val);

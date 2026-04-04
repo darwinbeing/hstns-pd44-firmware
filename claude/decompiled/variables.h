@@ -60,8 +60,8 @@ extern volatile uint16_t statusFlags;         /* 0x125A - main control flags wor
                                               *   bit9  = OVP flag
                                               *   bit10 = OCV flag
                                               *   bit11 = steady-state detect  */
-extern volatile uint16_t protectionStatus;         /* 0x1264 - status flags */
-extern volatile uint16_t runtimeFlags;         /* 0x126A - mode/status flags
+extern volatile uint16_t protectionStatus;         /* 0x1264 (high byte @0x1265) - status flags */
+extern volatile uint16_t runtimeFlags;         /* 0x126A (high byte @0x126B) - mode/status flags
                                               *   bit1  = start request
                                               *   bit2  = shutdown request
                                               *   bit7  = over-temperature flag
@@ -70,17 +70,27 @@ extern volatile uint16_t runtimeFlags;         /* 0x126A - mode/status flags
 extern volatile uint16_t thermalFlags;         /* 0x1266 - bit7 = OT flag */
 extern volatile uint16_t droopMode;         /* 0x1268 */
 
-extern volatile uint16_t systemFlags;         /* 0x1E1A
+extern volatile uint16_t systemFlags;         /* 0x1E1A (high byte @0x1E1B)
                                               *   bit0  = I2C request pending
                                               *   bit6  = Flash erase/readback trigger
                                               *   bit15 = fault state               */
-extern volatile uint16_t fwUpdateFlags;         /* 0x1E1B - bit0 = firmware update active */
-extern volatile uint16_t auxFlags;         /* 0x1E1C - bit1, bit11 status bits */
-extern volatile uint16_t startupFlags;         /* 0x1E1D - bit0 = startup tick */
-extern volatile uint16_t currentLimitFlags;         /* 0x1E18 - bit0 = current limiting active */
-extern volatile uint16_t controlStatus;      /* 0x1E20 - bit1 = fault present */
-extern volatile uint8_t  protStatusByte;         /* 0x1265 - status flags (byte, odd addr) */
-extern volatile uint8_t  i2cStatusByte;         /* 0x1BEB - I2C status flags (byte, odd addr) */
+extern volatile uint16_t auxFlags;         /* 0x1E1C (high byte @0x1E1D) - bit1, bit11 status bits */
+extern volatile uint16_t currentLimitFlags;         /* 0x1E18 (high byte @0x1E19) - bit0 = current limiting active */
+extern volatile uint16_t controlStatus;      /* 0x1E20 (high byte @0x1E21) - bit1 = fault present */
+
+/* Assembly byte-address flags (merged model, no separate C variables):
+ *   0x1E1B <-> systemFlags[15:8]       (old fwUpdateFlags)
+ *   0x1E1D <-> auxFlags[15:8]          (old startupFlags)
+ *   0x1265 <-> protectionStatus[15:8]  (old protStatusByte)
+ *   0x1BEB <-> droopEnableFlags[15:8]  (old i2cStatusByte)
+ *   0x191F <-> flash_write_offset[15:8] (old flash_write_page_hi)
+ *   0x1E19 <-> currentLimitFlags[15:8] (old internalStatusFlags)
+ *   0x1E21 <-> controlStatus[15:8]     (old ocpTripFlags)
+ *   0x1263 <-> statusFlags2[15:8]      (old ovpDebounceFlags)
+ *   0x1BF1 <-> pwmRunRequest[15:8]     (old llcHwFault)
+ *   0x126B <-> runtimeFlags[15:8]      (old droopBoostFlags)
+ *   0x1DDF <-> prevError[15:8]         (old unusedPad)
+ */
 
 /* ---- Control variables ---- */
 extern volatile int16_t voutTargetCode;         /* 0x1D4E - output voltage target code */
@@ -142,7 +152,7 @@ extern volatile int16_t cal_var_1E42;       /* 0x1E42 - auxiliary calibration */
  * Voltage loop 2P2Z / PID
  * ============================================================================ */
 extern volatile int16_t voltageError;       /* 0x1DE0 - e[n] */
-extern volatile int16_t prevError;          /* 0x1DDE - e[n-1] */
+extern volatile int16_t prevError;          /* 0x1DDE (high byte @0x1DDF) - e[n-1] */
 extern volatile int16_t prevPrevError;     /* 0x1DDC - e[n-2] */
 extern volatile int16_t compSlewTarget;      /* 0x1D4E - compensator slew-rate target */
 extern volatile uint16_t steadyCount;       /* 0x1DD2 - steady-state counter */
@@ -252,10 +262,8 @@ extern volatile uint16_t flashCmdFlags;    /* 0x1928 - Flash operation flag bits
                                               *   bit5 = flashProgramRead32
                                               *   bit6 = flashReadPage7        */
 extern volatile uint8_t  i2cRxPageNum;       /* 0x1921 - page number from I2C2 host */
-extern volatile uint8_t  i2cRxDataLo;        /* 0x1922 - data byte lo from I2C2 host */
-extern volatile uint8_t  i2cRxDataHi;        /* 0x1923 - data byte hi from I2C2 host */
-extern volatile uint16_t flash_write_offset; /* 0x191E */
-extern volatile uint8_t  flash_write_page_hi;/* 0x191F */
+extern volatile uint16_t i2cRxData;          /* 0x1922:0x1923 - data word from I2C2 host */
+extern volatile uint16_t flash_write_offset; /* 0x191E (high byte @0x191F) */
 
 /* ============================================================================
  * Flash buffers
@@ -267,7 +275,7 @@ extern uint8_t flash_sector_buf_1498[256];   /* 0x1498 - sector buffer */
 extern uint8_t flash_sector_buf_1598[24];    /* 0x1598 - sector buffer 2 */
 extern uint8_t flash_read_buf_15B0[32];      /* 0x15B0 */
 extern uint8_t flash_read_buf_15D0[32];      /* 0x15D0 */
-extern uint8_t flash_read_buf_15E6[32];      /* 0x15E6 */
+extern int8_t flash_read_buf_15E6[32];       /* 0x15E6 */
 extern uint8_t flash_read_buf_160E[256];     /* 0x160E */
 extern uint16_t flash_data_160A;             /* 0x160A */
 extern uint16_t flash_data_160C;             /* 0x160C */
@@ -316,46 +324,42 @@ extern volatile uint16_t pgoodDebounce;      /* 0x1E04 - Power-good debounce cou
 extern volatile uint16_t pgoodAssertCnt;     /* 0x1E06 - Power-good assertion counter */
 extern volatile uint16_t fanI2cAddr;         /* 0x1E08 - Fan I2C address work register */
 extern volatile uint16_t vinOcpLimit;        /* 0x1E14 - Vin OCP limit */
-extern volatile uint16_t internalStatusFlags; /* 0x1E19 - Internal status flags
-                                              *   bit0 = state5 init done
-                                              *   bit3 = droop mode 3
-                                              *   bit6 = droop active
-                                              *   bit7 = OT shutdown latch */
 extern volatile uint16_t restartFlags;       /* 0x1E1E - Restart/re-enable flags
                                               *   bit0 = AC-cycle restart latch
                                               *   bit1 = soft-start restart latch
                                               *   bit2 = OCP restart latch */
-extern volatile uint16_t ocpTripFlags;       /* 0x1E21 - OCP trip flags (bit2 = trip) */
 extern volatile uint16_t secondaryOcSetpoint; /* 0x1E3A - Secondary OC setpoint */
-extern volatile uint16_t droopEnableFlags;   /* 0x1BEA - bit5 = droop enable */
+extern volatile uint16_t droopEnableFlags;   /* 0x1BEA (high byte @0x1BEB) - bit5 = droop enable */
 extern volatile uint16_t startupResetLatch;  /* 0x1BEC - startup reset latch */
 extern volatile uint16_t startupResetLatch2; /* 0x1BEE - startup reset latch 2 */
-extern volatile uint16_t pwmRunRequest;      /* 0x1BF0 - bit0 = PWM run request */
+extern volatile uint16_t pwmRunRequest;      /* 0x1BF0 (high byte @0x1BF1) - bit0 = PWM run request */
 extern volatile uint16_t pwmRunning;         /* 0x1BF2 - bit0 = PWM running
                                               *   bit3 = Vin present flag */
+extern volatile uint16_t dbg_state0_calls;   /* debug: state0Idle invocation count */
+extern volatile uint16_t dbg_state0_passes;  /* debug: state0Idle all-gates-pass count */
+extern volatile uint16_t dbg_state0_fail;    /* debug: state0Idle fail bitmap */
+extern volatile uint32_t dbg_t1_isr_calls;   /* debug: _T1Interrupt invocation count */
+extern volatile uint32_t dbg_main_loop_calls; /* debug: main loop iteration count */
+extern volatile uint16_t dbg_main_stage;     /* debug: main-loop stage marker */
 extern volatile uint16_t flashUpdateResult;  /* 0x1BBC - Flash update result */
-extern volatile uint16_t statusFlags2;       /* 0x1262 - Status flags:
+extern volatile uint16_t statusFlags2;       /* 0x1262 (high byte @0x1263) - Status flags:
                                               *   bit0  = OVP latch
                                               *   bit3  = Vin UV latch
                                               *   bit5  = OT warn latch
                                               *   bit6  = OT shutdown latch
                                               *   bit14 = enable-pin high */
-extern volatile uint16_t ovpDebounceFlags;   /* 0x1263 - bit5 = OVP debounce, bit6 = active */
 extern volatile int32_t  droopIntegrator;    /* 0x126E:0x1270 - 32-bit droop integrator */
 extern volatile uint16_t pmbusAlertFlags;    /* 0x192A - bit0 = PMBus alert */
 extern volatile uint16_t tempAdcValue;       /* 0x1D16 - temperature ADC value */
 extern volatile uint16_t voutRefInitial;     /* 0x1DA2 - Vout ref initial */
-extern volatile uint16_t unusedPad;          /* 0x1DDF - unused pad */
 extern volatile uint16_t vinUvSubCounter;    /* 0x1DEE - Vin UV sub-counter (ms ticks) */
 extern volatile uint16_t vinUvSecCounter;    /* 0x1DF0 - Vin UV seconds counter */
 extern volatile uint16_t state5MsCounter;    /* 0x1DF2 - state5 ms tick counter */
 extern volatile uint16_t state5SecCounter;   /* 0x1DF4 - state5 seconds counter */
-extern volatile uint16_t ovpMultResultLo;    /* 0x1DF6 - Vout OVP multiply result lo */
-extern volatile uint16_t ovpMultResultHi;    /* 0x1DF8 - Vout OVP multiply result hi */
+extern volatile uint32_t ovpMultResult;      /* 0x1DF6:0x1DF8 - Vout OVP multiply result */
 extern volatile uint16_t ovpDebounceCnt;     /* 0x1DFA - Vout OVP debounce counter */
 extern volatile uint16_t ovpTripCounter;     /* 0x1DFC - Vout OVP trip counter */
-extern volatile uint16_t uptimeCounterLo;    /* 0x1DFE - Uptime counter lo */
-extern volatile uint16_t uptimeCounterHi;    /* 0x1E00 - Uptime counter hi */
+extern volatile uint32_t uptimeCounter;      /* 0x1DFE:0x1E00 - Uptime counter */
 
 /* ============================================================================
  * T1 subsystem variables
@@ -367,15 +371,12 @@ extern volatile uint16_t voutScaledQ2;       /* 0x1BE0 - vcal_a << 2, scaled Vou
 extern volatile uint16_t pdc3Shadow;         /* 0x1BCE - PDC3 shadow */
 extern volatile uint16_t oc2rsGateTiming;    /* 0x1924 - OC2RS / gate timing 2 */
 extern volatile uint16_t ocpThresholdHw;     /* 0x1BB6 - OCP threshold (HW) */
-extern volatile uint16_t llcHwFault;         /* 0x1BF1 - LLC HW fault - bit4/bit5 */
 extern volatile uint16_t llcStatus;          /* 0x1BF4 - LLC status - bit8 = inhibit */
 extern volatile uint8_t  fclSeqState;        /* 0x124A - FCL sequencer state byte */
 extern volatile uint16_t ovpUvpLatchTarget;  /* 0x1248 - OVP/UVP latch clear target */
-extern volatile uint16_t fanTickCounterLo;   /* 0x1274 - fan tick counter lo */
-extern volatile uint16_t fanTickCounterHi;   /* 0x1276 - fan tick counter hi */
+extern volatile uint32_t fanTickCounter;     /* 0x1274:0x1276 - fan tick counter */
 extern volatile uint16_t fanSpeedAccum;      /* 0x1272 - fan speed accumulator */
-extern volatile uint16_t fanVerifyCountLo;   /* 0x128A - fan verify count lo */
-extern volatile uint16_t fanVerifyCountHi;   /* 0x128C - fan verify count hi */
+extern volatile uint32_t fanVerifyCount;     /* 0x128A:0x128C - fan verify count */
 extern volatile uint16_t uartRxByteCount;    /* 0x1CF8 - UART1 RX byte counter */
 extern volatile uint16_t softStartRampCnt;   /* 0x124E - soft-start ramp counter */
 extern volatile uint16_t softStartDwellCnt;  /* 0x124C - soft-start dwell counter */
@@ -385,7 +386,6 @@ extern volatile int32_t  droopDelta2;        /* 0x1D62:0x1D64 - 32-bit droop int
 extern volatile uint16_t droopRampCounter;   /* was 0x1250 in original image */
 extern volatile int16_t  adcAn0Raw;          /* 0x1D9C - AN0 raw save */
 extern volatile int16_t  adcAn2Raw;          /* 0x1D98 - AN2 raw save */
-extern volatile uint16_t droopBoostFlags;    /* 0x126B - droop boost flags */
 extern volatile int16_t  initFreq;           /* 0x1D34 - initial frequency */
 
 /* ============================================================================
@@ -498,11 +498,9 @@ extern volatile uint16_t txBusStateFlags;       /* 0x194E - Tx-ready/bus-state f
 extern volatile uint16_t rxAuxFlags;            /* 0x1948 - Rx auxiliary flags */
 extern volatile uint16_t i2cPeriodCnt;          /* 0x197C - I2C2 period counter */
 extern volatile uint16_t i2cTxCounter;          /* 0x19A4 - I2C2 transaction counter */
-extern volatile uint16_t i2cTickCntLo;          /* 0x1936 - 32-bit tick counter lo */
-extern volatile uint16_t i2cTickCntHi;          /* 0x1938 - 32-bit tick counter hi */
+extern volatile uint32_t i2cTickCnt;            /* 0x1936:0x1938 - 32-bit tick counter */
 extern volatile uint16_t i2cBusLockCnt;         /* 0x193A - bus-lock error counter */
-extern volatile uint16_t i2cAccumLo;            /* 0x194A - 32-bit accum lo */
-extern volatile uint16_t i2cAccumHi;            /* 0x194C - 32-bit accum hi */
+extern volatile uint32_t i2cAccum;              /* 0x194A:0x194C - 32-bit accum */
 extern volatile uint16_t fanDroopStepCnt;       /* 0x193C - fan/droop step counter */
 extern volatile uint16_t startupResetShadow;    /* 0x193E - shadow of startupResetLatch */
 extern volatile uint8_t  eventCntBit4;          /* 0x1946 */

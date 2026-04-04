@@ -13,19 +13,6 @@
 #include <xc.h>
 #include "variables.h"
 
-/* Helper: read 16-bit little-endian value from flash calibration buffer.
- * Keeping this as an inline function avoids macro side effects and improves
- * debugger readability while preserving the same generated behavior.
- */
-static inline uint16_t flashCalReadU16(uint8_t offset)
-{
-    uint8_t hi_idx = (uint8_t)(offset + 1u);
-    if (hi_idx >= (uint8_t)sizeof(flash_read_buf_15E6))
-        return 0u;
-    return (uint16_t)(((uint16_t)flash_read_buf_15E6[hi_idx] << 8) |
-                      (uint16_t)flash_read_buf_15E6[offset]);
-}
-
 /* ============================================================================
  * adcMiscSample() — 0x2A30
  *
@@ -49,46 +36,57 @@ static inline uint16_t flashCalReadU16(uint8_t offset)
  * ============================================================================ */
 void adcMiscSample(void)
 {
+    const uint8_t *fb = (const uint8_t *)(const void *)flash_read_buf_15E6;
+
     if (!(statusFlags & (1u << 6)))
         return;
 
     statusFlags &= ~(1u << 6);
 
     /* Vout channel B calibration (buf[0x11]:buf[0x12]) */
-    cal_vb = (int16_t)flashCalReadU16(0x11);              /* 0x1D2A */
-    ofs_vb = (int16_t)((int16_t)flashCalReadU16(0x13) >> 4) + 1;  /* 0x1D28 */
+    cal_vb = (int16_t)((uint16_t)(((uint16_t)fb[0x12] << 8) |
+                                  (uint16_t)fb[0x11]));  /* 0x1D2A */
+    ofs_vb = (int16_t)((int16_t)((uint16_t)(((uint16_t)fb[0x14] << 8) |
+                                            (uint16_t)fb[0x13])) >> 4) + 1;  /* 0x1D28 */
 
     /* Vout channel A calibration (buf[0]:buf[1]) */
-    cal_va = (int16_t)flashCalReadU16(0x00);              /* 0x1D32 */
-    ofs_va = (int16_t)((int16_t)flashCalReadU16(0x02) >> 4) + 1;  /* 0x1D30 */
+    cal_va = (int16_t)((uint16_t)(((uint16_t)fb[0x01] << 8) |
+                                  (uint16_t)fb[0x00]));  /* 0x1D32 */
+    ofs_va = (int16_t)((int16_t)((uint16_t)(((uint16_t)fb[0x03] << 8) |
+                                            (uint16_t)fb[0x02])) >> 4) + 1;  /* 0x1D30 */
 
     /* Vout channel A2 (AN5) calibration (buf[4]:buf[5]) */
-    cal_va2 = (int16_t)flashCalReadU16(0x04);             /* 0x1D2E */
-    ofs_va2 = (int16_t)((int16_t)flashCalReadU16(0x06) >> 4) + 1; /* 0x1D2C */
+    cal_va2 = (int16_t)((uint16_t)(((uint16_t)fb[0x05] << 8) |
+                                   (uint16_t)fb[0x04])); /* 0x1D2E */
+    ofs_va2 = (int16_t)((int16_t)((uint16_t)(((uint16_t)fb[0x07] << 8) |
+                                             (uint16_t)fb[0x06])) >> 4) + 1; /* 0x1D2C */
 
     /* Current gain (buf[8]:buf[9]) */
-    uint8_t lo_ee = flash_read_buf_15E6[0x08];
-    uint8_t hi_ef = flash_read_buf_15E6[0x09];
+    uint8_t lo_ee = fb[0x08];
+    uint8_t hi_ef = fb[0x09];
     cal_a_gain = (int16_t)((uint16_t)(hi_ef << 8) | lo_ee);  /* 0x1D26 */
 
     /* Current offset: special case when gain==0x2000 and offset bytes are 0 */
     if (lo_ee == 0 && hi_ef == 0x20 &&
-        flash_read_buf_15E6[0x0A] == 0 && flash_read_buf_15E6[0x0B] == 0) {
+        fb[0x0A] == 0 && fb[0x0B] == 0) {
         cal_a_offset = 0;                                /* 0x1D24 */
     } else {
-        int16_t raw = (int16_t)flashCalReadU16(0x0A);
+        int16_t raw = (int16_t)((uint16_t)(((uint16_t)fb[0x0B] << 8) |
+                                           (uint16_t)fb[0x0A]));
         cal_a_offset = (int16_t)(raw / 122) + 1;        /* DIV.SW by 0x7A */
     }
 
     /* PDC5 calibration: apply only if within valid range */
-    uint16_t pdc5_val = flashCalReadU16(0x0C);
+    uint16_t pdc5_val = (uint16_t)(((uint16_t)fb[0x0D] << 8) |
+                                   (uint16_t)fb[0x0C]);
     cal_pdc5 = (int16_t)pdc5_val;                       /* 0x1E44 */
     /* Check: (pdc5_val + 0xFCDF) unsigned <= 0x9E, i.e. pdc5_val in [0x0321..0x03BF] */
     if ((uint16_t)(pdc5_val + 0xFCDF) <= 0x9E)
         PDC5 = pdc5_val;
 
     /* Auxiliary calibration value (buf[0x0E]:buf[0x0F]) */
-    cal_var_1E42 = (int16_t)flashCalReadU16(0x0E);        /* 0x1E42 */
+    cal_var_1E42 = (int16_t)((uint16_t)(((uint16_t)fb[0x0F] << 8) |
+                                        (uint16_t)fb[0x0E])); /* 0x1E42 */
 }
 
 /* ============================================================================
@@ -109,22 +107,6 @@ void adcMiscSample(void)
  * ============================================================================ */
 void adcVoltageSample(void)
 {
-#ifdef SIMULATION_MODE
-    int16_t cal_a_result;
-    int16_t cal_b_result;
-
-    vbuf_a[0] = ADCBUF5;
-    vbuf_b[0] = ADCBUF3;
-    vraw_sum_b = (int16_t)(ADCBUF3 << 6);
-
-    cal_a_result = (int16_t)((__mulsi3((int32_t)ADCBUF5, (int32_t)cal_va2) >> 13) + ofs_va2);
-    cal_b_result = (int16_t)((__mulsi3((int32_t)ADCBUF3, (int32_t)cal_vb) >> 13) + ofs_vb);
-
-    vcal_a = cal_a_result;
-    vcal_b = cal_b_result;
-    vcal_diff = cal_a_result - cal_b_result;
-    return;
-#else
     uint16_t idx = (uint16_t)tick_counter;  /* 0x1252:0x1254 (only low 6 bits used) */
 
     /* --- Channel A: ADCBUF5 --- */
@@ -164,7 +146,6 @@ void adcVoltageSample(void)
 
     /* Difference */
     vcal_diff = cal_a_result - cal_b_result;             /* 0x126C */
-#endif
 }
 
 /* ============================================================================
@@ -187,26 +168,6 @@ void adcVoltageSample(void)
  * ============================================================================ */
 void adcCurrentSample(void)
 {
-#ifdef SIMULATION_MODE
-    int16_t adc_val = ADCBUF4;
-    int16_t cal_result;
-
-    iout_4buf[0] = (int32_t)adc_val;
-    ioutSum64 = adc_val;
-    iout_64avg = adc_val;
-
-    cal_result = (int16_t)((__mulsi3((int32_t)cal_a_gain, (int32_t)adc_val) >> 13) + cal_a_offset);
-    Imeas_cal_a = (cal_result >= 0) ? cal_result : 0;
-    iout_cal_raw = Imeas_cal_a;
-    Imeas = Imeas_cal_a;
-    Imeas_scaled = (int16_t)(((int32_t)Imeas * (int32_t)0x1E80) >> 10);
-    Imeas_longavg = Imeas_cal_a;
-    iout_avg = adc_val;
-    iout_ring[0] = Imeas_cal_a;
-    iout_accum = Imeas_cal_a;
-    iout_ring_idx = 0;
-    return;
-#else
     int16_t adc_val = ADCBUF4;
     uint16_t idx = (uint16_t)tick_counter;
 
@@ -261,7 +222,6 @@ void adcCurrentSample(void)
     /* Subtract oldest sample from accumulator */
     int16_t oldest = iout_ring[iout_ring_idx];
     iout_accum -= (int32_t)oldest;
-#endif
 }
 
 /* ============================================================================

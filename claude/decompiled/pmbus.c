@@ -76,7 +76,7 @@
  *
  * i2cPeriodCnt (0x197C)– I2C2 timeout/period counter (init 0x5DC = 1500)
  * i2cTxCounter   (0x19A4) – transaction counter
- * i2cTickCntLo:Hi (0x1936/0x1938) – 32-bit tick counter for slave handler
+ * i2cTickCnt (0x1936:0x1938) – 32-bit tick counter for slave handler
  * i2cBusLockCnt (0x193A)     – bus-lock error counter (resets I2C2 if > 9999)
  *
  * startupResetLatch2 high byte (0x1BEF) – STATUS_BYTE response value
@@ -147,8 +147,8 @@ static void pmbusInitPointerTable(void)
     ptrTable19D0[1] = (uint16_t)&adcLiveA1;     /* was 0x1BE6 */
     ptrTable19D0[2] = (uint16_t)&adcLiveA2;     /* was 0x1BE4 */
     ptrTable19D0[3] = (uint16_t)&i2cTxCounter;  /* was 0x19A4 */
-    ptrTable19D0[4] = (uint16_t)&i2cAccumHi;    /* was 0x194C */
-    ptrTable19D0[5] = (uint16_t)&i2cAccumLo;    /* was 0x194A */
+    ptrTable19D0[4] = (uint16_t)((uint16_t*)&i2cAccum + 1); /* hi half, was 0x194C */
+    ptrTable19D0[5] = (uint16_t)&i2cAccum;                 /* lo half, was 0x194A */
     ptrTable19D0[6] = (uint16_t)&adcLiveB;      /* was 0x1BD2 */
     ptrTable19D0[7] = (uint16_t)&adcLiveC;      /* was 0x1BC8 */
 
@@ -302,7 +302,7 @@ static void pmbusI2c2Configure(void)
  *
  * When rxBufIndex reaches 4 (full 3-data-byte packet):
  *   Command 0x3B (PAGE command): reconstruct 16-bit value from rxPacketBuf[2:3],
- *     clamp/wrap to [0x0800 .. 0xF7FE], store in i2cRxDataLo/Hi (0x1922),
+ *     clamp/wrap to [0x0800 .. 0xF7FE], store in i2cRxData (0x1922),
  *     set flashCmdFlags bit1 (cmd_1).
  *   Command 0x20 (VOUT_COMMAND): validate rxPacketBuf[2] (page <= 0x0A),
  *     interpret rxPacketBuf[1] to pick a sub-function (mode 2 or 3) and encode
@@ -372,9 +372,8 @@ rx_check_complete:
             uint16_t val = ((uint16_t)rxPacketBuf[2] << 8)
                          | (uint16_t)(uint8_t)rxPacketBuf[3];
 
-            /* Store in i2cRxDataLo/Hi (0x1922) */
-            i2cRxDataLo = (uint8_t)val;
-            i2cRxDataHi = (uint8_t)(val >> 8);
+            /* Store in i2cRxData (0x1922) */
+            i2cRxData = val;
 
             /* Clamp: if val > 0xF7FE -> val = 0xF7FF (saturate high) */
             if (val > 0xF7FEu) {
@@ -383,8 +382,7 @@ rx_check_complete:
                 /* Wrap-around add: val += 0x0800 */
                 val += 0x0800u;
             }
-            i2cRxDataLo = (uint8_t)val;
-            i2cRxDataHi = (uint8_t)(val >> 8);
+            i2cRxData = val;
 
             /* Signal cmd_1 pending (BSET flashCmdFlags, #1) */
             flashCmdFlags |= (1u << 1);
@@ -716,7 +714,7 @@ static void pmbusChecksumResponse(void)
  *   offset 21 (cmd 0x1A) -> 0x1774  clear ptrTable19F0[6]
  *   offset 22 (cmd 0x1B) -> 0x1778  clear ptrTable19F0[7]
  *   offset 29 (cmd 0x22) -> 0x177E  -> BSET auxFlags #3, complex update
- *   offset 44 (cmd 0x31) -> 0x17E6  -> BTST i2cStatusByte #2 path
+ *   offset 44 (cmd 0x31) -> 0x17E6  -> BTST droopEnableFlags bit10 (0x1BEB bit2) path
  *   offset 55 (cmd 0x3C) -> 0x1814..0x183E  -> write ptrTable1A10[n] from W2
  *   offset 56 (cmd 0x3D) -> 0x1818
  *   ... (many more ptrTable1A10 table writes)
@@ -824,17 +822,17 @@ cmd22_set:
          * with firmware-update flag and limit clamp logic.
          * ------------------------------------------------------------------ */
         case 44: {
-            if (!(i2cStatusByte & (1u << 2))) {
+            if (!(droopEnableFlags & (1u << 10))) {
                 /* Normal path: write word_val to ptrTable1A10[1] */
                 *((volatile uint16_t *)ptrTable1A10[1]) = word_val;
                 if (word_val <= 0x000Fu) {
-                    internalStatusFlags |= (1u << 5);
+                    currentLimitFlags |= (1u << 13);
                 } else {
-                    internalStatusFlags &= ~(1u << 5);
+                    currentLimitFlags &= ~(1u << 13);
                 }
                 currentLimitFlags |= (1u << 0);
             } else {
-                /* Firmware-update path (bit2 of i2cStatusByte set) */
+                /* Firmware-update path (droopEnableFlags bit10 / 0x1BEB bit2 set) */
                 *((volatile uint16_t *)ptrTable1A10[1]) = word_val;
             }
             /* Common: set droopEnableFlags bit3 */
@@ -855,9 +853,9 @@ cmd22_set:
         case 61: *((volatile uint16_t *)ptrTable1A10[8])  = word_val; return;
         case 62: *((volatile uint16_t *)ptrTable1A10[9])  = word_val; return;
         case 63: *((volatile uint16_t *)ptrTable1A10[10]) = word_val; return;
-        /* cmd 0x46 (idx 65): also set fwUpdateFlags bit6 */
+        /* cmd 0x46 (idx 65): also set systemFlags bit14 (0x1E1B bit6) */
         case 65:
-            fwUpdateFlags |= (1u << 6);
+            systemFlags |= (1u << 14);
             *((volatile uint16_t *)ptrTable1A10[11]) = word_val;
             return;
         case 66: *((volatile uint16_t *)ptrTable1A10[12]) = word_val; return;
@@ -956,19 +954,19 @@ valid:
  *
  * Called from the T1 timer ISR to maintain a 2500-tick (2.5 s) keep-alive
  * counter for the I2C2 slave.  Also accumulates the i2cTxCounter read counter
- * and runs the 32-bit receive-data accumulator at i2cAccumLo/i2cAccumHi.
+ * and runs the 32-bit receive-data accumulator at i2cAccum.
  *
  * Flow:
  *   1. If flashCmdFlags bit0 set -> skip (I2C busy with UART command).
  *   2. Check pwmRunning bit1 (I2C2 active):
  *      - If clear -> reset counters and load current i2cTxCounter into
- *                   i2cAccumLo/Hi, then return.
- *      - If set   -> increment 32-bit counter i2cTickCntLo:i2cTickCntHi.
+ *                   i2cAccum, then return.
+ *      - If set   -> increment 32-bit counter i2cTickCnt.
  *   3. If counter reaches 0x09C3 (2499 ticks):
  *      a. Check rxEventFlags: if non-zero -> skip (transaction in progress).
  *      b. Reset counter to 0x09C3.
  *      c. Increment i2cTxCounter.  If it wraps to 0xFFFF -> skip.
- *      d. Read adcLiveA2 (ptrTable19D0[0] target) and add it into i2cAccumLo:Hi.
+ *      d. Read adcLiveA2 (ptrTable19D0[0] target) and add it into i2cAccum.
  * ============================================================================ */
 void i2cTxAccumulate(void)
 {
@@ -982,22 +980,17 @@ void i2cTxAccumulate(void)
     /* Check bit1: I2C2 active */
     if (!(f2 & (1u << 1))) {
         /* Not active: clear accumulators */
-        i2cTickCntLo = 0;
-        i2cTickCntHi = 0;
-        i2cAccumLo = 0;
-        i2cAccumHi = 0;
+        i2cTickCnt = 0;
+        i2cAccum = 0;
         /* Store current i2cTxCounter value (no-op: same variable) */
         return;
     }
 
     /* I2C2 active: increment 32-bit tick counter */
-    uint32_t cnt = ((uint32_t)i2cTickCntHi << 16) | i2cTickCntLo;
-    cnt++;
-    i2cTickCntLo = (uint16_t)(cnt & 0xFFFFu);
-    i2cTickCntHi = (uint16_t)(cnt >> 16);
+    i2cTickCnt++;
 
     /* Check if counter has reached 0x09C3 (2499) */
-    if (i2cTickCntLo > 0x09C3u || i2cTickCntHi != 0) {
+    if (i2cTickCnt > 0x09C3u) {
         return;   /* BRA LEU 0x2504: still under threshold */
     }
 
@@ -1007,8 +1000,7 @@ void i2cTxAccumulate(void)
     }
 
     /* Reset counter to 0x09C3 */
-    i2cTickCntLo = 0x09C3u;
-    i2cTickCntHi = 0;
+    i2cTickCnt = 0x09C3u;
 
     /* Increment i2cTxCounter; bail if it would wrap to 0 (== 0xFFFF before inc) */
     uint16_t s = i2cTxCounter;
@@ -1019,11 +1011,7 @@ void i2cTxAccumulate(void)
     i2cTxCounter = s;
 
     /* Add adcLiveA2 (was ptrTable19D0[0] target = 0x1BE4) into the 32-bit accumulator */
-    uint16_t delta = adcLiveA2;
-    uint32_t acc   = ((uint32_t)i2cAccumHi << 16) | i2cAccumLo;
-    acc += (uint32_t)delta;
-    i2cAccumLo = (uint16_t)(acc & 0xFFFFu);
-    i2cAccumHi = (uint16_t)(acc >> 16);
+    i2cAccum += (uint32_t)adcLiveA2;
 }
 
 /* ============================================================================
@@ -1689,7 +1677,7 @@ extern void i2cThresholdMonitor(void);        /* 0x215A - threshold comparison *
 extern void i2cFlagUpdate(void);              /* 0x21FE - flag state update */
 extern void uartCmdSubroutine6(void);         /* 0x2464 - peak tracker A */
 extern void uartCmdSubroutine7(void);         /* 0x2486 - peak tracker B */
-extern void i2cStatusByteUpdate(void);        /* 0x249C - status byte update */
+extern void statusByteSync249c(void);         /* 0x249C - status byte sync */
 extern void i2cStatusFlagSync(void);          /* 0x255A - status flag sync */
 extern void unknownSubroutine2594(void);      /* 0x2594 - power enable control */
 
@@ -1722,7 +1710,7 @@ void t1IsrI2cBody(void)
         i2cFlagUpdate();               /* 0x21FE */
         uartCmdSubroutine6();          /* 0x2464 */
         uartCmdSubroutine7();          /* 0x2486 */
-        i2cStatusByteUpdate();         /* 0x249C */
+        statusByteSync249c();          /* 0x249C */
         i2cStatusFlagSync();           /* 0x255A */
         unknownSubroutine2594();       /* 0x2594 */
     }

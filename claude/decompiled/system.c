@@ -38,7 +38,7 @@ extern void setFaultState(void);               /* 0x1FD6 – enter fault state *
 extern void droopMode0Watchdog(void);                /* 0x3666 – droop mode 0 watchdog */
 extern void droopMode3Watchdog(void);                /* 0x371A – droop mode 3 watchdog */
 extern void runNormalMode(void);                /* 0x378A – normal mode watchdog */
-extern void fanUpdateSpeed(void);              /* 0x3EAC – apply new fan speed */
+extern void flashSaveStatusPage(void);              /* 0x3EAC – apply new fan speed */
 extern uint16_t thresholdCompare(int16_t, int16_t, int16_t, int16_t);   /* 0x30E2: value, low, high, prev */
 extern uint16_t debounceCounter(int16_t, int16_t, volatile int16_t *, int16_t); /* 0x31B2: new, limit, counter, prev */
 
@@ -161,7 +161,7 @@ void statusUpdate(void)   /* 0x3322 – 0x3384 */
     /* Arguments: W2 = hi threshold 0x17F, W1 = lo threshold 0x15F,
                   W3 = OT bit, ADCBUF5 in W0 */
     /* RCALL 0x30E2: thresholdCompare with OVP/UVP thresholds */
-    if (thresholdCompare((int16_t)adc5, 0x15F, 0x17F, (int16_t)ot_bit) != 0)
+    if (thresholdCompare((int16_t)adc5, 0x15F, 0x17F, (int16_t)ot_bit) == 0)
         ovp_result = 1;
 
     /* RCALL 0x31B2: debounce counter for OVP latch */
@@ -190,8 +190,8 @@ void statusUpdate(void)   /* 0x3322 – 0x3384 */
         if (tmp == 2) {                     /* SUB W0,#2,[W15] / BRA NZ → skip */
             /* Only latch OVP if controlStatus == 0 (no other fault) */
             if (controlStatus == 0) {       /* CP0 0x1E20 / BRA NZ */
-                /* Set OVP latch bit in protStatusByte bit5 */
-                protStatusByte |= (1u << 5);     /* BSET 0x1265, #5 */
+                /* Set OVP latch bit in protectionStatus bit13 (0x1265 bit5) */
+                protectionStatus |= (1u << 13);     /* BSET 0x1265, #5 */
             }
         }
         goto done;
@@ -201,7 +201,7 @@ void statusUpdate(void)   /* 0x3322 – 0x3384 */
 
 clear_and_return:
     /* Clear bit4 of flags_1E19 and clear ovpUvpLatchTarget */
-    internalStatusFlags &= ~(1u << 4); /* BCLR 0x1E19, #4 */
+    currentLimitFlags &= ~(1u << 12); /* BCLR 0x1E19, #4 */
     ovpUvpLatchTarget = 0;                           /* CLR 0x1248 */
 
 done:
@@ -218,11 +218,11 @@ done:
  *   auxFlags bit2       – fault latch active
  *
  * If a fault is active AND systemState == 2:
- *   1. Clear fault-latch bits in protectionStatus/protStatusByte/auxFlags.
+ *   1. Clear fault-latch bits in protectionStatus low/high-byte bits and auxFlags.
  *   2. Assert controlStatus bit0 (fault present).
  *   3. Drive ADCBUF4 scaled value into the LLC dead-time shadow registers
  *      (0x1BDE, 0x1BD0, 0x1926, 0x1BCE, 0x1924).
- *   4. Set relay-on bit (ovpDebounceFlags bit4), clear arm bit (pwmRunning bit0),
+ *   4. Set relay-on bit (statusFlags2 bit12 / 0x1263 bit4), clear arm bit (pwmRunning bit0),
  *      set run bit (pwmRunRequest bit0).
  *   5. Call setFaultState() and shutdownPwm().
  *   6. Set systemState = 3.
@@ -255,16 +255,16 @@ void faultHandler(void)   /* 0x3386 – 0x33F2 */
 
     /* --- Full fault shutdown sequence --- */
 
-    /* Clear OVP latch (bit7 of protectionStatus), OCP latch (bit0 of protStatusByte),
+    /* Clear OVP latch (bit7 of protectionStatus), OCP latch (protectionStatus bit8 / 0x1265 bit0),
        and OCV latch (bit2 of auxFlags) */
     protectionStatus &= ~(1u << 7);  /* BCLR 0x1264, #7 */
-    protStatusByte                     &= ~(1u << 0);  /* BCLR 0x1265, #0 */
+    protectionStatus                  &= ~(1u << 8);  /* BCLR 0x1265, #0 */
     auxFlags                   &= ~(1u << 2);  /* BCLR 0x1E1C, #2 */
 
     /* Assert fault-present flag */
     controlStatus |= (1u << 0);            /* BSET 0x1E20, #0 */
 
-    /* --- Determine fault type for llcHwFault (PWM fault latch register) ---
+    /* --- Determine fault type for pwmRunRequest high-byte fault bits (0x1BF1) ---
      * If protectionStatus bit10 (OCV) is set → use bit4 path
      * Else if protectionStatus bit9 (OVP) is set → use bit4 path
      * Else if droopMode == 4 → use bit4 path
@@ -279,10 +279,10 @@ void faultHandler(void)   /* 0x3386 – 0x33F2 */
         }
     }
 set_bit4:
-    llcHwFault |= (1u << 4);                /* BSET 0x1BF1, #4 */
+    pwmRunRequest |= (1u << 12);                /* BSET 0x1BF1, #4 */
     goto compute_deadtime;
 set_bit5:
-    llcHwFault |= (1u << 5);                /* BSET 0x1BF1, #5 */
+    pwmRunRequest |= (1u << 13);                /* BSET 0x1BF1, #5 */
 
 compute_deadtime:
     /* --- Scale ADCBUF4 for dead-time registers ---
@@ -308,7 +308,7 @@ compute_deadtime:
     oc2rsGateTiming = out_lo;                     /* MOV W2, 0x1924 */
 
     /* --- Set relay/output enable and arm LLC hardware --- */
-    ovpDebounceFlags |= (1u << 4);                /* BSET 0x1263, #4  – relay on */
+    statusFlags2 |= (1u << 12);                /* BSET 0x1263, #4  – relay on */
     pwmRunRequest |= (1u << 0);               /* BSET 0x1BF0, #0  – LLC run bit */
     pwmRunning &= ~(1u << 0);              /* BCLR 0x1BF2, #0  – clear arm */
 
@@ -326,7 +326,7 @@ compute_deadtime:
 clear_latch_only:
     /* systemState != 2: just clear latch bits without shutdown */
     protectionStatus &= ~(1u << 7);  /* BCLR 0x1264, #7 */
-    protStatusByte                     &= ~(1u << 0);  /* BCLR 0x1265, #0 */
+    protectionStatus                  &= ~(1u << 8);  /* BCLR 0x1265, #0 */
     auxFlags                   &= ~(1u << 2);  /* BCLR 0x1E1C, #2 */
     return;                                       /* RETURN */
 }
@@ -379,11 +379,11 @@ void pwmUpdate(void)   /* 0x33F4 – 0x34EC */
     /* Assert fault-present */
     controlStatus |= (1u << 0);          /* BSET 0x1E20, #0 */
 
-    /* Choose llcHwFault fault bit based on LATD bit4 (relay state) */
+    /* Choose pwmRunRequest high-byte fault bit (0x1BF1) based on LATD bit4 (relay state) */
     if (LATDbits.LATD4)          /* BTST.Z W0,#4 / BRA Z */
-        llcHwFault |= (1u << 4);           /* BSET 0x1BF1, #4 */
+        pwmRunRequest |= (1u << 12);           /* BSET 0x1BF1, #4 */
     else
-        llcHwFault |= (1u << 5);           /* BSET 0x1BF1, #5 */
+        pwmRunRequest |= (1u << 13);           /* BSET 0x1BF1, #5 */
 
     /* Scale ADCBUF4 → dead-time registers (same calculation as fault_handler) */
     adc4_raw = ADCBUF4; /* MOV ADCBUF4, W0 */
@@ -399,7 +399,7 @@ void pwmUpdate(void)   /* 0x33F4 – 0x34EC */
     pdc3Shadow = out_lo;
     oc2rsGateTiming = out_lo;
 
-    ovpDebounceFlags |= (1u << 4);              /* relay on */
+    statusFlags2 |= (1u << 12);              /* relay on */
     pwmRunRequest |= (1u << 0);             /* LLC run */
     pwmRunning &= ~(1u << 0);            /* clear arm */
     setFaultState();                  /* CALL 0x1FD6 */
@@ -491,7 +491,7 @@ soft_start_path:
  * Called every T1 ISR tick.  Routes execution to one of three LLC watchdog
  * helpers depending on the current droopMode value:
  *
- *   systemState must equal 2  AND  startupFlags bit3 must be set,
+ *   systemState must equal 2  AND  auxFlags bit11 (0x1E1D bit3) must be set,
  *   otherwise the function returns immediately without action.
  *
  *   droopMode == 0  → BRA to   (0x378A) [normal-0 helper]
@@ -534,88 +534,7 @@ void watchdogService(void)   /* 0x37AA – 0x37C8 */
     return;
 }
 
-/* ============================================================================
- * 6.  fanControl  (0x3EBC – 0x3F0C)
- *
- * Periodic fan tachometer monitoring and speed update routine.
- * Called from the T1 ISR dispatch loop every tick.
- *
- * Algorithm:
- *   1. Bail out if pwmRunning bit0 (LLC armed) is clear.
- *   2. Bail out if llcStatus bit8 (inhibit flag) is set.
- *   3. Bail out if LATF bit1 is set (another fan-related condition).
- *
- *   4. Increment 32-bit tick counter at 0x1274:0x1276.
- *      If counter >= 0x4_93DF (300,000 ticks ≈ fan measurement window):
- *        - Reset counter to 0.
- *        - Increment fan verify count at 0x128A:0x128C, saturating at
- *          0xFF_FFFE.
- *        - Increment fan speed accumulator fanSpeedAccum.
- *          If fanSpeedAccum >= 0x59F (1439):
- *            - Store previous llcStatus value into fanSpeedAccum (reset).
- *            - Call fanUpdateSpeed() (0x3EAC) to apply new speed.
- * ============================================================================ */
-void fanControl(void)   /* 0x3EBC – 0x3F0C */
-{
-    uint16_t bf4_hi;
-    uint32_t tick;
-    uint32_t verify;
-    uint16_t speed_acc;
-
-    /* --- Guard: LLC must be armed --- */
-    if (!(pwmRunning & (1u << 0)))           /* BTST 0x1BF2,#0 / BRA Z */
-        return;
-
-    /* --- Guard: inhibit flag must be clear --- */
-    bf4_hi = llcStatus & 0x0100;            /* AND #0x100, W4 */
-    if (bf4_hi)                             /* BRA NZ */
-        return;
-
-    /* --- Guard: LATF bit1 must be clear --- */
-    if (LATFbits.LATF1)            /* BTST.Z W0,#1 / BRA NZ */
-        return;
-
-    /* --- Increment 32-bit fan tick counter (0x1274:0x1276) --- */
-    uint16_t cnt_lo = fanTickCounterLo;            /* MOV 0x1274, W0 */
-    uint16_t cnt_hi = fanTickCounterHi;            /* MOV 0x1276, W1 */
-    uint16_t new_lo = cnt_lo + 1;          /* ADD W0,#1,W2 */
-    uint16_t new_hi = cnt_hi + (new_lo < cnt_lo ? 1 : 0); /* ADDC W1,#0,W3 */
-    fanTickCounterLo = new_lo;                     /* MOV W2, 0x1274 */
-    fanTickCounterHi = new_hi;                     /* MOV W3, 0x1276 */
-
-    /* --- Check if measurement window expired (>= 0x0004_93DF) --- */
-    /* SUB W2,#0x93DF,[W15] / SUBB W3,#4,[W15] / BRA LEU → not expired */
-    tick = ((uint32_t)new_hi << 16) | new_lo;
-    if (tick <= 0x000493DFu)
-        return;
-
-    /* --- Reset tick counter --- */
-    fanTickCounterLo = 0;
-    fanTickCounterHi = 0;
-
-    /* --- Increment fan verify count, saturate at 0x00FF_FFFE --- */
-    uint16_t vc_lo = fanVerifyCountLo;
-    uint16_t vc_hi = fanVerifyCountHi;
-    verify = ((uint32_t)vc_hi << 16) | vc_lo;
-    if (verify < 0x00FFFFFEu) {
-        verify++;
-        fanVerifyCountLo = (uint16_t)(verify & 0xFFFF);
-        fanVerifyCountHi = (uint16_t)(verify >> 16);
-    }
-
-    /* --- Increment fan speed accumulator --- */
-    speed_acc = fanSpeedAccum + 1;              /* INC W1,W1 */
-    fanSpeedAccum  = speed_acc;
-
-    /* --- If accumulator >= 0x59F: reset and apply new speed --- */
-    if (speed_acc >= 0x059Fu) {            /* SUB W1,#0x59F,[W15] / BRA LEU → skip */
-        /* Reset accumulator to upper-half of llcStatus (previous W4 = bf4_hi field) */
-        fanSpeedAccum = llcStatus;               /* MOV W4, 0x1272 */
-        fanUpdateSpeed();                /* RCALL 0x3EAC */
-    }
-
-    return;
-}
+/* flashPeriodicSave (0x3EBC) — moved to utilities.c */
 
 /* ============================================================================
  * 7.    (0x583E – 0x5840)

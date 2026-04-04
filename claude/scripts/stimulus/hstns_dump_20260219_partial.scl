@@ -1,0 +1,42 @@
+testbench for "dsPIC33FJ64GS606" is
+begin
+   process is
+   begin
+      OSCCON.COSC <= "011";
+      OSCCON.LOCK <= '1';
+      ACLKCON.APLLCK <= '1';
+      wait for 1 ic;
+   end process;
+
+   process is
+   begin
+      RD0 <= '1';
+      RD11 <= '1';
+      RD6 <= '0';
+      wait;
+   end process;
+
+   -- _DAT_ram_0340 dump @2026-02-19 11:17:38.028571 (ADCBUF0..7)
+   process is
+   begin
+      ADCBUF0 <= 777;  -- 0x0309
+      ADCBUF1 <= 688;  -- 0x02B0
+      ADCBUF2 <= 778;  -- 0x030A
+      ADCBUF3 <= 917;  -- 0x0395
+      ADCBUF4 <= 10;   -- 0x000A
+      ADCBUF5 <= 791;  -- 0x0317
+      ADCBUF6 <= 158;  -- 0x009E
+      ADCBUF7 <= 974;  -- 0x03CE
+
+      -- Remaining channels keep prior-safe defaults.
+      ADCBUF8  <= 1023;
+      ADCBUF9  <= 0;
+      ADCBUF10 <= 692;
+      ADCBUF11 <= 607;
+      ADCBUF12 <= 0;
+      ADCBUF13 <= 233;
+      ADCBUF14 <= 0;
+      ADCBUF15 <= 1019;
+      wait;
+   end process;
+end testbench;

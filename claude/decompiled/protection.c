@@ -49,8 +49,8 @@ extern void shutdownPwm(void);   /* 0x4B50 — pwmOverrideEnable alias */
  *
  * Returns:
  *   W0  = 1 if value <  low_threshold  (below low)
- *          W3 if low_threshold <= value <= high_threshold  (hysteresis band)
- *          0 if value >  high_threshold  (above high)
+ *          0 if low_threshold <= value <= high_threshold  (middle band)
+ *          W3 if value > high_threshold  (hysteresis hold)
  *
  * Then zero-extended (ZE) so upper byte is cleared before return.
  * ============================================================================ */
@@ -66,15 +66,13 @@ PROT_LOCAL uint16_t thresholdCompare(uint16_t value, uint16_t low_thresh,
     if ((uint16_t)value < (uint16_t)low_thresh) {
         /* 0x30EA  MOV #0x1, W0 — below low threshold → return 1 */
         result = 1;
-    } else {
-        /* 0x30EE  SUB W4, W2   — value - high_thresh */
-        /* 0x30F0  BRA GTU, ... — if value > high_thresh (unsigned) → keep W0=prev */
-        if ((uint16_t)value > (uint16_t)high_thresh) {
-            /* 0x30F2  CLR W0 — above high threshold → return 0 */
-            result = 0;
-        }
-        /* else: value is in hysteresis band → keep result = prev_state */
+    } else if ((uint16_t)value <= (uint16_t)high_thresh) {
+        /* 0x30EE..0x30F2:
+         * not GTU (value <= high) -> CLR W0
+         */
+        result = 0;
     }
+    /* value > high: keep prev_state */
 
     /* 0x30F4  ZE W0, W0   — zero-extend low byte (clears upper byte) */
     result = (uint8_t)result;
@@ -208,7 +206,7 @@ void flagProcess(void)  /* 0x2FA6 */
         /* 0x3050  RETURN            */
         runtimeFlags &= ~(1u << 5);
         protCounter1232 = 0;
-        droopBoostFlags &= ~(1u << 2);
+        runtimeFlags &= ~(1u << 10);
         protCounter1230 = 0;
         return;
     }
@@ -218,7 +216,7 @@ void flagProcess(void)  /* 0x2FA6 */
     /* 0x2FAE  BRA Z, 0x2FDC    */
     /* 0x2FB0  BTST 0x1266, #7  — test OT flag */
     /* 0x2FB2  BRA Z, 0x2FDC    */
-    if ((i2cStatusByte & (1u << 1)) && (thermalFlags & (1u << 7))) {
+    if ((droopEnableFlags & (1u << 9)) && (thermalFlags & (1u << 7))) {
 
         /* 0x2FB4  MOV 0x1268, W2 */
         uint16_t dm = droopMode;
@@ -395,7 +393,7 @@ after_temp_counter:
             protCounter1230 = 1000;
 
             /* 0x303E  BSET 0x126B, #2 — set "ready" flag */
-            droopBoostFlags |= (1u << 2);
+            runtimeFlags |= (1u << 10);
             /* 0x3040  RETURN */
             return;
         }
@@ -405,7 +403,7 @@ after_temp_counter:
 no_ready_increment:
     /* Imeas > 0x19 OR be4 > 0xC */
     /* 0x3028  BCLR 0x126B, #2 */
-    droopBoostFlags &= ~(1u << 2);
+    runtimeFlags &= ~(1u << 10);
     /* 0x302A  MOV W1, 0x1230   — W1 = protectionStatus & 0x600 result (0 here) */
     protCounter1230 = 0;
     /* 0x302C  RETURN */
@@ -414,7 +412,7 @@ no_ready_increment:
 clear_ready_flag:
     /* droopMode != 3 OR protectionStatus bits[10:9] set */
     /* 0x3042  BCLR 0x126B, #2 */
-    droopBoostFlags &= ~(1u << 2);
+    runtimeFlags &= ~(1u << 10);
     /* 0x3044  CLR 0x1230      */
     protCounter1230 = 0;
     /* 0x3046  RETURN */
@@ -770,7 +768,7 @@ after_debounce:
 
     /* 0x315E  BTST 0x1E19, #3  — test flags_1E19 bit3 */
     /* 0x3160  BRA Z, 0x3166    */
-    if (internalStatusFlags & (1u << 3)) {
+    if (currentLimitFlags & (1u << 11)) {
         /* bit3 set: clear flags_1BF2 bit4 */
         /* 0x3162  BCLR 0x1BF2, #4 */
         pwmRunning &= ~(1u << 4);
@@ -837,7 +835,7 @@ void tempSample(void)  /* 0x316E */
 
         /* 0x3186  BTST 0x1E19, #0    — flags_1E19 bit0 (OT latch) set? */
         /* 0x3188  BRA NZ, 0x3190     */
-        if (internalStatusFlags & (1u << 0)) {
+        if (currentLimitFlags & (1u << 8)) {
             goto temp_increment;
         }
 
@@ -886,7 +884,7 @@ temp_threshold:
         *(volatile uint16_t *)&hwConfigByte = ioutCalFactor;
 
         /* 0x31AE  BSET 0x1E19, #0  — set OT latch flag */
-        internalStatusFlags |= (1u << 0);
+        currentLimitFlags |= (1u << 8);
     }
 
     /* 0x31B0  RETURN */
@@ -897,7 +895,7 @@ temp_threshold:
  *
  * Current limit function called from T1 ISR.
  * Only active when systemState == 2, var_1E0E == 0, controlStatus bit4 clear,
- * statusFlags bit2 clear, and startupFlags bit3 set.
+ * statusFlags bit2 clear, and auxFlags bit11 (0x1E1D bit3) set.
  *
  * Reads ADCBUF5 and uses thresholdCompare() with droop-dependent thresholds:
  *   droopMode in [3,4]: low = 0x15F (351), high = 0x17F (383)

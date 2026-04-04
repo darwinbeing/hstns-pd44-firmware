@@ -29,7 +29,7 @@ extern void ocpFoldback(void);         /* 0x2CD6 - OCP overcurrent foldback (PI)
 extern void softStartRamp(void);      /* 0x2DC6 - soft-start voltage ramp */
 extern void softStartRamp2(void);     /* 0x2DF6 - soft-start ramp phase 2 */
 extern void modeCheck(void);           /* 0x32E0 - operating mode check */
-extern void fanControl(void);              /* 0x3EBC - fan control */
+extern void flashPeriodicSave(void);              /* 0x3EBC - fan control */
 extern void stateControlMachine(void);        /* 0x2E2C - LLC sub-state machine */
 extern void protectionCheck(void);     /* 0x30F8 - protection check */
 extern void pwmUpdate(void);           /* 0x33F4 - PWM update */
@@ -97,7 +97,7 @@ extern void uartRxTickService(void);      /* 0x583E - UART RX tick service */
  *   3832  RCALL 0x2DC6             ; softStartRamp
  *   3834  RCALL 0x2DF6             ; softStartRamp2
  *   3836  RCALL 0x32E0             ; modeCheck
- *   3838  CALL  0x3EBC             ; fanControl
+ *   3838  CALL  0x3EBC             ; flashPeriodicSave
  *   383C  RCALL 0x2E2C             ; stateControlMachine
  *   3840  CALL  0x2506             ; 
  *   3844  RCALL 0x30F8             ; protectionCheck
@@ -160,6 +160,8 @@ extern void uartRxTickService(void);      /* 0x583E - UART RX tick service */
  * ============================================================================ */
 void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
 {
+    dbg_t1_isr_calls++;
+
     /* 32-bit tick counter (sub-divider, wraps at 0-63) */
     tick_counter++;
     if (tick_counter > 63)
@@ -183,13 +185,11 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
     softStartRamp();            /* 0x2DC6 */
     softStartRamp2();           /* 0x2DF6 */
     modeCheck();                 /* 0x32E0 */
-    fanControl();                    /* 0x3EBC */
+    /* flashPeriodicSave(); */              /* 0x3EBC: keep disabled in SIM */
 
     /* ---- State machine & I2C ---- */
     stateControlMachine();              /* 0x2E2C */
-#ifndef SIMULATION_MODE
     i2cBusStuckHandler();               /* 0x2506 */
-#endif
     protectionCheck();                  /* 0x30F8 */
 
     /* ---- PWM update gate (0x3844..0x385C) ----
@@ -223,19 +223,13 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
     watchdogService();                  /* 0x37AA */
     vinCheck();                         /* 0x3254 */
     portdSample();                      /* 0x2F48 */
-#ifndef SIMULATION_MODE
     i2cTxAccumulate();                  /* 0x24B2 */
-#endif
     flagProcess();                      /* 0x2FA6 */
     standbyCheck();              /* 0x3052 */
-#ifndef SIMULATION_MODE
     eepromHandler();                 /* 0x26D6 */
-#endif
     tempSample();                /* 0x316E */
     diagCheck();                 /* 0x30AA */
-#ifndef SIMULATION_MODE
     uartRxTickService();             /* 0x583E */
-#endif
 
     IFS0bits.T1IF = 0;               /* clear T1 interrupt flag */
 }
