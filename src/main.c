@@ -84,17 +84,14 @@ void initTIMER();
 void initCMP4(void);
 void initCMP3(void);
 void initUART(void);
+void initVars(void);
 
-
-extern s16  VMC_Vref;
-extern int16_t vref_ocp_adj;
-extern s16  comp_2p2z_vref;
-extern int16_t  vref_ls;
 
 int main(void)
 {
 
   ClrWdt();
+  initVars();
 
   SET_CPU_IPL(7); 
   // __builtin_disable_interrupts();   // mask all interrupts (IPL=7)
@@ -109,7 +106,7 @@ int main(void)
   initI2C2();
   initUART();
   initSPI2();
-
+  PWMStart();
   SET_CPU_IPL(0);
   //__builtin_enable_interrupts();    // unmask interrupts (IPL=0)
 
@@ -119,11 +116,18 @@ int main(void)
 //  LATFbits.LATF6 = 0;
 //  LATFbits.LATF0 = 0;
 
-
+  char buf[32];
+  int n = 10;
+  sprintf(buf, "The value is %d", n);
   while(1) {
     ClrWdt();
     
     mainStateDispatch();          /* 0x51FE: T1-driven main state machine */
+    
+    //uart2_puts_ln(buf);
+    printf("The value is %d\r\n", n);
+    LED_TOGGLE();
+    delay_ms(500);
 
   }
 

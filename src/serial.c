@@ -26,26 +26,6 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 #include "define.h"
 
 
-void uart1_putc(char c)
-{
-  while (U1STAbits.UTXBF);   /* wait if TX buffer full */
-  U1TXREG = c;
-}
-
-void uart1_puts(const char *str)
-{
-  while (*str)
-  {
-    uart1_putc(*str++);
-  }
-}
-
-void uart1_puts_ln(const char *str)
-{
-  uart1_puts(str);
-  uart1_putc('\r');
-  uart1_putc('\n');
-}
 
 void uart2_putc(char c)
 {
@@ -68,22 +48,7 @@ void uart2_puts_ln(const char *str)
   uart2_putc('\n');
 }
 
-void _mon_putc(char c)
-{
-  while (U2STAbits.UTXBF);
-  U2TXREG = c;
-}
 
-extern uint8_t spi_rx_buf[256];
-extern uint32_t spi_flash_id;
-extern int16_t vout_cal;
-extern s16  ptper_adj;
-extern s16  u_exec;
-extern s16 comp_2p2z_vref;
-extern int16_t Imeas;
-extern int16_t vref_ocp_adj;
-extern int16_t  vref_ls;
-extern uint8_t at45db_device_id[8];
 extern uint16_t spi_flash_status;
 
 void uart2_transmit_frame(void)

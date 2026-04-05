@@ -27,29 +27,28 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 #include "define.h"
 #include "dsp.h"
 
-volatile unsigned int timerInterruptCount = 0;
+volatile unsigned int timerInterruptCount;
 
-int16_t e_n = 0, e_n1 = 0, e_n2 = 0, e_n3;
-int32_t y_n1 = 24000, y_n2 = 24000;
-int32_t y_n = 24000;
+int16_t e_n, e_n1, e_n2, e_n3;
+int32_t y_n1, y_n2;
+int32_t y_n;
 
-int32_t n1 = Q15_FROM_FLOAT(-1.95197);
-int32_t n2 = Q15_FROM_FLOAT(2.424896);
-int32_t n3 = Q15_FROM_FLOAT(-0.69126);
-int16_t d2 = Q15_FROM_FLOAT(0.25742);
-int16_t d3 = Q15_FROM_FLOAT(-0.00742);
+int32_t n1;
+int32_t n2;
+int32_t n3;
+int16_t d2;
+int16_t d3;
 
 /* --- ADC inputs --- */
-u16  adc_an0 = 0;    /* AN0 raw sample (Vout path A)   */
-u16  adc_an2 = 0;    /* AN2 raw sample (Vout path B)   */
-u16  adc_an0_prev = 0;    /* AN0 raw sample (Vout path A)   */
-u16  adc_an2_prev = 0;    /* AN2 raw sample (Vout path B)   */
+u16  adc_an0;    /* AN0 raw sample (Vout path A)   */
+u16  adc_an2;    /* AN2 raw sample (Vout path B)   */
+u16  adc_an0_prev;    /* AN0 raw sample (Vout path A)   */
+u16  adc_an2_prev;    /* AN2 raw sample (Vout path B)   */
 s16  vfb_sum2ch;      /* (AN0 + AN2) * 2                */
-s16  VMC_Vref = 0;          /* output voltage set-point       */
-s16  comp_2p2z_vref = 0;
+s16  voutSetpoint;          /* output voltage set-point       */
 
 /* --- Frequency control word (after clamping) --- */
-s16  u_exec = 0x5DC0;        /* clamped output -> PTPER calc   */
+s16  u_exec;        /* clamped output -> PTPER calc   */
 
 /* --- Gain scheduling (Kff) --- */
 s16  kff_vout;      /* Vout-proportional Kff base     */
@@ -59,8 +58,8 @@ s16  kff_gain;      /* dynamic gain factor G(n)
 
 /* --- Computed PWM values (written to registers each cycle) --- */
 s16  ptper;         /* switching period register      */
-s16  pdc1 = 0x05F9;     /* PTPER - 8  (fine adjustment)   */
-s16  pdc2 = 0x05F9;     /* PTPER - 8  (fine adjustment)   */
+s16  pdc1;     /* PTPER - 8  (fine adjustment)   */
+s16  pdc2;     /* PTPER - 8  (fine adjustment)   */
 s16  pdc3;          /* SR duty cycle                  */
 s16  dtr;           /* dead-time  (symmetric)         */
 
@@ -88,9 +87,9 @@ static __attribute__((always_inline)) int16_t util_divsd(int32_t dividend, int16
 void __attribute__((__interrupt__, no_auto_psv)) _T1Interrupt()
 {
         // timerInterruptCount ++; 	/* Increment interrupt counter */
-        llc_adc_current_sample();
-        llc_droop_trim_calc();
-        llc_ocp_foldback();
+        updateCurrentMeasurementPipeline();
+        //llc_droop_trim_calc();
+        ocpVrefFoldbackUpdate();
         IFS0bits.T1IF = 0; 		/* Clear Interrupt Flag */
 }
 
@@ -124,7 +123,7 @@ void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt()
         adc_an0_prev = adc_an0;
         adc_an2_prev = adc_an2;
 
-        e_n = comp_2p2z_vref -  vfb_sum2ch;	    /* Find error */
+        e_n = voutSetpoint -  vfb_sum2ch;	    /* Find error */
 
         delta = e_n - e_n1;
         if (delta > 100) {                      /* rate limit up */
@@ -182,8 +181,8 @@ void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt()
         y_n1 = y_n;
         y_n2 = y_n1;
 
-        llc_current_fast_avg();
-        llc_voltage_cal_ovp();
+        updateCurrentOcpFastAvg8Pt();
+        //llc_voltage_cal_ovp();
         
         IFS0bits.T2IF = 0; 		/* Clear Interrupt Flag */
         IFS3bits.PSEMIF         = 0;

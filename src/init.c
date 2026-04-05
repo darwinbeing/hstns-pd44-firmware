@@ -32,7 +32,55 @@ extern int modifier;
 extern unsigned char index_SR, faultState;
 extern unsigned int synchRectDutyCycle[126][2];
 extern unsigned int timerInterruptCount;
-unsigned char softStartFlag = 0;
+extern int16_t e_n, e_n1, e_n2, e_n3;
+extern int32_t y_n1, y_n2, y_n;
+extern int32_t n1, n2, n3;
+extern int16_t d2, d3;
+extern u16 adc_an0, adc_an2, adc_an0_prev, adc_an2_prev;
+extern s16 voutSetpoint;
+extern s16 u_exec;
+extern s16 pdc1, pdc2;
+extern int16_t cal_a_gain, cal_a_offset;
+extern int32_t integrator;
+extern int16_t Iref, vref_ocp_adj, vref_ls;
+unsigned char softStartFlag;
+
+void initVars(void)
+{
+  softStartFlag = 0;
+  timerInterruptCount = 0;
+
+  e_n = 0;
+  e_n1 = 0;
+  e_n2 = 0;
+  e_n3 = 0;
+
+  y_n1 = 24000;
+  y_n2 = 24000;
+  y_n = 24000;
+
+  n1 = Q15_FROM_FLOAT(-1.95197);
+  n2 = Q15_FROM_FLOAT(2.424896);
+  n3 = Q15_FROM_FLOAT(-0.69126);
+  d2 = Q15_FROM_FLOAT(0.25742);
+  d3 = Q15_FROM_FLOAT(-0.00742);
+
+  adc_an0 = 0;
+  adc_an2 = 0;
+  adc_an0_prev = 0;
+  adc_an2_prev = 0;
+  voutSetpoint = 0;
+  u_exec = 0x5DC0;
+  pdc1 = 0x05F9;
+  pdc2 = 0x05F9;
+
+  cal_a_gain = 0x2030;
+  cal_a_offset = (int16_t)0xFFF8;
+  integrator = 0;
+  Iref = 0xA6;
+  vref_ocp_adj = 0;
+  vref_ls = 0;
+}
 
 void initClock(void)
 {

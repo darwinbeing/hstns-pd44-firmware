@@ -4,7 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>../define.h</itemPath>
+      <itemPath>../src/define.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -18,19 +18,19 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../init.c</itemPath>
-      <itemPath>../isr.c</itemPath>
-      <itemPath>../main.c</itemPath>
-      <itemPath>../traps.c</itemPath>
-      <itemPath>../v_ctrl.c.c</itemPath>
-      <itemPath>../i_ctrl.c</itemPath>
-      <itemPath>../at45db.c</itemPath>
-      <itemPath>../serial.c</itemPath>
-      <itemPath>../state_machine.c</itemPath>
+      <itemPath>../src/init.c</itemPath>
+      <itemPath>../src/isr.c</itemPath>
+      <itemPath>../src/main.c</itemPath>
+      <itemPath>../src/traps.c</itemPath>
+      <itemPath>../src/v_ctrl.c.c</itemPath>
+      <itemPath>../src/i_ctrl.c</itemPath>
+      <itemPath>../src/at45db.c</itemPath>
+      <itemPath>../src/serial.c</itemPath>
+      <itemPath>../src/sm.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
-    <Elem>..</Elem>
+    <Elem>../src</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -191,7 +191,7 @@
       </C30-LD>
       <C30Global>
         <property key="combine-sourcefiles" value="false"/>
-        <property key="common-include-directories" value="../"/>
+        <property key="common-include-directories" value="../src"/>
         <property key="dual-boot-partition" value="0"/>
         <property key="fast-math" value="false"/>
         <property key="generic-16-bit" value="false"/>
@@ -244,7 +244,7 @@
         <property key="communication.speed" value="${communication.speed.default}"/>
         <property key="debugoptions.debug-startup" value="Use system settings"/>
         <property key="debugoptions.reset-behaviour" value="Use system settings"/>
-        <property key="debugoptions.useswbreakpoints" value="true"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
         <property key="event.recorder.debugger.behavior" value="Running"/>
         <property key="event.recorder.enabled" value="false"/>
         <property key="event.recorder.scvd.files" value=""/>
@@ -446,6 +446,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-abff"/>
         <property key="poweroptions.powerenable" value="true"/>
+        <property key="programmerToGoFilePath"
+                  value="/Users/litao/Developer/hstns-pd44-firmware/LLC_VMC.X/debug/default/LLC_VMC_ptg"/>
         <property key="programmerToGoImageName" value="LLC_VMC_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>

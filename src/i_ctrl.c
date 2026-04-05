@@ -22,7 +22,7 @@ int16_t iout_sum;          // DAT_ram_1d68, running sum
 int16_t iout_avg;          // DAT_ram_1d46, = sum >> 3
 int16_t iout_raw;          // DAT_ram_1d94, latest snapshot
 
-void llc_current_fast_avg(void)
+void updateCurrentOcpFastAvg8Pt(void)
 {
     int16_t sample = ADCBUF4;                  // DAT_ram_0348
     iout_raw = sample;                          // DAT_ram_1d94
@@ -77,13 +77,13 @@ int16_t  adc_an4;               // DAT_ram_0348, AN4 raw
 extern int16_t  iout_avg;              // DAT_ram_1d46, 8-point avg from TIMER2
  
 // --- 64-point ring buffer ---
-int16_t  ring64_idx;            // DAT_ram_1252, write index 0-63
+int32_t  ring64_idx;            // DAT_ram_1252, write index 0-63
 int32_t  ring64_buf[64];        // DAT_ram_110a..1189
 int32_t  ring64_sum;            // DAT_ram_1258:1256, running sum
  
 // --- Calibration A ---
-int16_t  cal_a_gain = 0x2030;            // DAT_ram_1d26
-int16_t  cal_a_offset = 0xFFF8;          // DAT_ram_1d24
+int16_t  cal_a_gain;            // DAT_ram_1d26
+int16_t  cal_a_offset;          // DAT_ram_1d24
 int16_t  Imeas_cal_a;           // DAT_ram_1e4e, output of cal path A
 int16_t  Imeas_cal_a_diag;      // DAT_ram_1108, diagnostic
  
@@ -101,7 +101,7 @@ int16_t  Imeas_longavg;         // DAT_ram_1d1e, long-term average
 // --- Library ---
 extern int32_t __mulsi3(int32_t a, int32_t b);
  
-void llc_adc_current_sample(void)
+void updateCurrentMeasurementPipeline(void)
 {
     // ==========================================================
     // Step 1: Store AN4 into 64-entry ring buffer
@@ -114,7 +114,12 @@ void llc_adc_current_sample(void)
     //   W3 = 0x110a (buffer base)
     //   [W2+W3] = W1:W0 (store 32-bit, W1=0)
  
-    ring64_buf[ring64_idx] = (int32_t)ADCBUF4;
+    ring64_buf[ring64_idx] = (int16_t)ADCBUF4;
+
+    /* Advance 64-point shared index (DAT_ram_1252), wrap at 63 */
+    ring64_idx++;
+    if (ring64_idx > 0x3F)
+        ring64_idx = 0;
  
     // ==========================================================
     // Step 2: Sum all 64 entries
@@ -285,16 +290,17 @@ void llc_adc_current_sample(void)
 //   vref_2p2z = (0xC2F - trim_offset) - u[n] ? TIMER2 2P2Z ? LLC freq
 // =================================================================
 
-int32_t integrator = 0;
-int16_t Iref = 0xA6;
+int32_t integrator;
+int16_t Iref;
 // int16_t Iref = 0x30F;
 
-int16_t vref_ocp_adj = 0;
+int16_t vref_ocp_adj;
 
 // int16_t Imeas = 0;
 extern int16_t vfb_sum2ch;
+extern s16  voutSetpoint;
 
-void llc_ocp_foldback(void)
+void ocpVrefFoldbackUpdate(void)
 {
     // Step1: Vout ADC ? gain scale factor (not voltage regulation)
     // Higher Vout ? gain_scale clamped to min 0x100
@@ -335,10 +341,12 @@ void llc_ocp_foldback(void)
 
     // Step5: Output ? offsets 2P2Z reference in TIMER2
     vref_ocp_adj = u_n;  // DAT_ram_1d38
+    
+    voutSetpoint = 0xC2F - u_n;
 }
 
 // --- Output ---
-int16_t  vref_ls = 0;        // DAT_ram_1d3a ? vref offset load sharing, current sharing
+int16_t  vref_ls;        // DAT_ram_1d3a ? vref offset load sharing, current sharing
  
 // --- Library ---
 extern int32_t __mulsi3(int32_t a, int32_t b);
