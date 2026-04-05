@@ -25,6 +25,8 @@
       <itemPath>../v_ctrl.c.c</itemPath>
       <itemPath>../i_ctrl.c</itemPath>
       <itemPath>../at45db.c</itemPath>
+      <itemPath>../serial.c</itemPath>
+      <itemPath>../state_machine.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -182,7 +184,7 @@
         <property key="secure-flash" value="no_flash"/>
         <property key="secure-ram" value="no_ram"/>
         <property key="secure-write-protect" value="no_write_protect"/>
-        <property key="stack-size" value="16"/>
+        <property key="stack-size" value="1024"/>
         <property key="symbol-stripping" value=""/>
         <property key="trace-symbols" value=""/>
         <property key="warn-section-align" value="false"/>
@@ -242,7 +244,7 @@
         <property key="communication.speed" value="${communication.speed.default}"/>
         <property key="debugoptions.debug-startup" value="Use system settings"/>
         <property key="debugoptions.reset-behaviour" value="Use system settings"/>
-        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="debugoptions.useswbreakpoints" value="true"/>
         <property key="event.recorder.debugger.behavior" value="Running"/>
         <property key="event.recorder.enabled" value="false"/>
         <property key="event.recorder.scvd.files" value=""/>
@@ -262,6 +264,8 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-abff"/>
         <property key="poweroptions.powerenable" value="true"/>
+        <property key="programmerToGoFilePath"
+                  value="/Users/litao/Developer/hstns-pd44-firmware/LLC_VMC.X/debug/default/LLC_VMC_ptg"/>
         <property key="programmerToGoImageName" value="LLC_VMC_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>

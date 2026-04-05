@@ -85,6 +85,7 @@ void initCMP4(void);
 void initCMP3(void);
 void initUART(void);
 
+
 extern s16  VMC_Vref;
 extern int16_t vref_ocp_adj;
 extern s16  comp_2p2z_vref;
@@ -93,84 +94,67 @@ extern int16_t  vref_ls;
 int main(void)
 {
 
-        initClock();                            				/* Initialize Primary and Auxiliary oscillators */
+  ClrWdt();
 
-        initCMP4();
-        initCMP3();
+  SET_CPU_IPL(7); 
+  // __builtin_disable_interrupts();   // mask all interrupts (IPL=7)
+  // ... peripheral init: PWM, ADC, Timer, SPI, UART ...
+  initClock();                  /* Initialize Primary and Auxiliary oscillators */
+  initCMP4();
+  initCMP3();
+  initIOPorts();		/* Setup LEDs and other I/O Ports */
+  initADC();			/* Setup ADC module and ADC triggering */
+  initTIMER();
+  initPWM();			/* Initialize Half-bridge and synchronous rectification PWMs */
+  initI2C2();
+  initUART();
+  initSPI2();
 
-        initIOPorts();								/* Setup LEDs and other I/O Ports */
+  SET_CPU_IPL(0);
+  //__builtin_enable_interrupts();    // unmask interrupts (IPL=0)
 
-        initADC();								/* Setup ADC module and ADC triggering */
 
-        initTIMER();
+//  LATDbits.LATD3 = 0;
+//  LATDbits.LATD5 = 1;
+//  LATFbits.LATF6 = 0;
+//  LATFbits.LATF0 = 0;
 
-        initPWM();								/* Initialize Half-bridge and synchronous rectification PWMs */
 
-        initI2C2();
+  while(1) {
+    ClrWdt();
+    
+    mainStateDispatch();          /* 0x51FE: T1-driven main state machine */
 
-        initUART();
+  }
 
-        initSPI2();
+}
 
-        SR &= 0x1F;
 
-        LATDbits.LATD3 = 0;
-        LATDbits.LATD5 = 1;
-        LATFbits.LATF6 = 0;
-        LATFbits.LATF0 = 0;
-
-        LED_ON();
-        /* Override PWM1H/L - full-bridge leg 1 */
-        IOCON1bits.OVRENH = 0;
-        Nop();
-        Nop();
-        Nop();
-        IOCON1bits.OVRENL = 0;
-        Nop();
-        Nop();
-        Nop();
-        /* Override PWM2H/L - full-bridge leg 2 */
-        IOCON2bits.OVRENH = 0;
-        Nop();
-        Nop();
-        Nop();
-        IOCON2bits.OVRENL = 0;
-        Nop();
-        Nop();
-        Nop();
-
-        /* Override PWM3H/L - synchronous rectifier */
-        IOCON3bits.OVRENH = 1;
-        Nop();
-        Nop();
-        Nop();
-        IOCON3bits.OVRENL = 0;
-        
-        VMC_Vref = 0;
-        while (VMC_Vref < (VREF - 30)) {
-            VMC_Vref += 10;                                
-            comp_2p2z_vref = VMC_Vref;
-
-            ClrWdt();
-            delay_us(10);                         
-        }
-        
-        comp_2p2z_vref = VREF_NOMINAL - vref_ls - vref_ocp_adj;
-        
-        while(1) {
-            
-                comp_2p2z_vref = VREF_NOMINAL - vref_ls - vref_ocp_adj;
-                if (comp_2p2z_vref > VREF_MAX) comp_2p2z_vref = VREF_MAX;
-                if (comp_2p2z_vref < VREF_MIN) comp_2p2z_vref = VREF_MIN;
-                
-                ClrWdt();
-                delay_us(10);
-                
-                Nop();
-                Nop();
-                Nop();
-                Nop();
-                Nop();
-	}
-
+void PWMStart(void)
+{
+  // LED_ON();
+  /* Override PWM1H/L - full-bridge leg 1 */
+  IOCON1bits.OVRENH = 0;
+  Nop();
+  Nop();
+  Nop();
+  IOCON1bits.OVRENL = 0;
+  Nop();
+  Nop();
+  Nop();
+  /* Override PWM2H/L - full-bridge leg 2 */
+  IOCON2bits.OVRENH = 0;
+  Nop();
+  Nop();
+  Nop();
+  IOCON2bits.OVRENL = 0;
+  Nop();
+  Nop();
+  Nop();
+  /* Override PWM3H/L - synchronous rectifier */
+  IOCON3bits.OVRENH = 0;
+  Nop();
+  Nop();
+  Nop();
+  IOCON3bits.OVRENL = 0;
 }

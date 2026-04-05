@@ -1,0 +1,177 @@
+testbench for "dsPIC33FJ64GS606" is
+begin
+   process is
+   begin
+      OSCCON.COSC <= "011";
+      OSCCON.LOCK <= '1';
+      ACLKCON.APLLCK <= '1';
+      wait for 1 ic;
+   end process;
+
+   process is
+   begin
+      RD0 <= '1';
+      RD1 <= '1';
+      RD10 <= '0';
+      RD11 <= '1';
+      RD6 <= '0';
+      wait;
+   end process;
+
+   process is
+   begin
+      ADCBUF1  <= 688;
+      ADCBUF3  <= 917;
+      ADCBUF4  <= 10;
+      ADCBUF6  <= 158;
+      ADCBUF7  <= 974;
+      ADCBUF8  <= 1023;
+      ADCBUF9  <= 0;
+      ADCBUF10 <= 692;
+      ADCBUF11 <= 607;
+      ADCBUF12 <= 0;
+      ADCBUF13 <= 233;
+      ADCBUF14 <= 0;
+      ADCBUF15 <= 1019;
+      wait;
+   end process;
+
+   -- Force PWM special event interrupt flag pulses in simulator.
+   process is
+   begin
+      wait for 200000 ic;
+      loop
+         IFS3.PSEMIF <= '1';
+         wait for 2000 ic;
+         IFS3.PSEMIF <= '0';
+         wait for 18000 ic;
+      end loop;
+   end process;
+
+   -- Slow startup ramp for AN0/AN2/AN5 (voltage feedback channels).
+   process is
+   begin
+      ADCBUF0 <= 0;
+      ADCBUF2 <= 0;
+      ADCBUF5 <= 0;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 40;
+      ADCBUF2 <= 42;
+      ADCBUF5 <= 44;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 80;
+      ADCBUF2 <= 82;
+      ADCBUF5 <= 84;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 120;
+      ADCBUF2 <= 122;
+      ADCBUF5 <= 125;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 160;
+      ADCBUF2 <= 162;
+      ADCBUF5 <= 165;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 200;
+      ADCBUF2 <= 202;
+      ADCBUF5 <= 206;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 240;
+      ADCBUF2 <= 242;
+      ADCBUF5 <= 246;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 280;
+      ADCBUF2 <= 282;
+      ADCBUF5 <= 287;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 320;
+      ADCBUF2 <= 322;
+      ADCBUF5 <= 327;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 360;
+      ADCBUF2 <= 362;
+      ADCBUF5 <= 368;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 400;
+      ADCBUF2 <= 402;
+      ADCBUF5 <= 409;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 440;
+      ADCBUF2 <= 442;
+      ADCBUF5 <= 449;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 480;
+      ADCBUF2 <= 482;
+      ADCBUF5 <= 488;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 520;
+      ADCBUF2 <= 522;
+      ADCBUF5 <= 528;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 560;
+      ADCBUF2 <= 562;
+      ADCBUF5 <= 568;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 600;
+      ADCBUF2 <= 602;
+      ADCBUF5 <= 608;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 640;
+      ADCBUF2 <= 642;
+      ADCBUF5 <= 648;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 680;
+      ADCBUF2 <= 682;
+      ADCBUF5 <= 688;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 720;
+      ADCBUF2 <= 722;
+      ADCBUF5 <= 728;
+      wait for 8000000 ic;
+
+      ADCBUF0 <= 760;
+      ADCBUF2 <= 762;
+      ADCBUF5 <= 768;
+      wait for 8000000 ic;
+
+      -- Slow near-setpoint ripple (lower slope + low-frequency perturbation).
+      loop
+         ADCBUF0 <= 776;
+         ADCBUF2 <= 779;
+         ADCBUF5 <= 785;
+         wait for 120000 ic;
+
+         ADCBUF0 <= 779;
+         ADCBUF2 <= 782;
+         ADCBUF5 <= 788;
+         wait for 120000 ic;
+
+         ADCBUF0 <= 782;
+         ADCBUF2 <= 785;
+         ADCBUF5 <= 791;
+         wait for 120000 ic;
+
+         ADCBUF0 <= 780;
+         ADCBUF2 <= 783;
+         ADCBUF5 <= 789;
+         wait for 120000 ic;
+      end loop;
+   end process;
+end testbench;

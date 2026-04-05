@@ -143,7 +143,7 @@ int spi_at45db_page_read(uint8_t *buf, uint16_t len,
 }
 
 // CRC-16/XMODEM
-static uint16_t crc16(const uint8_t *buf, uint16_t len)
+uint16_t crc16(const uint8_t *buf, uint16_t len)
 {
     uint16_t crc = 0;
     for (uint16_t i = 0; i < len; i++) {
@@ -389,4 +389,37 @@ int spi_at45db_page_program(const uint8_t *buf, uint16_t page)
         return -1;
 
     return 0;
+}
+
+uint8_t spi_rx_buf[256];
+
+void spi_flash_test() 
+{
+  delay_ms(100);
+  LED_OFF();
+  delay_ms(100);
+  LED_ON();
+  spi_flash_dump_raw(0, 1024);    // all 1024 pages
+
+  // spi_at45db_page_read(spi_rx_buf, 256, 7, 0);
+  // spi_at45db_buf_program(spi_rx_buf, 18);
+  //spi_at45db_page_program(spi_rx_buf, 18);
+  // spi_at45db_page_write_safe(spi_rx_buf, 18);
+  // spi_at45db_page_erase(18);
+  LED_OFF();
+  delay_ms(100);
+
+  //spi_at45db_init();
+  while(1) {
+    LED_TOGGLE();
+    delay_ms(10);
+
+    ClrWdt();
+  }
+  
+    spi_at45db_read_id();
+    spi_at45db_page_read(spi_rx_buf, 0x20, 7, 0);
+    uart2_transmit_frame();
+  
+  
 }
