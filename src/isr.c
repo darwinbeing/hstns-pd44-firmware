@@ -65,6 +65,11 @@ s16  dtr;           /* dead-time  (symmetric)         */
 
 
 extern  int16_t adc_4pt_sum;       // DAT_ram_1d9e, 4-point moving average
+extern void updateCurrentMeasurementPipeline(void);
+extern void updateCurrentOcpFastAvg8Pt(void);
+extern void ocpVrefFoldbackUpdate(void);
+extern void llc_voltage_cal_ovp(void);
+extern void ocpShutdownCheck(void);
 
 
 static __attribute__((always_inline)) int16_t util_divsd(int32_t dividend, int16_t divisor)
@@ -90,6 +95,7 @@ void __attribute__((__interrupt__, no_auto_psv)) _T1Interrupt()
         updateCurrentMeasurementPipeline();
         //llc_droop_trim_calc();
         ocpVrefFoldbackUpdate();
+        ocpShutdownCheck();
         IFS0bits.T1IF = 0; 		/* Clear Interrupt Flag */
 }
 
@@ -97,7 +103,6 @@ void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt()
 {
         // timerInterruptCount ++; 	/* Increment interrupt counter */
 
-        s16 e_slew;
         s16 delta;
 
         s32 tmp;
@@ -172,6 +177,7 @@ void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt()
         ptper = period - 8;
         pdc1 = period;
         pdc2 = period;
+        pdc3 = SR_FIXED_PDC3;
 
         e_n1 = e_n;		/* Update previous voltage error */
         e_n2 = e_n1;
@@ -182,7 +188,7 @@ void __attribute__((__interrupt__, no_auto_psv)) _T2Interrupt()
         y_n2 = y_n1;
 
         updateCurrentOcpFastAvg8Pt();
-        //llc_voltage_cal_ovp();
+        llc_voltage_cal_ovp();
         
         IFS0bits.T2IF = 0; 		/* Clear Interrupt Flag */
         IFS3bits.PSEMIF         = 0;
@@ -203,7 +209,7 @@ void __attribute__((__interrupt__, no_auto_psv)) _PWMSpEventMatchInterrupt()
         PTPER   = ptper;           /* period register (PDC-8)   */
         PDC1    = pdc1;            /* primary high-side: 100% DC   */
         PDC2    = pdc2;            /* primary low-side:  100% DC   */
-        PDC3    = 0x36B;           /* SR duty cycle               */
+        PDC3    = pdc3;            /* SR duty cycle               */
         PHASE3  = 0;               /* SR phase offset             */
         DTR3    = 0x2F;            /* SR dead-time rising edge    */
         ALTDTR3 = 0x2F;            /* SR dead-time falling edge   */

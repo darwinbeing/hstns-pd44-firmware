@@ -25,6 +25,7 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 ** ADDITIONAL NOTES:       LLC SeriesResonant converter without output Inductor
 *************************************************************************************************************************************************************/
 #include <xc.h>
+#include <stdio.h>
 #include "p33Fxxxx.h"
 #include "define.h"
 
@@ -85,6 +86,8 @@ void initCMP4(void);
 void initCMP3(void);
 void initUART(void);
 void initVars(void);
+void PWMStart(void);
+void mainStateDispatch(void);
 
 
 int main(void)

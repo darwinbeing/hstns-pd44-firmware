@@ -120,6 +120,18 @@ int16_t adc_4pt_sum;       // DAT_ram_1d9e, AN0+prev_AN0+AN2+prev_AN2
 static const int16_t cal_coeff = VOUT_CAL_COEFF;          // DAT_ram_1d2e, = 0x200F (8207)
 static const int16_t cal_offset = VOUT_CAL_OFFSET;         // DAT_ram_1d2c, = 0x0001
 int16_t vout_cal;           // DAT_ram_1d66, calibrated voltage output
+uint16_t ovp_counter;        // DAT_ram_1dca, OVP shutdown confirmation counter
+
+extern volatile uint16_t systemState;
+extern volatile uint16_t statusFlags;
+extern volatile uint16_t controlStatus;
+extern volatile uint16_t droopMode;
+extern volatile uint16_t faultResetTimer;
+extern s16 u_exec;
+extern s16 pdc1;
+extern s16 pdc2;
+extern s16 pdc3;
+extern void llcFaultShutdown(uint16_t control_flags);
  
 
 void llc_voltage_cal_ovp(void)
@@ -154,6 +166,50 @@ void llc_voltage_cal_ovp(void)
     // other modes: normal threshold
     //   0x36F = 879 ? ~13.9V (~13% above 12.3V nominal)
     int16_t ovp_thresh = 0x36F;                     // default: 879
+    if (droopMode == 4)
+        ovp_thresh = OVP_THRESHOLD_MODE4;
+    else
+        ovp_thresh = OVP_THRESHOLD_NORMAL;
+
+    // ==========================================================
+    // Step 3: OVP activation and shutdown sequencing
+    // ==========================================================
+    if (controlStatus & OVP_ARM_FLAG) {
+        uint16_t cnt = ovp_counter + 1;
+        ovp_counter = cnt;
+
+        if (systemState == 2) {           // DAT_ram_1e22 = normal run
+            pdc1 = 0;
+            pdc2 = 0;
+            pdc3 = 0;
+
+            cnt += 2;                                  // original 0x444C accelerated count
+            ovp_counter = cnt;
+            if (cnt > 1) {
+                ovp_counter = 1;
+                llcFaultShutdown(0);
+            }
+        } else {
+            ovp_counter = 0;
+        }
+        return;
+    }
+
+    if (v_avg > ovp_thresh) {
+        if ((u_exec >= OVP_FREQ_CTRL_MIN) || (statusFlags & STATUS_FLAG_STARTUP)) {
+            pdc1 = 0;
+            pdc2 = 0;
+            pdc3 = 0;
+            controlStatus |= OVP_ARM_FLAG;
+            ovp_counter = 0;
+            faultResetTimer = 0x00C8;
+        } else {
+            ovp_counter = 0;
+        }
+        return;
+    }
+
+    ovp_counter = 0;
  
 }
 

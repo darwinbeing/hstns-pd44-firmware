@@ -39,10 +39,29 @@ extern int16_t d2, d3;
 extern u16 adc_an0, adc_an2, adc_an0_prev, adc_an2_prev;
 extern s16 voutSetpoint;
 extern s16 u_exec;
-extern s16 pdc1, pdc2;
+extern s16 pdc1, pdc2, pdc3;
 extern int16_t cal_a_gain, cal_a_offset;
 extern int32_t integrator;
 extern int16_t Iref, vref_ocp_adj, vref_ls;
+extern volatile uint16_t systemState;
+extern volatile uint16_t statusFlags;
+extern volatile uint16_t protectionStatus;
+extern volatile uint16_t runtimeFlags;
+extern volatile uint16_t thermalFlags;
+extern volatile uint16_t droopMode;
+extern volatile uint16_t systemFlags;
+extern volatile uint16_t auxFlags;
+extern volatile uint16_t currentLimitFlags;
+extern volatile uint16_t controlStatus;
+extern volatile uint16_t pwmRunRequest;
+extern volatile uint16_t pwmRunning;
+extern volatile uint16_t pmbusAlertFlags;
+extern volatile uint16_t faultResetTimer;
+extern volatile uint16_t fanI2cAddr;
+extern uint16_t ocp_shutdown_counter;
+extern uint16_t ocp_foldback_counter;
+extern uint16_t ioutAdcRaw;
+extern uint16_t ovp_counter;
 unsigned char softStartFlag;
 
 void initVars(void)
@@ -73,6 +92,27 @@ void initVars(void)
   u_exec = 0x5DC0;
   pdc1 = 0x05F9;
   pdc2 = 0x05F9;
+  pdc3 = SR_FIXED_PDC3;
+
+  systemState = 2;
+  statusFlags = 0;
+  protectionStatus = 0;
+  runtimeFlags = 0;
+  thermalFlags = 0;
+  droopMode = 0;
+  systemFlags = 0;
+  auxFlags = 0;
+  currentLimitFlags = 0;
+  controlStatus = 0;
+  pwmRunRequest = (1u << 0);
+  pwmRunning = (1u << 0);
+  pmbusAlertFlags = 0;
+  faultResetTimer = 0;
+  fanI2cAddr = 0;
+  ocp_shutdown_counter = 0;
+  ocp_foldback_counter = 0;
+  ioutAdcRaw = OCP_DROOP3_THRESHOLD;
+  ovp_counter = 0;
 
   cal_a_gain = 0x2030;
   cal_a_offset = (int16_t)0xFFF8;

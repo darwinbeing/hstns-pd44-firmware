@@ -4,6 +4,9 @@
 #include "p33Fxxxx.h"
 #include "define.h"
 
+extern void delay_ms(uint16_t ms);
+extern void uart2_transmit_frame(void);
+
 /* reads can bypass the buffers */
 #define OP_READ_CONTINUOUS	0xE8
 #define OP_READ_PAGE		0xD2
@@ -187,7 +190,7 @@ void spi_flash_dump_raw(uint16_t start_page, uint16_t num_pages)
 // Configure AT45DB021E page size (one-time nonvolatile setting)
 // mode: 0 = binary 256 bytes, 1 = standard 264 bytes
 
-static int spi_at45db_config_pagesize(uint8_t mode)
+static int __attribute__((unused)) spi_at45db_config_pagesize(uint8_t mode)
 {
     uint8_t tx[4] = {
         0x3D, 0x2A, 0x80,
@@ -359,7 +362,7 @@ int spi_at45db_page_write_safe(const uint8_t *buf, uint16_t page)
 int spi_at45db_init(void)
 {     
     // ensure binary page size (256 bytes)
-    // return spi_at45db_config_binary_pagesize();
+    return spi_at45db_config_binary_pagesize();
 }
 
 
