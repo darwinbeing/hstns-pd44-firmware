@@ -178,7 +178,8 @@ void llc_voltage_cal_ovp(void)
     // Step 3: OVP activation and shutdown sequencing
     // ==========================================================
     if (controlStatus & OVP_ARM_FLAG) {
-        uint16_t cnt = ovp_counter + 1;
+        uint16_t prev_cnt = ovp_counter;
+        uint16_t cnt = prev_cnt + 1;
         ovp_counter = cnt;
 
         if (systemState == 2) {           // DAT_ram_1e22 = normal run
@@ -186,7 +187,7 @@ void llc_voltage_cal_ovp(void)
             pdc2 = 0;
             pdc3 = 0;
 
-            cnt += 2;                                  // original 0x444C accelerated count
+            cnt = prev_cnt + 2;                       // 0x4496: INC2 old counter
             ovp_counter = cnt;
             if (cnt > 1) {
                 ovp_counter = 1;
