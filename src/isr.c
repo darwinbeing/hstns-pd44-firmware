@@ -70,6 +70,7 @@ extern void updateCurrentOcpFastAvg8Pt(void);
 extern void ocpVrefFoldbackUpdate(void);
 extern void llc_voltage_cal_ovp(void);
 extern void ocpShutdownCheck(void);
+extern void tempFanHandler(void);
 
 
 static __attribute__((always_inline)) int16_t util_divsd(int32_t dividend, int16_t divisor)
@@ -96,6 +97,7 @@ void __attribute__((__interrupt__, no_auto_psv)) _T1Interrupt()
         //llc_droop_trim_calc();
         ocpVrefFoldbackUpdate();
         ocpShutdownCheck();
+        tempFanHandler();
         IFS0bits.T1IF = 0; 		/* Clear Interrupt Flag */
 }
 
