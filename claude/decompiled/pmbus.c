@@ -866,19 +866,25 @@ cmd30_set:
         /* ------------------------------------------------------------------ *
          * cmd 0x31 (idx 44): write word_val to ptrTable1A10[1] / 1A12 path,
          * with firmware-update flag and limit clamp logic.
+         * 0x17E6..0x1810: bit0 is set only on the droopEnableFlags bit10 path.
          * ------------------------------------------------------------------ */
         case 44: {
-            if (!(droopEnableFlags & (1u << 10))) {
-                /* Normal path: write word_val to ptrTable1A10[1] */
+            if (droopEnableFlags & (1u << 10)) {
+                /* Firmware-update path (droopEnableFlags bit10 / 0x1BEB bit2 set) */
                 *((volatile uint16_t *)ptrTable1A10[1]) = word_val;
-                if (word_val <= 0x000Fu) {
-                    currentLimitFlags |= (1u << 13);
+                if (word_val == 0x8000u) {
+                    flash_read_buf_15E6[0x10] = 1;
+                    flashCmdFlags |= (1u << 6);
                 } else {
-                    currentLimitFlags &= ~(1u << 13);
+                    if (word_val <= 0x000Fu) {
+                        currentLimitFlags |= (1u << 13);
+                    } else {
+                        currentLimitFlags &= ~(1u << 13);
+                    }
                 }
                 currentLimitFlags |= (1u << 0);
             } else {
-                /* Firmware-update path (droopEnableFlags bit10 / 0x1BEB bit2 set) */
+                /* Normal path: write word_val to ptrTable1A10[1] and skip flags */
                 *((volatile uint16_t *)ptrTable1A10[1]) = word_val;
             }
             /* Common: set droopEnableFlags bit3 */
