@@ -364,12 +364,30 @@ check_droop:
  *    (0x540A)
  * ============================================================================ */
 
-/* 0x534A: scale Imeas_cal_a * 11 / 559, clamp to 10 */
+static const int16_t oc2rsPsvTable934a[55] = {
+    0x0032, 0x0005, 0x0000, (int16_t)0xFF9C, (int16_t)0xFE0C,
+    0x0032, 0x0005, 0x0000, (int16_t)0xFFBA, (int16_t)0xFED4,
+    0x0032, 0x0005, 0x0000, (int16_t)0xFFD8, (int16_t)0xFF38,
+    0x003C, 0x0005, 0x0000, (int16_t)0xFFEC, (int16_t)0xFF6A,
+    0x0050, 0x0005, 0x0000, (int16_t)0xFFF6, (int16_t)0xFF83,
+    0x007D, 0x000A, 0x0000, (int16_t)0xFFFB, (int16_t)0xFF97,
+    0x0096, 0x001E, 0x0000, (int16_t)0xFFFB, (int16_t)0xFFA6,
+    0x00C8, 0x0028, 0x0000, (int16_t)0xFFFB, (int16_t)0xFFB0,
+    0x0190, 0x005A, 0x0000, (int16_t)0xFFFB, (int16_t)0xFFC4,
+    0x01F4, 0x0064, 0x0000, (int16_t)0xFFFB, (int16_t)0xFFD8,
+    0x0401, 0x0A07, 0x100D, 0x1613, 0x0019
+};
+
+/* 0x534A: MUL.SU Imeas_cal_a by 11, DIV.UW by 559, clamp to 10.
+ * The ADC calibration path clamps Imeas_cal_a to zero at 0x2BBC..0x2BC2. */
 static int16_t scaleImeasCal(void) {
-    int32_t prod = (int32_t)Imeas_cal_a * 11;
-    uint16_t rem = (uint16_t)(prod % 559);
-    if (rem > 10) rem = 10;
-    return (int16_t)rem;
+    uint32_t prod = (uint32_t)((int32_t)Imeas_cal_a * 11);
+    uint32_t quotient = prod / 559u;
+
+    if (quotient > 10)
+        quotient = 10;
+
+    return (int16_t)quotient;
 }
 
 /* 0x5364: map (val - ref) to zone 0..4 */
@@ -380,6 +398,46 @@ static int16_t classifyDelta(int16_t val, int16_t ref) {
     if (diff < -5) return 4;
     if (diff < -1) return 3;
     return 2;
+}
+
+/* 0x5398: threshold table lookup with 5-count downward hysteresis */
+static int16_t oc2rsThresholdTableLookup(int16_t input)
+{
+    int16_t idx = 0;
+
+    while (idx < 5 && input >= oc2rsStepThresholds[idx])
+        idx++;
+
+    if (idx >= 5)
+        idx = 4;
+
+    if (oc2rsLookupIndex == 0)
+        oc2rsLookupIndex = 1;
+
+    if (idx < (int16_t)oc2rsLookupIndex) {
+        if ((int16_t)(input + 5) < oc2rsStepThresholds[oc2rsLookupIndex - 1u])
+            oc2rsLookupIndex = (uint16_t)idx;
+    } else {
+        oc2rsLookupIndex = (uint16_t)idx;
+    }
+
+    return oc2rsStepValues[oc2rsLookupIndex];
+}
+
+/* 0x53D2: droop adjustment lookup, or force max OC2RS at high current limits */
+static int16_t computeDroopAdjustmentFloor(void)
+{
+    int16_t imeas_scaled = 0;
+
+    if (systemState == 2u)
+        imeas_scaled = (int16_t)(((int32_t)Imeas * 100L) / 559L);
+
+    if ((ioutLimitLo > 0x57) || (ioutDefault > 0x57)) {
+        oc2rs_shadow = 0x07CF;
+        return 0x54C4;
+    }
+
+    return oc2rsThresholdTableLookup(imeas_scaled);
 }
 
 /* ============================================================================
@@ -419,24 +477,26 @@ void computeTargetOc2rs(void) {
     int16_t imeas_zone = scaleImeasCal();
     int16_t zone_lo = classifyDelta(ioutLimitLo, 0x4D);
     int16_t zone_def = classifyDelta(ioutDefault, 0x4D);
+    int16_t floor;
     if (zone_lo > zone_def) zone_lo = zone_def;
 
-    /* 2D table lookup at PSV address 0x934A */
-    /* uint16_t table_idx = (uint16_t)imeas_zone * 5 + zone_lo; */
-    /* int16_t table_adj = psv_table[table_idx]; */
-    /* secondaryOcSetpoint += table_adj; */
+    secondaryOcSetpoint = (uint16_t)((int16_t)secondaryOcSetpoint +
+        oc2rsPsvTable934a[(uint16_t)imeas_zone * 5u + (uint16_t)zone_lo]);
 
-    /* Droop adjustment: check ioutLimitLo and ioutDefault vs 0x57 */
-    if (ioutLimitLo > 0x57 && ioutDefault > 0x57) {
-        oc2rs_shadow = 0x7CF;
-        return;
-    }
+    floor = computeDroopAdjustmentFloor();
+    if (floor < (int16_t)ioutVoutTarget)
+        floor = (int16_t)ioutVoutTarget;
+
+    if ((int16_t)secondaryOcSetpoint < floor)
+        secondaryOcSetpoint = (uint16_t)floor;
 
     /* Clamp secondaryOcSetpoint to [0x5DC .. 0x54C4] */
     if (secondaryOcSetpoint > 0x54C4)
         secondaryOcSetpoint = 0x54C4;
     if ((int16_t)secondaryOcSetpoint <= 0x5DB)
         secondaryOcSetpoint = 0x5DC;
+
+    oc2rsLinearAdjustment();
 }
 
 /* ============================================================================
@@ -1062,7 +1122,64 @@ void uart1RxHandler(void) {
                 sum += uartRxBuf[i];
             if ((sum & 0xFF) == uartRxBuf[12]) {
                 /* Valid: extract parameters */
-                uartCmdParamExt = (uartRxBuf[1] << 8) + uartRxBuf[0];
+                uint16_t hi = uartRxBuf[1];
+
+                if (hi & 0x0080u) {
+                    pwmRunning |= 0x0400u;
+                } else {
+                    pwmRunning &= (uint16_t)~0x0400u;
+                }
+
+                hi &= 0x007Fu;
+                uartRxBuf[1] = hi;
+                uartCmdParamExt = (hi << 8) + uartRxBuf[0];
+                uartCmdParam2 = uartRxBuf[3];
+                tempAdcValue = uartRxBuf[4];
+
+                if (tempAdcValue < (uint16_t)ioutLimitLo) {
+                    ioutDefault = ioutLimitLo;
+                } else {
+                    ioutDefault = (int16_t)tempAdcValue;
+                }
+
+                if (uartRxBuf[5] == 0) {
+                    systemFlags &= (uint16_t)~0x0002u;
+                } else {
+                    systemFlags |= 0x0002u;
+                }
+
+                pmbusInfoBytes[0] = (uint8_t)uartRxBuf[6];
+                pmbusInfoBytes[1] = (uint8_t)uartRxBuf[7];
+                pmbusInfoBytes[2] = (uint8_t)uartRxBuf[8];
+                pmbusInfoBytes[3] = (uint8_t)uartRxBuf[9];
+                pmbusInfoBytes[4] = (uint8_t)uartRxBuf[10];
+
+                if (uartRxBuf[11] == 0x00AAu) {
+                    controlStatus &= (uint16_t)~0x0100u;
+                    pwmRunning |= 0x0004u;
+                    protectionStatus &= (uint16_t)~0x4000u;
+                    controlStatus &= (uint16_t)~0x0080u;
+                } else if (uartRxBuf[11] == 0x0055u) {
+                    controlStatus &= (uint16_t)~0x0100u;
+                    pwmRunning &= (uint16_t)~0x0004u;
+                    protectionStatus &= (uint16_t)~0x4000u;
+                    controlStatus &= (uint16_t)~0x0080u;
+                } else if (uartRxBuf[11] == 0x005Au) {
+                    controlStatus &= (uint16_t)~0x0100u;
+                    pwmRunning &= (uint16_t)~0x0004u;
+                    protectionStatus |= 0x4000u;
+                    controlStatus &= (uint16_t)~0x0080u;
+                } else if (uartRxBuf[11] == 0x00A5u) {
+                    controlStatus |= 0x0100u;
+                    pwmRunning &= (uint16_t)~0x0004u;
+                    protectionStatus &= (uint16_t)~0x4000u;
+                    controlStatus &= (uint16_t)~0x0080u;
+                } else if (uartRxBuf[11] == 0x00A0u) {
+                    controlStatus &= (uint16_t)~0x0100u;
+                    pwmRunning &= (uint16_t)~0x0004u;
+                    protectionStatus &= (uint16_t)~0x4000u;
+                    controlStatus |= 0x0080u;
+                }
             }
         }
         uartRxState = 0;
@@ -1071,21 +1188,301 @@ void uart1RxHandler(void) {
     uartRxState = 0;
 }
 
-/* ---- I2C2 / PMBus comm sub-routines (stubs, addresses noted) ---- */
-void i2cEncodeResponse(void) { }         /* 0x1616 */
-void i2cThresholdMonitor(void) { }       /* 0x215A */
-void i2cFlagUpdate(void) { }             /* 0x21FE */
-void i2cChecksumValidate(void) { }       /* 0x2298 */
-void i2cIoutUpdatePath(void) { }         /* 0x230C */
-void i2cIoutScaling(void) { }            /* 0x231C */
-void i2cTempBandSelect(void) { }         /* 0x2378 */
-void i2cTempHysteresis(void) { }         /* 0x2382 */
-void i2cPeakCurrentTrack(void) { }       /* 0x2466 */
-void statusByteSync249c(void) { }        /* 0x249C */
-void i2cStatusFlagSync(void) { }         /* 0x255A */
-void i2cPowerEnableCtrl(void) { }        /* 0x25D4 */
-void i2cTargetPeriodUpdate(void) { }     /* 0x25FC */
-void i2cOvThresholdCheck(void) { }       /* 0x26A0 */
+/* ---- I2C2 / PMBus comm sub-routines (addresses noted) ---- */
+static uint16_t encodeResponseCode(uint16_t code)  /* 0x1616 */
+{
+    uint16_t tx;
+
+    if (code == 4u) {
+        tx = 0x00FAu;
+    } else if (code < 4u) {
+        if (code == 1u) {
+            tx = 0x00FEu;
+        } else if (code == 2u) {
+            tx = 0x00CEu;
+        } else {
+            return 1u;
+        }
+    } else if (code == 8u) {
+        tx = 0x0055u;
+    } else if (code == 0x0010u) {
+        tx = 0x00AAu;
+    } else {
+        return 1u;
+    }
+
+    I2C2TRN = tx;
+    return 0;
+}
+
+void i2cEncodeResponse(void)              /* 0x1616 */
+{
+    (void)encodeResponseCode(txCtrlWord);
+}
+
+void i2cThresholdMonitor(void)            /* 0x215A */
+{
+    uint16_t upper;
+    uint16_t lower;
+
+    adcLive2 = (uint16_t)((uint16_t)ioutLimitHi << 6);
+    adcLive3 = (uint16_t)(tempAdcValue << 6);
+    adcLive4 = (uint16_t)((uint16_t)ioutLimitLo << 6);
+    adcLive5 = (uint16_t)(uartCmdParam2 << 6);
+
+    if (vinCooldownTimer != 0)
+        return;
+
+    upper = voutCalC;
+    lower = (upper > 0x0140u) ? (uint16_t)(upper - 0x0140u) : 0;
+    if ((controlStatus & 0x0008u) || (adcLive2 >= upper)) {
+        startupResetLatch |= 0x0010u;
+    } else if (adcLive2 <= lower) {
+        startupResetLatch &= (uint16_t)~0x0010u;
+    }
+
+    upper = voutCalB;
+    lower = (upper > 0x0140u) ? (uint16_t)(upper - 0x0140u) : 0;
+    if (adcLive3 >= upper) {
+        txBusStateFlags |= 0x0100u;
+    } else if (adcLive3 <= lower) {
+        txBusStateFlags &= (uint16_t)~0x0100u;
+    }
+
+    upper = voutCalA;
+    lower = (upper > 0x0140u) ? (uint16_t)(upper - 0x0140u) : 0;
+    if (adcLive4 >= upper) {
+        txBusStateFlags |= 0x0200u;
+    } else if (adcLive4 <= lower) {
+        txBusStateFlags &= (uint16_t)~0x0200u;
+    }
+
+    if ((controlStatus & 0x0002u) || (txBusStateFlags & 0x0300u)) {
+        startupResetLatch |= 0x0020u;
+    } else {
+        startupResetLatch &= (uint16_t)~0x0020u;
+    }
+
+    if (controlStatus & 0x0008u) {
+        currentLimitFlags |= 0x0200u;
+    } else {
+        currentLimitFlags &= (uint16_t)~0x0200u;
+    }
+
+    if (protectionStatus & 0x4000u) {
+        pwmRunRequest |= 0x0100u;
+        pwmRunRequest &= (uint16_t)~0x0200u;
+    } else if ((int16_t)systemFlags < 0) {
+        pwmRunRequest &= (uint16_t)~0x0100u;
+        pwmRunRequest |= 0x0200u;
+    } else {
+        pwmRunRequest &= (uint16_t)~0x0300u;
+    }
+}
+
+void i2cFlagUpdate(void)                  /* 0x21FE */
+{
+    uint16_t flags = pwmRunRequest;
+
+    if (flags != pwmRunRequestShadow) {
+        pwmRunRequestShadow = flags;
+        auxFlags &= (uint16_t)~0x0008u;
+    }
+
+    if (flags == 0) {
+        txBusStateFlags &= (uint16_t)~0x0001u;
+    } else if (flags != 0x0010u) {
+        txBusStateFlags |= 0x0001u;
+    }
+
+    if (startupResetLatch == 0) {
+        txBusStateFlags &= (uint16_t)~0x0002u;
+    } else {
+        txBusStateFlags |= 0x0002u;
+    }
+}
+
+void i2cChecksumValidate(void)            /* folded label near 0x2298 */
+{
+    uint16_t sum = (uint16_t)(I2C2ADD + I2C2ADD);
+    uint16_t idx;
+
+    if (rxBufIndex == 0)
+        return;
+
+    for (idx = 0; idx < rxBufIndex; idx++)
+        sum = (uint16_t)(sum + rxPacketBuf[idx]);
+
+    if (rxPacketBuf[rxBufIndex] == (uint8_t)(-(uint8_t)sum)) {
+        txCtrlWord |= 0x0004u;
+    } else {
+        txCtrlWord &= (uint16_t)~0x0004u;
+    }
+}
+
+static uint16_t scalePmbusDataReg(uint16_t value, uint16_t gain)
+{
+    if (value == 0)
+        return 0;
+
+    return (uint16_t)(((uint32_t)value * (uint32_t)gain) >> 8) + 1u;
+}
+
+void i2cIoutUpdatePath(void)              /* 0x230C */
+{
+    pmbusDataReg4 = scalePmbusDataReg((uint16_t)ioutLimitHi, 0x04A7u);
+
+    pmbusDataReg0 = 0;
+    if (outputVoltage > 0x0320u) {
+        uint16_t scaled = (uint16_t)(((uint32_t)OC2RS * 0x20C4u) >> 16) + 1u;
+        pmbusDataReg0 = (scaled <= 0x00FEu) ? scaled : 0x00FFu;
+    }
+
+    pmbusDataReg3 = scalePmbusDataReg(tempAdcValue, 0x02F1u);
+    pmbusDataReg2 = scalePmbusDataReg((uint16_t)ioutLimitLo, 0x02F1u);
+    pmbusDataReg1 = scalePmbusDataReg(uartCmdParam2, 0x03A8u);
+}
+
+void i2cIoutScaling(void)                 /* folded label near 0x231C */
+{
+    i2cIoutUpdatePath();
+}
+
+void i2cTempBandSelect(void)              /* folded label near 0x2378 */
+{
+    i2cIoutUpdatePath();
+}
+
+void i2cTempHysteresis(void)              /* folded label near 0x2382 */
+{
+    i2cIoutUpdatePath();
+}
+
+void i2cPeakCurrentTrack(void)            /* folded label near 0x2466 */
+{
+    if ((pwmRunning & 0x0002u) == 0) {
+        adcLiveB = 0;
+        adcLiveC = 0;
+    } else {
+        if (adcLiveC <= adcLiveA2)
+            adcLiveC = adcLiveA2;
+        if (adcLiveB <= adcLiveA1)
+            adcLiveB = adcLiveA1;
+    }
+}
+
+void statusByteSync249c(void)             /* 0x249C */
+{
+    if ((pwmRunning & 0x0001u) == 0) {
+        pdc3Shadow = 0;
+    } else if (pdc3Shadow <= pmbusLiveBC0) {
+        pdc3Shadow = pmbusLiveBC0;
+    }
+}
+
+void i2cStatusFlagSync(void)              /* 0x255A */
+{
+    if ((pwmRunRequest & 0x004Eu) == 0) {
+        pwmRunRequest &= (uint16_t)~0x0001u;
+    } else if (((droopEnableFlags & 0x0020u) ||
+                ((pwmRunRequest & 0x0040u) == 0)) &&
+               (IOCON2 & 0x8000u)) {
+        pwmRunRequest |= 0x0001u;
+    }
+
+    if (auxFlags & 0x6000u)
+        pwmRunRequest |= 0x0001u;
+}
+
+void i2cPowerEnableCtrl(void)             /* folded label near 0x25D4 */
+{
+    i2cStatusFlagSync();
+}
+
+static void clampOc2rsLimit(void)         /* 0x5312 */
+{
+    if ((systemState == 2u) && (LATD & 0x0010u)) {
+        if (oc2rsUpperLimit <= 0x0191u) {
+            oc2rsUpperLimit = 0x0191u;
+        } else if (oc2rsUpperLimit > 0xF000u) {
+            oc2rsUpperLimit = 0x0191u;
+        }
+    } else {
+        if (oc2rsUpperLimit <= 1u) {
+            oc2rsUpperLimit = 1u;
+        } else if (oc2rsUpperLimit > 0xF000u) {
+            oc2rsUpperLimit = 1u;
+        }
+    }
+}
+
+void i2cTargetPeriodUpdate(void)          /* 0x25FC */
+{
+    uint16_t target;
+
+    txByteCntPreset = 0x05DCu;
+
+    if (systemState == 2u) {
+        if ((txBusStateFlags & 0x0004u) == 0) {
+            txBusStateFlags |= 0x0004u;
+            i2cPeriodCnt = 0x05DCu;
+        }
+    } else if (txBusStateFlags & 0x0004u) {
+        txBusStateFlags &= (uint16_t)~0x0004u;
+        i2cPeriodCnt = 0x05DCu;
+    }
+
+    if ((currentLimitFlags & 0x0001u) || (outputCurrent <= ioutVoutTarget)) {
+        target = (uint16_t)(ioutVoutTarget + 0x0096u);
+    } else {
+        target = outputCurrent;
+    }
+
+    if ((systemFlags & 0x2000u) && (target < 0x2EE1u))
+        target = 0x2EE0u;
+
+    if ((outputVoltage > 0x00C7u) && (LATD & 0x0020u)) {
+        uint16_t delta;
+        uint16_t limit;
+
+        if (outputVoltage < target) {
+            delta = (uint16_t)(target - outputVoltage);
+            limit = (delta > 0x03E7u) ? 9u : 0x31u;
+            fanDroopStepCnt++;
+            if (fanDroopStepCnt > limit) {
+                fanDroopStepCnt = 0;
+                oc2rsUpperLimit++;
+            }
+        } else {
+            delta = (uint16_t)(outputVoltage - target);
+            limit = (delta > 0x03E7u) ? 9u : 0x31u;
+            fanDroopStepCnt++;
+            if (fanDroopStepCnt > limit) {
+                fanDroopStepCnt = 0;
+                oc2rsUpperLimit--;
+            }
+        }
+    }
+
+    clampOc2rsLimit();
+
+    if (oc2rsUpperLimit > 0x07D0u)
+        oc2rsUpperLimit = 0x07D1u;
+}
+
+void i2cOvThresholdCheck(void)            /* 0x26A0 */
+{
+    if ((droopEnableFlags & 0x0008u) == 0) {
+        pwmRunning &= (uint16_t)~0x0080u;
+    } else if ((currentLimitFlags & 0x0001u) == 0) {
+        if ((oc2rsUpperLimit < oc2rsTarget) ||
+            (outputCurrent <= ioutVoutTarget)) {
+            pwmRunning |= 0x0080u;
+        } else {
+            pwmRunning &= (uint16_t)~0x0080u;
+        }
+    }
+}
 
 /* ---- Helper functions referenced by t1_sub_prot.c ---- */
 uint16_t thresholdCompare(int16_t adc_val, int16_t upper_thresh,

@@ -20,6 +20,16 @@ extern uint16_t ADCBUF15;
 
 extern uint16_t PDC5;
 extern uint16_t PORTD;
+extern uint16_t PORTG;
+extern uint16_t TRISF;
+extern uint16_t I2C2CON;
+extern uint16_t I2C2ADD;
+extern uint16_t I2C2TRN;
+extern uint16_t I2C2RCV;
+extern uint16_t I2C2STAT;
+extern uint16_t IPC12;
+extern uint16_t IFS3;
+extern uint16_t IEC3;
 
 typedef struct {
     uint16_t RD0;
@@ -34,5 +44,11 @@ typedef struct {
 } latg_bits_t;
 
 extern volatile latg_bits_t LATGbits;
+
+typedef struct {
+    uint16_t D_A;
+} i2c2stat_bits_t;
+
+extern volatile i2c2stat_bits_t I2C2STATbits;
 
 #endif /* XC_H_UNIT_TEST_STUB */

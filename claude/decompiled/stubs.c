@@ -200,24 +200,101 @@ void tempFanHandler(void)
  *
  * Power / current calculation for PMBus telemetry path.
  * Computes voutScaledQ2 (0x1BE0), adcLive1 (0x1BE2), pdcShadowA (0x1BDE),
- * pmbusLiveBC0 (0x1BC0), pmbusLiveBC0 min-clamp=6, pmbusLive197A.
- * Performs 32-bit division via FUN_rom_001100 (hardware __divsd).
+ * protTempAdc (0x1BBE), pmbusLiveBC0 (0x1BC0), pmbusLive197A.
+ * The helper at 0x1100 is a 32-bit multiply-low helper; both telemetry
+ * products are shifted right by 14 and min-clamped to 6.
  * Also checks OV/UV thresholds and sets startupResetLatch bits 2-6.
- *
- * TODO: full decompilation requires __divsd helper.  Stub preserves safe
- *       defaults until implemented.
  * ============================================================================ */
+static uint16_t powerTelemetryProduct(uint16_t lhs, uint16_t rhs)
+{
+    uint16_t value = (uint16_t)(((uint32_t)lhs * (uint32_t)rhs) >> 14);
+
+    if (value <= 6u)
+        value = 6u;
+
+    return value;
+}
+
 void uartCmdSubroutine2(void)
 {
-    if (systemState != 2) {
+    uint16_t state = systemState;
+
+    if (state == 2u) {
+        uint16_t vout_a = (uint16_t)((uint16_t)vcal_a << 2);
+        uint16_t vout_b = (uint16_t)((uint16_t)vcal_b << 2);
+        uint32_t i_prod;
+        uint16_t i_scaled;
+
+        voutScaledQ2 = vout_a;
+
+        if ((llcStatus & 0x0100u) || (portdBit0State == 0)) {
+            adcLive1 = vout_b;
+        } else {
+            adcLive1 = vout_a;
+        }
+
+        i_prod = (uint32_t)((int32_t)Imeas_longavg * 0x1E80L);
+        i_scaled = (uint16_t)(i_prod >> 10);
+        uartStatusWord = i_scaled;
+
+        pdcShadowA = (i_scaled < 0x0021u) ? 0x0020u : i_scaled;
+        protTempAdc = powerTelemetryProduct(voutScaledQ2, pdcShadowA);
+        pmbusLiveBC0 = powerTelemetryProduct(adcLive1, pdcShadowA);
+    } else {
         /* Not in ACTIVE state — clear telemetry accumulators */
         adcLive1     = 0;
         pdcShadowA   = 0;
         pmbusLiveBC0 = 0;
         voutScaledQ2 = 0;
-        pmbusLiveBC0 = 0;
+        protTempAdc  = 0;
     }
-    /* TODO: implement full telemetry calculation from Ghidra 0x2042 */
+
+    if ((pwmRunning & 0x0001u) && (state == 2u)) {
+        uint16_t high_clear = 0xFFCCu;
+        uint16_t low_clear = 0;
+        uint16_t sample = adcLive1;
+
+        if (voutCalE < 0xFFCCu)
+            high_clear = (uint16_t)(voutCalE + 0x0033u);
+
+        if (voutCalD > 0x0033u)
+            low_clear = (uint16_t)(voutCalD - 0x0033u);
+
+        if (sample < voutCalE) {
+            startupResetLatch |= 0x0008u;
+        } else if (((protectionStatus & 0x0008u) == 0) && (sample >= high_clear)) {
+            startupResetLatch &= (uint16_t)~0x0008u;
+        }
+
+        if (sample > voutCalD) {
+            startupResetLatch |= 0x0004u;
+        } else if ((sample <= 0x0C98u) && (sample <= low_clear)) {
+            startupResetLatch &= (uint16_t)~0x0004u;
+        }
+    }
+
+    {
+        uint16_t foldback_clear =
+            (uint16_t)(((uint32_t)tempLinearFmt * 0x003Du) >> 6);
+
+        if ((pwmRunning & 0x0001u) && (state == 2u)) {
+            uint16_t current = pdcShadowA;
+
+            if (current > tempLinearFmt) {
+                startupResetLatch |= 0x0040u;
+            } else if (current <= foldback_clear) {
+                startupResetLatch &= (uint16_t)~0x0040u;
+            }
+        } else {
+            startupResetLatch &= (uint16_t)~0x0040u;
+        }
+    }
+
+    if (llcStatus & 0x0100u) {
+        pmbusLive197A = voutScaledQ2;
+    } else {
+        pmbusLive197A = 0;
+    }
 }
 
 /* ============================================================================
@@ -227,7 +304,7 @@ void uartCmdSubroutine2(void)
  * adcLiveA (0x1BE8), adcLiveA2 (0x1BE4) using division and scaling.
  * Also checks OT/UT thresholds and sets startupResetLatch bits 0-1.
  *
- * TODO: full decompilation requires __divsd helper.
+ * Uses the same signed divide helper shape as the original __divsd call site.
  * ============================================================================ */
 void uartCmdSubroutine3(void)
 {
@@ -352,16 +429,55 @@ void uartCmdSubroutine7(void)
  *
  * Power-enable control.  Manages LATE bit7 (GPIO output enable) based on
  * droopEnableFlags (0x1BEA), pwmRunning (0x1BF2), and several condition
- * flags.  Also calls sub_257E for parameter-based configuration.
- *
- * Simplified implementation: controls LATE.7 based on droopEnableFlags bit2.
+ * flags.  Also calls 0x257E for parameter-based configuration.
  * ============================================================================ */
+static void powerEnableConfigUpdate(void)  /* 0x257E */
+{
+    droopEnableFlags |= 0x0004u;
+    statusFlags2 &= (uint16_t)~0x0004u;
+
+    if (droopMode == 3u) {
+        statusFlags2 |= 0x0002u;
+    } else if (droopMode == 4u) {
+        statusFlags2 &= (uint16_t)~0x0002u;
+    }
+}
+
 void unknownSubroutine2594(void)
 {
-    if (((pwmRunning & 0x0002) == 0) || (vinCooldownTimer != 0))
-        return;
+    if ((pwmRunning & 0x0002u) && (vinCooldownTimer == 0)) {
+        uint16_t flags = txBusStateFlags;
 
-    /* Simplified: if droopEnableFlags bit2 set → assert LATE.7, else deassert */
+        if ((flags & 0x0001u) &&
+            ((auxFlags & 0x0008u) == 0) &&
+            (droopEnableFlags & 0x0001u)) {
+            powerEnableConfigUpdate();
+        } else if ((flags & 0x0002u) &&
+                   (droopEnableFlags & 0x0002u) &&
+                   ((systemState == 2u) ||
+                    ((startupResetLatch & 0x000Cu) == 0))) {
+            powerEnableConfigUpdate();
+        } else if (droopEnableFlags & 0x0004u) {
+            if (statusFlags2 & 0x0002u) {
+                if (currentLimitFlags & 0x0800u)
+                    statusFlags2 |= 0x0004u;
+            } else {
+                if ((currentLimitFlags & 0x0800u) == 0)
+                    statusFlags2 |= 0x0004u;
+            }
+
+            if (statusFlags2 & 0x0004u) {
+                if (statusFlags2 & 0x0002u) {
+                    if ((currentLimitFlags & 0x0800u) == 0)
+                        droopEnableFlags &= (uint16_t)~0x0004u;
+                } else {
+                    if (currentLimitFlags & 0x0800u)
+                        droopEnableFlags &= (uint16_t)~0x0004u;
+                }
+            }
+        }
+    }
+
     if (droopEnableFlags & 0x0004) {
         LATE |= 0x0080;
     } else {
@@ -598,7 +714,6 @@ void droopMode3Watchdog(void)
         return;
     }
 
-    /* Simplified: check if LATD bit4 is set and manage droop */
     if ((statusFlags & 0x0010) == 0) {
         if (((clFlags == 0) || (runtimeFlags & 0x0008)) &&
             (voutTargetCode != 0x0C4D) &&
@@ -649,15 +764,120 @@ void runNormalMode(void)
 /* --------------------------------------------------------------------------
  * initI2cPointerTables (0x13C2 – 0x150A)
  *
- * Keep startup-safe defaults that are required by the control-loop path used
- * in simulation. The full PMBus pointer-table RAM clear is not enabled here
- * because current decompiled table mappings are still incomplete.
+ * Initializes the PMBus pointer tables, clears the RAM locations referenced
+ * by those tables, then applies the ROM default PMBus configuration values.
  * -------------------------------------------------------------------------- */
 void initI2cPointerTables(void)
 {
-    llcStatus      = 1;
-    i2cPeriodCnt   = 0x05DC;
+    int i;
+
+    ptrTable19B0[0] = (uint16_t)&llcStatus;
+    ptrTable19B0[1] = (uint16_t)&pwmRunning;
+    ptrTable19B0[2] = (uint16_t)&startupResetLatch2;
+
+    ptrTable19BA[0] = (uint16_t)&eventCntBit4;
+    ptrTable19BA[1] = (uint16_t)&eventCntBit6;
+    ptrTable19BA[2] = (uint16_t)&eventCntBit8;
+
+    ptrTable19D0[0] = (uint16_t)&adcLiveA;
+    ptrTable19D0[1] = (uint16_t)&adcLiveA1;
+    ptrTable19D0[2] = (uint16_t)&adcLiveA2;
+    ptrTable19D0[3] = (uint16_t)&i2cTxCounter;
+    ptrTable19D0[4] = (uint16_t)((uint16_t *)&i2cAccum + 1);
+    ptrTable19D0[5] = (uint16_t)&i2cAccum;
+    ptrTable19D0[6] = (uint16_t)&adcLiveB;
+    ptrTable19D0[7] = (uint16_t)&adcLiveC;
+
+    ptrTable19F0[0] = (uint16_t)&adcLive1;
+    ptrTable19F0[1] = (uint16_t)&pdcShadowA;
+    ptrTable19F0[2] = (uint16_t)&pmbusLiveBC0;
+    ptrTable19F0[3] = (uint16_t)&pdcShadowB;
+    ptrTable19F0[4] = (uint16_t)&pdc3Shadow;
+    ptrTable19F0[5] = (uint16_t)&pmbusLive197A;
+
+    ptrTable1A10[0] = (uint16_t)&droopEnableFlags;
+    ptrTable1A10[1] = (uint16_t)&outputCurrent;
+    ptrTable1A10[2] = (uint16_t)&ioutScaleConst;
+    ptrTable1A10[3] = (uint16_t)&ocpThresholdHw;
+    ptrTable1A10[4] = (uint16_t)&ioutAdcRaw;
+    ptrTable1A10[5] = (uint16_t)&pmbusReadPtr1;
+    ptrTable1A10[6] = (uint16_t)&pmbusReadPtr0;
+    ptrTable1A10[7] = (uint16_t)&voutCalE;
+    ptrTable1A10[8] = (uint16_t)&voutCalD;
+    ptrTable1A10[9] = (uint16_t)&tempLinearFmt;
+    ptrTable1A10[10] = (uint16_t)&voutCalC;
+    ptrTable1A10[11] = (uint16_t)&voutCalB;
+    ptrTable1A10[12] = (uint16_t)&voutCalA;
+    ptrTable1A10[13] = (uint16_t)&ioutCalFactor;
+    ptrTable1A10[16] = (uint16_t)&outputVoltage;
+    ptrTable1A10[17] = (uint16_t)&pmbusDataReg0;
+    ptrTable1A10[18] = (uint16_t)&adcLive2;
+    ptrTable1A10[19] = (uint16_t)&pmbusDataReg4;
+    ptrTable1A10[20] = (uint16_t)&adcLive3;
+    ptrTable1A10[21] = (uint16_t)&pmbusDataReg3;
+    ptrTable1A10[22] = (uint16_t)&adcLive4;
+    ptrTable1A10[23] = (uint16_t)&pmbusDataReg2;
+    ptrTable1A10[24] = (uint16_t)&adcLive5;
+    ptrTable1A10[25] = (uint16_t)&pmbusDataReg1;
+    ptrTable1A10[27] = (uint16_t)&voutScaleA;
+    ptrTable1A10[28] = (uint16_t)&voutScaleB;
+
+    ptrTable1A70[0] = (uint16_t)&flashUpdateResult;
+    ptrTable1A70[1] = (uint16_t)&eepromCrcShadow;
+    ptrTable1A70[2] = (uint16_t)&eepromPageShadow;
+    ptrTable1A70[3] = (uint16_t)&eepromSavedShadow;
+    ptrTable1A70[4] = (uint16_t)&pmbusCfgReg6;
+
+    ptrTable1B90[0] = (uint16_t)&pmbusCfgReg5;
+    ptrTable1B90[1] = (uint16_t)&pmbusCfgReg4;
+    ptrTable1B90[2] = (uint16_t)&pmbusCfgReg3;
+    ptrTable1B90[3] = (uint16_t)&pmbusCfgReg2;
+    ptrTable1B90[4] = (uint16_t)&pmbusCfgReg1;
+    ptrTable1B90[6] = (uint16_t)&pmbusCfgReg0;
+
+    for (i = 0; i < 3; i++)
+        *((volatile uint16_t *)ptrTable19B0[i]) = 0;
+    for (i = 0; i < 3; i++)
+        *((volatile uint16_t *)ptrTable19BA[i]) = 0;
+    for (i = 0; i < 8; i++)
+        *((volatile uint16_t *)ptrTable19D0[i]) = 0;
+    for (i = 0; i < 8; i++) {
+        if (ptrTable19F0[i])
+            *((volatile uint16_t *)ptrTable19F0[i]) = 0;
+    }
+    for (i = 0; i < 30; i++) {
+        if (ptrTable1A10[i])
+            *((volatile uint16_t *)ptrTable1A10[i]) = 0;
+    }
+    for (i = 0; i < 5; i++)
+        *((volatile uint16_t *)ptrTable1A70[i]) = 0;
+    for (i = 0; i < 7; i++) {
+        if (ptrTable1B90[i])
+            *((volatile uint16_t *)ptrTable1B90[i]) = 0;
+    }
+
+    llcStatus = 1;
+    i2cPeriodCnt = 0x05DC;
+    pmbusReadPtr1 = 0x15C0;
+    pmbusReadPtr0 = 0x21C0;
+    voutCalE = 0x0B00;
+    voutCalD = 0x0D00;
+    voutCalC = 0x0DC0;
+    voutCalB = 0x15C0;
+    voutCalA = 0x15C0;
+    ioutCalFactor = 0x0108;
     ioutScaleConst = 0x3133;
     ocpThresholdHw = 0x0640;
-    ioutAdcRaw     = 0x1180;
+    ioutAdcRaw = 0x1180;
+    voutScaleA = 0x0135;
+    voutScaleB = 0x013B;
+    pmbusCfgReg5 = 0x00EF;
+    pmbusCfgReg4 = 0x00FF;
+    pmbusCfgReg3 = 0x001F;
+    pmbusCfgReg2 = 0x3FFF;
+    pmbusCfgReg1 = 0x3FFF;
+    pmbusCfgReg0 = 0x001F;
+    tempLinearFmt = 0x10AB;
+    txBusStateFlags = 0;
+    rxAuxFlags = 0;
 }

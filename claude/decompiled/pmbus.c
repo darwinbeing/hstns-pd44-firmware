@@ -111,12 +111,45 @@ static uint16_t pmbusChecksumVerify(uint8_t *buf, uint16_t len);
 static uint16_t pmbusEncodeResponse(uint16_t code);
 static void pmbusUnsupportedCommand(void);
 static void pmbusMultiByteTxSetup(void);
+static uint16_t pmbusBlockCommandInvalid(uint16_t cmd_idx);
+static void pmbusFlashReadWindow(void);
+static void pmbusFlashWriteWindow(void);
+static void pmbusOperationUnlock(void);
+static void pmbusProgramHeader(void);
+static void pmbusProgramBlock(void);
+static void pmbusReadbackBlock(void);
+static void pmbusStartFlashWrite(void);
+static void pmbusReadDeviceInfo(void);
+static void pmbusEnterProgramming(void);
+static void pmbusStoreProgrammingData(void);
+static void pmbusReadFlashSummaryBlock(void);
+static void pmbusReadFlashDataBlock(void);
+static void pmbusReadFlashStatusBlock(void);
+static void pmbusReadVoutCommand(void);
+static void pmbusReadIoutCommand(void);
+static void pmbusSetOperationMode(void);
+static void pmbusBlockWriteModeSelect(void);
+static void pmbusReadConfigCommand(void);
 static void pmbusWriteCommand(uint8_t cmd, uint16_t word_val, uint16_t byte_cnt);
 static uint16_t pmbusValidateCommand(uint16_t cmd_idx);
 void i2cTxAccumulate(void);
 void i2cBusStuckHandler(void);
 void eepromHandler(void);
+void eepromCfgUpdate(uint8_t mode, uint8_t status, uint8_t enable);
+uint16_t eepromCfgRead(void);
+uint8_t flash_lookup_15D0(uint16_t idx);
+uint8_t flash_lookup_15B0(uint16_t idx);
+uint8_t flash_lookup_1598(uint16_t idx);
 /* si2c2_handler is the ISR — declared below */
+
+/*
+ * 0x93B8: ROM byte table used by the block dispatcher at 0x27CE.
+ * Each entry points at the command byte of a 3-byte tuple in rxPacketBuf:
+ *   [command, low byte, high byte] at offsets 1, 4, 7, ...
+ */
+static const uint8_t pmbusBlockOffsets[] = {  /* 0x93B8 */
+    0x01u, 0x04u, 0x07u, 0x0Au, 0x0Du, 0x10u, 0x13u, 0x16u, 0x19u
+};
 
 
 /* ============================================================================
@@ -295,7 +328,8 @@ static void pmbusI2c2Configure(void)
  * When rxBufIndex == 0x21 (first byte = address byte):
  *   store I2C2RCV -> rxAddrByte, do NOT increment rxPacketBuf.
  * Otherwise:
- *   store I2C2RCV -> rxPacketBuf[rxBufIndex - 0x1958], then increment rxBufIndex.
+ *   store I2C2RCV -> rxPacketBuf[rxBufIndex] (RAM 0x1958 + index),
+ *   then increment rxBufIndex.
  *
  * After each byte the function checks rxPacketBuf[0] (command code) against
  * known commands and sets bits in rxEventFlags.
@@ -318,9 +352,9 @@ static void pmbusRxPacketDecode(void)
         rxAddrByte = b;
         /* fall through — do NOT increment idx */
     } else {
-        /* Normal data byte: store into rxPacketBuf[idx - base] where base = 0x1958 */
+        /* Normal data byte: store into rxPacketBuf[idx] (base address 0x1958) */
         uint8_t b = (uint8_t)I2C2RCV;
-        rxPacketBuf[idx - 0x1958u + 0] = b;   /* [W2+W1] where W2=idx, W1=0x1958 */
+        rxPacketBuf[idx] = b;   /* [0x1958 + rxBufIndex] */
         idx++;
         rxBufIndex = idx;
     }
@@ -443,49 +477,35 @@ rx_check_complete:
 /* ============================================================================
  *   (0x15EA – 0x1614)
  *
- * Computes a simple 8-bit additive checksum over a byte buffer and compares
- * it against the last byte of the buffer (the expected checksum byte).
+ * Computes the PMBus PEC-style additive checksum used by this firmware and
+ * tests the final byte against the two's-complement accumulator.
  *
- * Entry: W0 = command code (unused by checksum but may be used by caller),
- *        W1 = buffer length (number of data bytes, not including checksum),
+ * Entry: W0 = buffer pointer (0x1958),
+ *        W1 = buffer length, including the checksum byte,
  *        W5 = pointer to start of buffer (set by caller at 0x15EB).
- * Exit:  W0 = 1 if checksum MATCHES, 0 if mismatch.
- *        W3 (low byte) = toggled result flag.
+ * Exit:  W0 = 1 if the checksum is non-zero (bad), 0 if it matches.
  *
  * Algorithm:
  *   sum = 2 * I2C2ADD   (device address counted twice)
- *   for i in 0 .. len-1:
+ *   for i in 0 .. len-2:
  *       sum += buf[i]
- *   expected = buf[len]   (byte immediately after the payload)
- *   match = (expected == (uint8_t)(-sum))
- *   return match ? 1 : 0  (actually returns ZE(toggle), see assembly)
+ *   return (uint8_t)(buf[len-1] + sum) != 0
  * ============================================================================ */
 static uint16_t pmbusChecksumVerify(uint8_t *buf, uint16_t len)
 {
-    /* W5 = buf, W1 = len — mirror assembly register use */
-    uint8_t  *ptr  = buf;
-    uint16_t  addr = (uint16_t)I2C2ADD;
-    uint16_t  sum  = addr + addr;   /* 2 * slave address */
-    uint16_t  i;
+    uint16_t addr = (uint16_t)I2C2ADD;
+    uint16_t sum  = addr + addr;   /* 2 * slave address */
+    uint16_t i;
 
-    for (i = 0; i < len; i++) {
-        sum += (uint16_t)(uint8_t)ptr[i];
+    if (len == 0) {
+        return 0;
     }
 
-    /* Compare last byte (ptr[len]) against two's-complement of sum */
-    uint8_t expected = ptr[len];       /* byte at offset len = checksum byte */
-    uint8_t computed = (uint8_t)(-(uint8_t)sum);
-
-    uint8_t match = 0;
-    if (expected == computed) {
-        match = 1;
+    for (i = 0; i < (uint16_t)(len - 1u); i++) {
+        sum += (uint16_t)(uint8_t)buf[i];
     }
 
-    /* Assembly toggles bit0 of W3 (BTG.B W3, #0) and zero-extends.
-     * This effectively XORs the match flag.  Start value of W3 is 0.     */
-    match ^= 0;   /* initial W3 = 0, after toggle W3 = match */
-
-    return (uint16_t)match;
+    return ((uint8_t)((uint8_t)buf[len - 1u] + (uint8_t)sum) != 0u) ? 1u : 0u;
 }
 
 /* ============================================================================
@@ -504,7 +524,7 @@ static uint16_t pmbusChecksumVerify(uint8_t *buf, uint16_t len)
  *   code == 4    -> I2C2TRN = 0xFA  (READ_WORD response start)
  *   code == 8    -> I2C2TRN = 0x55
  *   code == 0x10 -> I2C2TRN = 0xAA
- *   other        -> I2C2TRN = 0x01  (error / unsupported)
+ *   other        -> return 1 without touching I2C2TRN
  * After writing I2C2TRN the low byte of the return value is cleared -> W0 = 0.
  * ============================================================================ */
 static uint16_t pmbusEncodeResponse(uint16_t code)
@@ -519,9 +539,7 @@ static uint16_t pmbusEncodeResponse(uint16_t code)
         } else if (code == 0x10) {
             tx_byte = 0xAA;
         } else {
-            /* Unsupported code */
-            I2C2TRN = 0x01;
-            return 0;   /* CLR.B W0 -> ZE -> 0 */
+            return 1;
         }
     } else if (code == 1) {
         tx_byte = 0xFE;
@@ -529,8 +547,7 @@ static uint16_t pmbusEncodeResponse(uint16_t code)
         tx_byte = 0xCE;
     } else {
         /* code == 0 or unknown */
-        I2C2TRN = 0x01;
-        return 0;
+        return 1;
     }
 
     I2C2TRN = tx_byte;
@@ -555,8 +572,8 @@ static void pmbusUnsupportedCommand(void)
  *   2. Computes txByteCount = rxBufIndex - 2 (skip address + command bytes).
  *   3. If txByteCount <= 0x0F sets flag bit0 in txCtrlWord (0x1950).
  *   4. If txByteCount > 0x0F sets flag bit1 in txCtrlWord.
- *   5. Calls (txCtrlWord) to write the first response header byte.
- *   6. If  returned non-zero (byte was sent):
+ *   5. Calls pmbusEncodeResponse(txCtrlWord).
+ *   6. If no header byte was loaded (non-zero return):
  *      a. Shifts rxPendFlag right by W0 positions to get bit offset.
  *      b. Computes index W2 = txByteCount (adjusted); looks up rxPacketBuf[W2] to
  *         find the command code for the pointed-to register.
@@ -598,10 +615,10 @@ static void pmbusMultiByteTxSetup(void)
 tx_setup_send:
     {
         uint16_t ctrl = txCtrlWord;
-        uint16_t result = (ctrl);
+        uint16_t result = pmbusEncodeResponse(ctrl);
 
         if (result == 0) {
-            /*  did not put a valid byte in TRN — done */
+            /* Header byte was loaded in TRN — done */
             return;
         }
 
@@ -685,6 +702,44 @@ static void pmbusChecksumResponse(void)
     I2C2TRN = pec;
 }
 
+static void pmbusSendDataByte(uint8_t value)
+{
+    I2C2TRN = (uint16_t)value;
+    txChecksumAccum = (uint16_t)(txChecksumAccum + (uint16_t)I2C2TRN);
+}
+
+static void pmbusSendEndChecksum(void)
+{
+    txCtrlWord |= (1u << 1);
+    I2C2TRN = (uint8_t)(-(int8_t)(uint8_t)txChecksumAccum);
+}
+
+static uint16_t pmbusCommandCodeSupported(uint8_t cmd)
+{
+    if (cmd < 0x18u) {
+        if (cmd > 0x15u) {
+            return 1;
+        }
+        if (cmd > 0x04u) {
+            if (cmd < 0x08u || cmd == 0x13u) {
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    if (cmd < 0x23u) {
+        return 0;
+    }
+    if (cmd <= 0x24u) {
+        return 1;
+    }
+    if ((uint8_t)(cmd - 0x30u) <= 0x0Cu) {
+        return 1;
+    }
+    return (cmd == 0x3Du) ? 1u : 0u;
+}
+
 /* ============================================================================
  *   (0x16BC – 0x1848)
  *
@@ -697,36 +752,27 @@ static void pmbusChecksumResponse(void)
  *        W2 = word formed from rxPacketBuf[1:2]  (big-endian)
  *
  * The dispatch at 0x16E0 is "BRA W0" — a computed branch (jump table) with
- * (W0 - 5) as the index, covering command codes 0x05 .. 0x3D+.
+ * (W0 - 5) as the index, covering command codes 0x05 .. 0x3D.
  * Commands not in the table branch to 0x1848 (default: no-op / RETURN).
  *
- * Only the commands with explicit branch targets are shown below; the rest
- * fall through to the default RETURN at 0x1848.
- *
- * Abbreviated jump table (assembly 0x16E2..0x1752):
+ * Jump table entries with explicit branch targets (assembly 0x16E2..0x1752):
  *   offset  0 (cmd 0x05) -> 0x1754  MOV ptrTable19BA[0] -> clear *ptr
  *   offset  1 (cmd 0x06) -> 0x1758  MOV ptrTable19BA[1] -> clear *ptr
  *   offset  2 (cmd 0x07) -> 0x175C  MOV ptrTable19BA[2] -> clear *ptr
- *   offset  3..10        -> 0x1848  (unsupported)
- *   offset 11 (cmd 0x10) -> 0x1760  clear ptrTable19D0[3..5] (*ptr = 0)
- *   offset 14 (cmd 0x13) -> 0x176C  clear ptrTable19D0[6]
- *   offset 15 (cmd 0x14) -> 0x1770  clear ptrTable19D0[7]
- *   offset 21 (cmd 0x1A) -> 0x1774  clear ptrTable19F0[6]
- *   offset 22 (cmd 0x1B) -> 0x1778  clear ptrTable19F0[7]
- *   offset 29 (cmd 0x22) -> 0x177E  -> BSET auxFlags #3, complex update
+ *   offset 14 (cmd 0x13) -> 0x1760  clear ptrTable19D0[3..5]
+ *   offset 17 (cmd 0x16) -> 0x176C  clear ptrTable19D0[6]
+ *   offset 18 (cmd 0x17) -> 0x1770  clear ptrTable19D0[7]
+ *   offset 30 (cmd 0x23) -> 0x1774  clear ptrTable19F0[6]
+ *   offset 31 (cmd 0x24) -> 0x1778  clear ptrTable19F0[7]
+ *   offset 43 (cmd 0x30) -> 0x177E  status/droop word update
  *   offset 44 (cmd 0x31) -> 0x17E6  -> BTST droopEnableFlags bit10 (0x1BEB bit2) path
- *   offset 55 (cmd 0x3C) -> 0x1814..0x183E  -> write ptrTable1A10[n] from W2
- *   offset 56 (cmd 0x3D) -> 0x1818
- *   ... (many more ptrTable1A10 table writes)
- *   offset 67 (cmd 0x48) -> 0x183E (last write entry)
- *   offset 68 (cmd 0x49) -> 0x1844 ptrTable1A10[13]
+ *   offset 45..56        -> 0x1814..0x1844 write ptrTable1A10[2..13]
  *   default -> 0x1848 RETURN
- *
- * Rather than reproducing the full 56-entry jump table as C switch labels,
- * the key cases are enumerated; the rest are implicit (return).
  * ============================================================================ */
 static void pmbusWriteCommand(uint8_t cmd, uint16_t word_val, uint16_t byte_cnt)
 {
+    (void)byte_cnt;
+
     /* Adjust cmd: subtract 5 to get table index */
     if (cmd < 5) {
         return;   /* BRA GTU 0x1848: out of range */
@@ -751,34 +797,34 @@ static void pmbusWriteCommand(uint8_t cmd, uint16_t word_val, uint16_t byte_cnt)
         case 2:
             *((volatile uint16_t *)ptrTable19BA[2]) = 0;
             return;
-        /* cmd 0x10 (idx 11): clear ptrTable19D0[3], [4], [5] */
-        case 11:
+        /* cmd 0x13 (idx 14): clear ptrTable19D0[3], [4], [5] */
+        case 14:
             *((volatile uint16_t *)ptrTable19D0[3]) = 0;
             *((volatile uint16_t *)ptrTable19D0[4]) = 0;
             *((volatile uint16_t *)ptrTable19D0[5]) = 0;
             return;
-        /* cmd 0x13 (idx 14): clear ptrTable19D0[6] */
-        case 14:
+        /* cmd 0x16 (idx 17): clear ptrTable19D0[6] */
+        case 17:
             *((volatile uint16_t *)ptrTable19D0[6]) = 0;
             return;
-        /* cmd 0x14 (idx 15): clear ptrTable19D0[7] */
-        case 15:
+        /* cmd 0x17 (idx 18): clear ptrTable19D0[7] */
+        case 18:
             *((volatile uint16_t *)ptrTable19D0[7]) = 0;
             return;
-        /* cmd 0x1A (idx 21): clear ptrTable19F0[6] */
-        case 21:
+        /* cmd 0x23 (idx 30): clear ptrTable19F0[6] */
+        case 30:
             *((volatile uint16_t *)ptrTable19F0[6]) = 0;
             return;
-        /* cmd 0x1B (idx 22): clear ptrTable19F0[7] */
-        case 22:
+        /* cmd 0x24 (idx 31): clear ptrTable19F0[7] */
+        case 31:
             *((volatile uint16_t *)ptrTable19F0[7]) = 0;
             return;
 
         /* ------------------------------------------------------------------ *
-         * cmd 0x22 (idx 29): set auxFlags bit3; update droopEnableFlags bit2 based
+         * cmd 0x30 (idx 43): set auxFlags bit3; update droopEnableFlags bit2 based
          * on status; route the new value to ptrTable1A10[0].
          * ------------------------------------------------------------------ */
-        case 29: {
+        case 43: {
             auxFlags |= (1u << 3);   /* BSET 0x1E1C, #3 */
 
             /* Evaluate whether to clear droopEnableFlags bit2 */
@@ -791,14 +837,14 @@ static void pmbusWriteCommand(uint8_t cmd, uint16_t word_val, uint16_t byte_cnt)
                     droopEnableFlags &= ~(1u << 2);
                 }
                 if (systemState == 2) {
-                    goto cmd22_set;
+                    goto cmd30_set;
                 }
                 uint16_t bec = startupResetLatch;
                 if (bec & 0x0Cu) {
                     return;   /* bits 2 or 3 set -> abort */
                 }
             }
-cmd22_set:
+cmd30_set:
             /* Call helper at 0x257E (update flags) */
             /* RCALL 0x257E — modelled inline: */
             {
@@ -841,28 +887,24 @@ cmd22_set:
         }
 
         /* ------------------------------------------------------------------ *
-         * cmd 0x3C (idx 55) and the following 10 commands each write
-         * word_val into successive ptrTable1A10 entries [2]..[12].
+         * cmd 0x32..0x3D (idx 45..56) write successive ptrTable1A10 entries.
          * ------------------------------------------------------------------ */
-        case 55: *((volatile uint16_t *)ptrTable1A10[2])  = word_val; return;
-        case 56: *((volatile uint16_t *)ptrTable1A10[3])  = word_val; return;
-        case 57: *((volatile uint16_t *)ptrTable1A10[4])  = word_val; return;
-        case 58: *((volatile uint16_t *)ptrTable1A10[5])  = word_val; return;
-        case 59: *((volatile uint16_t *)ptrTable1A10[6])  = word_val; return;
-        case 60: *((volatile uint16_t *)ptrTable1A10[7])  = word_val; return;
-        case 61: *((volatile uint16_t *)ptrTable1A10[8])  = word_val; return;
-        case 62: *((volatile uint16_t *)ptrTable1A10[9])  = word_val; return;
-        case 63: *((volatile uint16_t *)ptrTable1A10[10]) = word_val; return;
-        /* cmd 0x46 (idx 65): also set systemFlags bit14 (0x1E1B bit6) */
-        case 65:
+        case 45: *((volatile uint16_t *)ptrTable1A10[2])  = word_val; return;
+        case 46: *((volatile uint16_t *)ptrTable1A10[3])  = word_val; return;
+        case 47: *((volatile uint16_t *)ptrTable1A10[4])  = word_val; return;
+        case 48: *((volatile uint16_t *)ptrTable1A10[5])  = word_val; return;
+        case 49: *((volatile uint16_t *)ptrTable1A10[6])  = word_val; return;
+        case 50: *((volatile uint16_t *)ptrTable1A10[7])  = word_val; return;
+        case 51: *((volatile uint16_t *)ptrTable1A10[8])  = word_val; return;
+        case 52: *((volatile uint16_t *)ptrTable1A10[9])  = word_val; return;
+        case 53: *((volatile uint16_t *)ptrTable1A10[10]) = word_val; return;
+        /* cmd 0x3B (idx 54): also set systemFlags bit14 (0x1E1B bit6) */
+        case 54:
             systemFlags |= (1u << 14);
             *((volatile uint16_t *)ptrTable1A10[11]) = word_val;
             return;
-        case 66: *((volatile uint16_t *)ptrTable1A10[12]) = word_val; return;
-        /* cmd 0x48 (idx 67) */
-        case 67: *((volatile uint16_t *)ptrTable1A10[13]) = word_val; return;
-        /* cmd 0x49 (idx 68): indirect write via ptrTable1A10[13] */
-        case 68: *((volatile uint16_t *)ptrTable1A10[13]) = word_val; return;
+        case 55: *((volatile uint16_t *)ptrTable1A10[12]) = word_val; return;
+        case 56: *((volatile uint16_t *)ptrTable1A10[13]) = word_val; return;
 
         default:
             return;   /* unsupported command */
@@ -893,13 +935,14 @@ cmd22_set:
  *   cmd 0x05 -> Read ptrTable19BA[0] and return *ptr
  *   cmd 0x06 -> Read ptrTable19BA[1]
  *   cmd 0x07 -> Read ptrTable19BA[2]
- *   cmd 0x10 -> Clear three ptrTable19D0 entries (accumulators)
- *   cmd 0x13..0x15 -> Clear ptrTable19D0[6..7] / ptrTable19F0[6..7]
- *   cmd 0x22 -> Status/fault complex handler (see above)
+ *   cmd 0x13 -> Clear three ptrTable19D0 entries (accumulators)
+ *   cmd 0x16..0x17 -> Clear ptrTable19D0[6..7]
+ *   cmd 0x23..0x24 -> Clear ptrTable19F0[6..7]
+ *   cmd 0x30 -> Status/fault complex handler (see above)
  *   cmd 0x31 -> Write iout/vout value
- *   cmd 0x3C..0x49 -> Write successive ptrTable1A10 entries
+ *   cmd 0x32..0x3D -> Write successive ptrTable1A10 entries
  *
- * This function is modelled by () above.
+ * This function is modelled by pmbusWriteCommand() above.
  * ============================================================================ */
 
 /* ============================================================================
@@ -911,42 +954,719 @@ cmd22_set:
  * Returns 0 (RETLW #0) if supported, 1 (RETLW #1) if unsupported.
  *
  * Valid command ranges:
- *   0x01..0x07 (but NOT 0x06, 0x07 alone — see assembly)
  *   0x05..0x07
  *   0x13, 0x16, 0x17
  *   0x23..0x24
+ *   0x30..0x3D
  * ============================================================================ */
 static uint16_t pmbusValidateCommand(uint16_t cmd_idx)
 {
-    /* Zero-extend: already done by caller */
-    uint8_t cmd = (uint8_t)rxPacketBuf[cmd_idx];
+    return pmbusCommandCodeSupported((uint8_t)rxPacketBuf[cmd_idx]) ? 0u : 1u;
+}
 
-    /* Ranges that are valid (assemble from the BRA chain in 0x194E..0x1980) */
-    if (cmd <= 0x17u) {
-        if (cmd <= 0x07u) {
-            /* 0x01..0x07 valid, 0x00 invalid */
-            /* Assembly accepts 0x05, 0x06, 0x07, 0x13, 0x16, 0x17 */
-            if (cmd >= 0x05u && cmd <= 0x07u) goto valid;
-            if (cmd == 0x13u) goto valid;
-            goto invalid;
+/*
+ * 0x184A: second-stage validator used by the block-write dispatcher.
+ * pmbusValidateCommand() only checks the command code; this also checks that
+ * the associated 16-bit value is in the range accepted by the original image.
+ * Return value follows the assembly convention: 0 = valid, 1 = reject.
+ */
+static uint16_t pmbusBlockCommandInvalid(uint16_t cmd_idx)
+{
+    uint8_t cmd = (uint8_t)rxPacketBuf[cmd_idx];
+    uint16_t word_val = (uint16_t)rxPacketBuf[cmd_idx + 1u]
+                      | ((uint16_t)rxPacketBuf[cmd_idx + 2u] << 8);
+
+    switch (cmd) {
+        case 0x05u:
+        case 0x06u:
+        case 0x07u:
+        case 0x13u:
+        case 0x16u:
+        case 0x17u:
+        case 0x23u:
+        case 0x24u:
+            return (word_val != 0u) ? 1u : 0u;
+
+        case 0x30u:
+            return ((word_val & 0xF010u) != 0u) ? 1u : 0u;
+
+        case 0x31u:
+            if (flash_read_buf_15E6[0x10] == 1) {
+                return 1;
+            }
+            if ((droopEnableFlags & 0x0400u) == 0) {
+                return (word_val == 0u) ? 1u : 0u;
+            }
+            if (word_val < 0x0100u || word_val == 0x8000u) {
+                return 0;
+            }
+            return 1;
+
+        case 0x32u:
+            return (word_val <= 0x2FFFu || word_val > 0x3133u) ? 1u : 0u;
+
+        case 0x33u:
+            return (word_val <= 0x003Fu || word_val > 0x0640u) ? 1u : 0u;
+
+        case 0x34u:
+            return (word_val <= 0x003Fu || word_val > 0x1180u) ? 1u : 0u;
+
+        case 0x35u:
+            return (word_val > (uint16_t)(pmbusReadPtr0 - 0x0100u)) ? 1u : 0u;
+
+        case 0x36u:
+            return (word_val < (uint16_t)(pmbusReadPtr1 + 0x0100u)) ? 1u : 0u;
+
+        case 0x37u:
+            return (word_val > (uint16_t)(voutCalD - 0x0100u)) ? 1u : 0u;
+
+        case 0x38u:
+            return (word_val < (uint16_t)(voutCalE + 0x0100u)) ? 1u : 0u;
+
+        case 0x3Du: {
+            uint8_t low = (uint8_t)word_val;
+            if (low == 0u) {
+                return 1;
+            }
+            if (low <= 0xEFu) {
+                return 0;
+            }
+            return (low == 0xFAu) ? 0u : 1u;
         }
-        if (cmd == 0x13u) goto valid;
-        if (cmd == 0x16u) goto valid;
-        if (cmd == 0x17u) goto valid;
+
+        default:
+            return 0;
+    }
+}
+
+/*
+ * 0x1982: stream a window out of flash_read_buf_160E.
+ * rxBufIndex selects one of two firmware formats:
+ *   len 3: rxPacketBuf[1] is a 16-byte page index (page << 4).
+ *   len 4: rxPacketBuf[1] is a start byte, rxPacketBuf[2] is a byte count.
+ */
+static void pmbusFlashReadWindow(void)
+{
+    if (rxBufIndex == 3u) {
+        if (rxPacketBuf[1] < 0x10u) {
+            txByteCntPreset = 0;
+        } else {
+            txCtrlWord |= (1u << 1);
+        }
+    } else if (rxBufIndex == 4u) {
+        uint16_t start = (uint16_t)rxPacketBuf[1];
+        uint16_t count = (uint16_t)rxPacketBuf[2];
+        if (count != 0u && (uint16_t)(start + count) < 0x0101u) {
+            txByteCntPreset = 1;
+        } else {
+            txCtrlWord |= (1u << 1);
+        }
+    } else if (rxBufIndex < 5u) {
+        if (rxBufIndex != 0u) {
+            txCtrlWord |= (1u << 0);
+        }
     } else {
-        if (cmd >= 0x23u && cmd <= 0x24u) goto valid;
-        /* Additional range derived from assembly 0x1976..0x197C */
-        {
-            /* cmd += 0xD0; if (cmd - 0xD <=0) valid */
-            uint8_t t = cmd + 0xD0u;
-            if ((t - 0x0Du) <= 0) goto valid;
+        txCtrlWord |= (1u << 1);
+    }
+
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+
+    if (txByteCntPreset == 0u) {
+        if (rxPendFlag > 0x000Fu) {
+            pmbusSendEndChecksum();
+            return;
+        }
+        pmbusSendDataByte(flash_read_buf_160E[((uint16_t)rxPacketBuf[1] << 4) + rxPendFlag]);
+    } else {
+        if ((uint16_t)rxPacketBuf[2] <= rxPendFlag) {
+            pmbusSendEndChecksum();
+            return;
+        }
+        pmbusSendDataByte(flash_read_buf_160E[(uint16_t)rxPacketBuf[1] + rxPendFlag]);
+    }
+}
+
+/*
+ * 0x1A12: write a received byte window into flash_read_buf_160E.
+ * The first 200 bytes are protected unless LLC programming mode is active
+ * (llcStatus bit8); this mirrors the original dst > 0x00C7 test.
+ */
+static void pmbusFlashWriteWindow(void)
+{
+    uint16_t changed;
+
+    if (rxBufIndex < 4u) {
+        if (rxBufIndex != 0u) {
+            txCtrlWord |= (1u << 0);
+        }
+    } else if ((uint16_t)((uint16_t)rxPacketBuf[1] + rxBufIndex - 4u) > 0x00FFu) {
+        txCtrlWord |= (1u << 1);
+    }
+
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+
+    changed = (flashCmdFlags >> 4) & 1u;
+    for (uint16_t i = 0; i < (uint16_t)(rxBufIndex - 3u); i++) {
+        uint16_t dst = (uint16_t)rxPacketBuf[1] + i;
+        if ((llcStatus & 0x0100u) != 0u || dst > 0x00C7u) {
+            flash_read_buf_160E[dst] = rxPacketBuf[i + 2u];
+            changed = 1;
+        } else {
+            break;
         }
     }
 
-invalid:
-    return 1;
-valid:
+    flashCmdFlags = (flashCmdFlags & (uint16_t)~0x0010u) | (uint16_t)(changed << 4);
+    txCtrlWord |= (1u << 1);
+    I2C2TRN = (changed != 0u) ? 0x31u : 0xAAu;
+}
+
+/*
+ * 0x1A92: programming unlock handshake.
+ * The packet includes a fixed magic prefix plus the EEPROM CRC shadow, then
+ * toggles systemFlags bit9 and persists the enable state through eepromCfgUpdate().
+ */
+static void pmbusOperationUnlock(void)
+{
+    if (rxBufIndex != 8u) {
+        if (rxBufIndex < 9u) {
+            if (rxBufIndex != 0u) {
+                txCtrlWord |= (1u << 0);
+            }
+        } else {
+            txCtrlWord |= (1u << 1);
+        }
+    }
+
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+
+    txCtrlWord |= (1u << 1);
+    if (rxPacketBuf[1] == 0x05u && rxPacketBuf[2] == 0xA6u && rxPacketBuf[4] == 0x01u &&
+        rxPacketBuf[3] == 0x02u &&
+        rxPacketBuf[5] == (uint8_t)(eepromCrcShadow >> 8) &&
+        rxPacketBuf[6] == (uint8_t)eepromCrcShadow) {
+        systemFlags |= 0x0200u;
+        eepromCfgUpdate(0xFFu, 0xFFu, 1u);
+        flashUpdateResult = eepromCfgRead();
+        I2C2TRN = 0x31u;
+        return;
+    }
+
+    systemFlags &= (uint16_t)~0x0200u;
+    eepromCfgUpdate(0xFFu, 0xFFu, 0u);
+    flashUpdateResult = eepromCfgRead();
+    I2C2TRN = 0xCEu;
+}
+
+/* 0x1B2A: accept the "PH" programming header only after the unlock bit is set. */
+static void pmbusProgramHeader(void)
+{
+    if (rxBufIndex == 4u) {
+        if ((systemFlags & 0x0200u) == 0u) {
+            txCtrlWord |= (1u << 4);
+        }
+    } else if (rxBufIndex < 5u) {
+        if (rxBufIndex != 0u) {
+            txCtrlWord |= (1u << 0);
+        }
+    } else {
+        txCtrlWord |= (1u << 1);
+    }
+
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+
+    txCtrlWord |= (1u << 1);
+    if (rxPacketBuf[1] == 'P' && rxPacketBuf[2] == 'H') {
+        systemFlags |= 0x0001u;
+        I2C2TRN = 0x31u;
+    } else {
+        I2C2TRN = 0xCEu;
+    }
+}
+
+/*
+ * 0x1B6A: receive a programming data block.
+ * The block has an internal 8-bit additive checksum at byte_count + 5, separate
+ * from the outer PMBus checksum.  The page word is then translated into the
+ * AT45DB write window by adding 0x0800, saturating at 0xF7FF.
+ */
+static void pmbusProgramBlock(void)
+{
+    uint8_t byte_count = rxPacketBuf[1];
+    uint16_t end = (uint16_t)byte_count + 4u;
+    uint16_t sum = 0;
+
+    if ((rxBufIndex >= 7u && rxBufIndex <= 0x17u) || rxBufIndex == 0x17u) {
+        if (byte_count < 0x11u) {
+            if ((systemFlags & 0x0200u) == 0u) {
+                txCtrlWord |= (1u << 4);
+            }
+        } else {
+            txCtrlWord |= (1u << 1);
+        }
+    } else {
+        if (rxBufIndex > 0x17u) {
+            txCtrlWord |= (1u << 1);
+        } else if (rxBufIndex != 0u) {
+            txCtrlWord |= (1u << 0);
+        }
+    }
+
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+
+    txCtrlWord |= (1u << 1);
+    /* Original code verifies the block-local checksum before copying bytes. */
+    for (uint16_t i = 1u; i <= end; i++) {
+        sum += rxPacketBuf[i];
+    }
+
+    txChecksumAccum = (uint8_t)(-(int8_t)(uint8_t)sum);
+    if ((uint8_t)txChecksumAccum != rxPacketBuf[(uint16_t)byte_count + 5u]) {
+        I2C2TRN = 0xCEu;
+        return;
+    }
+
+    if (rxPacketBuf[4] == 0u) {
+        if (rxBufIndex < 8u || byte_count == 0u) {
+            I2C2TRN = 0xCEu;
+            return;
+        }
+
+        /*
+         * 0x1BD6..0x1BE4 copies rxPacketBuf[5..byte_count+4] to scratch RAM
+         * at 0x170E, then 0x1C0E..0x1C20 copies scratch[0..byte_count-1] to
+         * the 0x171E programming page buffer.  The 0x181E readback buffer is
+         * not updated by this command.
+         */
+        for (uint16_t i = 0; i < byte_count; i++) {
+            flash_program_scratch[i] = rxPacketBuf[5u + i];
+        }
+
+        flashBlockPageWord = ((uint16_t)rxPacketBuf[2] << 8) | rxPacketBuf[3];
+        /* Host page word is offset into the flash write address window. */
+        if (flashBlockPageWord < 0xF7FFu) {
+            flashBlockPageWord = (uint16_t)(flashBlockPageWord + 0x0800u);
+        } else {
+            flashBlockPageWord = 0xF7FFu;
+        }
+
+        flashBlockByteCount = byte_count;
+        uint16_t dst = flashBlockPageWord & 0x00FFu;
+        for (uint16_t i = 0; i < byte_count; i++) {
+            flashBlockLastOffset = (uint16_t)(dst + i);
+            flash_buf_171E[flashBlockLastOffset] = flash_program_scratch[i];
+        }
+        if (flashBlockLastOffset == 0x00FFu) {
+            flashCmdFlags |= (1u << 0);
+        }
+    }
+
+    eepromCfgUpdate(0xFFu, 0u, 0xFFu);
+    I2C2TRN = 0x31u;
+}
+
+/* 0x1C48: read back bytes from the assembled programming page buffer. */
+static void pmbusReadbackBlock(void)
+{
+    if (rxBufIndex == 5u) {
+        if (rxPacketBuf[1] <= 0x10u) {
+            goto ok;
+        }
+        txCtrlWord |= (1u << 1);
+    } else if (rxBufIndex < 6u) {
+        if (rxBufIndex != 0u) {
+            txCtrlWord |= (1u << 0);
+        }
+        goto ok;
+    } else {
+        txCtrlWord |= (1u << 1);
+    }
+
+ok:
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+    if (rxPendFlag == rxPacketBuf[1]) {
+        pmbusSendEndChecksum();
+        return;
+    }
+    pmbusSendDataByte(flash_buf_181E[rxPendFlag]);
+}
+
+/* 0x1C94: start the deferred flash write sequence at flash address 0x0800. */
+static void pmbusStartFlashWrite(void)
+{
+    if (rxBufIndex != 2u) {
+        if (rxBufIndex < 3u) {
+            if (rxBufIndex != 0u) {
+                txCtrlWord |= (1u << 3);
+            }
+        } else {
+            txCtrlWord |= (1u << 1);
+        }
+    }
+
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+
+    txCtrlWord |= (1u << 1);
+    I2C2TRN = 0x31u;
+    if ((systemFlags & 0x0100u) == 0u) {
+        systemFlags |= 0x0100u;
+        flash_page_addr = 0;
+        flash_write_offset = 0x0800u;
+        eepromCfgUpdate(0xFFu, 1u, 0xFFu);
+    }
+}
+
+/* 0x1CD4: 10-byte device information response from the table at 0x1D03. */
+static void pmbusReadDeviceInfo(void)
+{
+    if (rxBufIndex == 3u) {
+        if (rxPacketBuf[1] == 0xE0u) {
+            goto ok;
+        }
+    } else if (rxBufIndex == 0u) {
+        goto ok;
+    }
+    txCtrlWord |= (1u << 3);
+
+ok:
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+    if (rxPendFlag == 10u) {
+        pmbusSendEndChecksum();
+        return;
+    }
+    pmbusSendDataByte(pmbusInfoBytes[rxPendFlag]);
+}
+
+static uint8_t pmbusProgrammingStringByte(uint16_t idx)
+{
+    if (idx < sizeof(pmbusStringBuf)) {
+        return pmbusStringBuf[idx];
+    }
+
+    idx = (uint16_t)(idx - sizeof(pmbusStringBuf));
+    if (idx < sizeof(pmbusInfoBytes)) {
+        return pmbusInfoBytes[idx];
+    }
+
     return 0;
+}
+
+/* 0x1DC8 read path: streams the 20-byte programming metadata window. */
+static void pmbusReadProgrammingString(void)
+{
+    if ((llcStatus & 0x0100u) == 0u) {
+        I2C2TRN = 0x55u;
+        return;
+    }
+
+    if (rxPendFlag == 0x14u) {
+        txCtrlWord |= (1u << 2);
+        I2C2TRN = (uint8_t)(-(int8_t)(uint8_t)txChecksumAccum);
+        return;
+    }
+
+    uint8_t b;
+    if (rxPendFlag == 0u) {
+        b = (uint8_t)flash_read_buf_15E6[0x11];
+    } else if (rxPendFlag == 1u) {
+        b = (uint8_t)flash_read_buf_15E6[0x12];
+    } else if (rxPendFlag == 2u) {
+        b = (uint8_t)flash_read_buf_15E6[0x13];
+    } else if (rxPendFlag == 3u) {
+        b = (uint8_t)flash_read_buf_15E6[0x14];
+    } else {
+        b = (uint8_t)flash_read_buf_15E6[(uint16_t)rxPendFlag - 4u];
+    }
+
+    pmbusSendDataByte(b);
+}
+
+/* 0x1D5E: stores or streams the 9-byte programming string buffer at 0x1CFA. */
+static void pmbusEnterProgramming(void)
+{
+    if (rxBufIndex < 2u && rxBufIndex != 0u) {
+        txCtrlWord |= (1u << 3);
+    }
+
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+
+    if ((llcStatus & 0x0100u) != 0u) {
+        if (rxBufIndex == 0x0Bu) {
+            for (uint16_t i = 0; i < 9u; i++) {
+                pmbusStringBuf[i] = rxPacketBuf[i + 1u];
+            }
+            currentLimitFlags |= (1u << 1);
+            txCtrlWord |= (1u << 2);
+            I2C2TRN = 0x31u;
+            return;
+        }
+
+        if (rxPendFlag >= 2u &&
+            pmbusProgrammingStringByte((uint16_t)(rxPendFlag - 2u)) == '\n' &&
+            pmbusProgrammingStringByte((uint16_t)(rxPendFlag - 1u)) == '\r') {
+            txCtrlWord |= (1u << 2);
+            I2C2TRN = (uint8_t)(-(int8_t)(uint8_t)txChecksumAccum);
+            return;
+        }
+
+        pmbusSendDataByte(pmbusProgrammingStringByte(rxPendFlag));
+        return;
+    }
+
+    I2C2TRN = 0x55u;
+}
+
+/* 0x1DC8: store programming metadata into flash_read_buf_15E6. */
+static void pmbusStoreProgrammingData(void)
+{
+    if (rxBufIndex < 2u && rxBufIndex != 0u) {
+        txCtrlWord |= (1u << 3);
+    }
+
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+
+    if ((llcStatus & 0x0100u) != 0u) {
+        if (rxBufIndex == 0x16u) {
+            flash_read_buf_15E6[0x11] = (int8_t)rxPacketBuf[1];
+            flash_read_buf_15E6[0x12] = (int8_t)rxPacketBuf[2];
+            flash_read_buf_15E6[0x13] = (int8_t)rxPacketBuf[3];
+            flash_read_buf_15E6[0x14] = (int8_t)rxPacketBuf[4];
+            for (uint16_t i = 0; i < 16u; i++) {
+                flash_read_buf_15E6[i] = (int8_t)rxPacketBuf[i + 5u];
+            }
+            flashCmdFlags |= (1u << 6);
+            statusFlags |= (1u << 6);
+            txCtrlWord |= (1u << 2);
+            I2C2TRN = 0x31u;
+            return;
+        }
+
+        pmbusReadProgrammingString();
+        return;
+    }
+
+    I2C2TRN = 0x55u;
+}
+
+/* 0x1E8A path: status-summary block sourced from flash_read_buf_15D0. */
+static void pmbusReadFlashSummaryBlock(void)
+{
+    if (rxPendFlag < 0x16u) {
+        if (rxPacketBuf[2] == 0u) {
+            pmbusSendDataByte(flash_lookup_15D0(rxPendFlag));
+        } else {
+            pmbusSendDataByte(0);
+        }
+        return;
+    }
+
+    pmbusSendEndChecksum();
+}
+
+/* 0x1EB0 path: calibration/data block sourced from flash_read_buf_15B0. */
+static void pmbusReadFlashDataBlock(void)
+{
+    if (rxPacketBuf[1] == 2u) {
+        if (rxPendFlag < 0x1Cu) {
+            goto send_byte;
+        }
+    } else if (rxPacketBuf[1] == 3u && rxPendFlag < 0x1Du) {
+        goto send_byte;
+    }
+
+    pmbusSendEndChecksum();
+    return;
+
+send_byte:
+    if (rxPacketBuf[2] < 0x0Bu) {
+        pmbusSendDataByte(flash_lookup_15B0(rxPendFlag));
+    } else {
+        pmbusSendDataByte(0);
+    }
+}
+
+/* 0x1EEE path: flash status block sourced from flash_sector_buf_1598. */
+static void pmbusReadFlashStatusBlock(void)
+{
+    if (rxPendFlag < 0x18u) {
+        if (rxPacketBuf[2] == 0u) {
+            pmbusSendDataByte(flash_lookup_1598(rxPendFlag));
+        } else {
+            pmbusSendDataByte(0);
+        }
+        return;
+    }
+
+    pmbusSendEndChecksum();
+}
+
+/* 0x289A: select one of the flash readback block formats. */
+static void pmbusBlockWriteModeSelect(void)
+{
+    if (rxBufIndex != 4u) {
+        if (rxBufIndex < 5u) {
+            if (rxBufIndex != 0u) {
+                txCtrlWord |= (1u << 0);
+            }
+        } else {
+            txCtrlWord |= (1u << 1);
+        }
+    }
+
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+
+    if (rxPacketBuf[1] == 1u) {
+        pmbusReadFlashStatusBlock();
+    } else if (rxPacketBuf[1] == 0u) {
+        pmbusReadFlashSummaryBlock();
+    } else if (rxPacketBuf[1] == 2u || rxPacketBuf[1] == 3u) {
+        pmbusReadFlashDataBlock();
+    } else {
+        I2C2TRN = 0;
+    }
+}
+
+/* 0x1F18: enter config/update mode only when LLC programming mode is active. */
+static void pmbusReadConfigCommand(void)
+{
+    if (rxBufIndex == 3u) {
+        if (rxPacketBuf[1] == 1u) {
+            goto ok;
+        }
+    } else if (rxBufIndex < 4u) {
+        if (rxBufIndex != 0u) {
+            txCtrlWord |= (1u << 0);
+        }
+        goto ok;
+    }
+    txCtrlWord |= (1u << 1);
+
+ok:
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+    txCtrlWord |= (1u << 1);
+    if ((llcStatus & 0x0100u) != 0u) {
+        systemFlags |= 0x0048u;
+        I2C2TRN = 0x31u;
+    } else {
+        I2C2TRN = 0xAAu;
+    }
+}
+
+/* 0x1F54: arm the VOUT read/update path and shadow the current calibration. */
+static void pmbusReadVoutCommand(void)
+{
+    if (rxBufIndex == 3u) {
+        if ((currentLimitFlags & 0x0100u) == 0u && systemState != ST_HOLDOFF &&
+            rxPacketBuf[1] == 0xAAu) {
+            goto ok;
+        }
+    } else if (rxBufIndex < 4u) {
+        if (rxBufIndex != 0u) {
+            txCtrlWord |= (1u << 0);
+        }
+        goto ok;
+    }
+    txCtrlWord |= (1u << 1);
+
+ok:
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+    txCtrlWord |= (1u << 1);
+    currentLimitFlags |= 0x0100u;
+    ioutCalFactorShadow = ioutCalFactor;
+    I2C2TRN = 0x31u;
+}
+
+/* 0x1F90: clear IOUT/VOUT programming state while in LLC programming mode. */
+static void pmbusReadIoutCommand(void)
+{
+    if (rxBufIndex == 3u) {
+        if (rxPacketBuf[1] == 1u) {
+            goto ok;
+        }
+    } else if (rxBufIndex < 4u) {
+        if (rxBufIndex != 0u) {
+            txCtrlWord |= (1u << 0);
+        }
+        goto ok;
+    }
+    txCtrlWord |= (1u << 1);
+
+ok:
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+    txCtrlWord |= (1u << 1);
+    if ((llcStatus & 0x0100u) != 0u) {
+        *((volatile uint16_t *)ptrTable1A10[0]) = 0;
+        *((volatile uint16_t *)ptrTable1A10[1]) = 0;
+        flash_read_buf_15E6[0x10] = 0;
+        droopEnableFlags &= (uint16_t)~0x0008u;
+        flashCmdFlags |= (1u << 6);
+        I2C2TRN = 0x31u;
+    } else {
+        I2C2TRN = 0xAAu;
+    }
+}
+
+/* 0x1D12: set or clear LLC programming mode with the "PH" command prefix. */
+static void pmbusSetOperationMode(void)
+{
+    if (rxBufIndex != 5u) {
+        if (rxBufIndex < 6u) {
+            if (rxBufIndex != 0u) {
+                txCtrlWord |= (1u << 0);
+            }
+        } else {
+            txCtrlWord |= (1u << 1);
+        }
+    }
+
+    if (pmbusEncodeResponse(txCtrlWord) == 0u) {
+        return;
+    }
+
+    txCtrlWord |= (1u << 1);
+    if (rxPacketBuf[1] == 'P' && rxPacketBuf[2] == 'H') {
+        if (rxPacketBuf[3] == 1u) {
+            llcStatus |= 0x0100u;
+            I2C2TRN = 0x31u;
+            return;
+        }
+        if (rxPacketBuf[3] == 0u) {
+            llcStatus &= (uint16_t)~0x0100u;
+            I2C2TRN = 0x31u;
+            return;
+        }
+    }
+
+    llcStatus &= (uint16_t)~0x0100u;
+    I2C2TRN = 0xCEu;
 }
 
 /* ============================================================================
@@ -1305,212 +2025,102 @@ static void startupResetEventTracking(void)
  * Tx sub-function.  Handles both single-byte and block read formats.
  *
  * Key sub-functions called:
- *   0x1652         (cmd 0x01 handler)
- *   0x27CE  this function       (cmd 0x11 handler, recursive-style)
- *   0x1F54  (cmd 0x11 sub)
- *   0x1F90  (cmd 0x12 sub)
- *   0x289A  (cmd 0x21, recursive tx setup)
- *   0x1F18  (cmd 0x21 sub)
- *   0x1982  (cmd 0x22 sub)
- *   0x1A12  (cmd 0x23 sub)
- *   0x1D12  (cmd 0x24 sub)
- *   0x1B6A  (cmd 0x3B sub)
- *   0x1C48  (cmd 0x3C sub)
- *   0x1B2A  (cmd 0x3D sub)
- *   0x1C94  (cmd 0x3D-alt sub)
- *   0x1CD4  (cmd 0xE0 sub)
- *   0x1D5E  (cmd 0xE3 sub)
- *   0x1DC8  (cmd 0xE4 sub)
- *   0x1A92  (cmd 0x01 alt sub)
+ *   0x1652  pmbusMultiByteTxSetup       (cmd 0x00)
+ *   0x27CE  pmbusCommandDispatcher      (cmd 0x01)
+ *   0x1F54  pmbusReadVoutCommand        (cmd 0x11)
+ *   0x1F90  pmbusReadIoutCommand        (cmd 0x12)
+ *   0x289A  pmbusBlockWriteModeSelect   (cmd 0x20)
+ *   0x1F18  pmbusReadConfigCommand      (cmd 0x21)
+ *   0x1982  pmbusFlashReadWindow        (cmd 0x22)
+ *   0x1A12  pmbusFlashWriteWindow       (cmd 0x23)
+ *   0x1D12  pmbusSetOperationMode       (cmd 0x24)
+ *   0x1B6A  pmbusProgramBlock           (cmd 0x3A)
+ *   0x1C48  pmbusReadbackBlock          (cmd 0x3B)
+ *   0x1B2A  pmbusProgramHeader          (cmd 0x3C)
+ *   0x1C94  pmbusStartFlashWrite        (cmd 0x3D)
+ *   0x1CD4  pmbusReadDeviceInfo         (cmd 0xE0)
+ *   0x1D5E  pmbusEnterProgramming       (cmd 0xE2)
+ *   0x1DC8  pmbusStoreProgrammingData   (cmd 0xE3)
+ *   0x1A92  pmbusOperationUnlock        (cmd 0xFF)
  *
  * The txCtrlWord bit0 controls the "parity" selection (odd/even byte index).
  * ============================================================================ */
 
-/* Forward declarations for sub-functions referenced by the dispatch */
-extern void pmbusDispatcherTable1(void);    /* command dispatch helper 1 */
-extern void pmbusCommandRouter(void);       /* 0x27CE - command router */
-extern void pmbusReadVout(void);            /* 0x1F54 - READ_VOUT handler */
-extern void pmbusReadIout(void);            /* 0x1F90 - READ_IOUT handler */
-extern void pmbusBlockWrite(void);          /* 0x289A - block write handler */
-extern void pmbusReadConfig(void);          /* 0x1F18 - read config handler */
-extern void pmbusDispatcherTable2(void);    /* command dispatch helper 2 */
-extern void pmbusCmdSetVout(void);          /* 0x1A12 - VOUT_COMMAND handler */
-extern void pmbusCmdSetIout(void);          /* 0x1D12 - IOUT limit handler */
-extern void pmbusCmdMarginHi(void);         /* 0x1B6A - VOUT_MARGIN_HIGH */
-extern void pmbusCmdMarginLo(void);         /* 0x1C48 - VOUT_MARGIN_LOW */
-extern void pmbusCmdOvFault(void);          /* 0x1B2A - VOUT_OV_FAULT_LIMIT */
-extern void pmbusCmdOvWarn(void);           /* 0x1C94 - VOUT_OV_WARN_LIMIT */
-extern void pmbusCmdUvWarn(void);           /* 0x1CD4 - VOUT_UV_WARN_LIMIT */
-extern void pmbusCmdUvFault(void);          /* 0x1D5E - VOUT_UV_FAULT_LIMIT */
-extern void pmbusCmdFanConfig(void);        /* 0x1DC8 - FAN_CONFIG handler */
-extern void pmbusCmdOperation(void);        /* 0x1A92 - OPERATION handler */
-
 static void pmbusCommandDispatcher(void)
 {
-    /* Save W8..W10 (PUSH) */
-    /* (handled by compiler — noted for ABI awareness) */
-
     uint16_t idx = rxBufIndex;   /* 0x1E40 */
 
-    /* If idx - 5 > 0x18 (i.e. idx > 0x1D = 29), branch to "no-match" */
-    if ((uint16_t)(idx - 5u) > 0x18u) {
-        goto check_fallback;
-    }
+    if (idx >= 5u && idx <= 0x1Du) {
+        uint16_t parity = 1u;
+        uint16_t probe = 2u;
 
-    /* Build parity mask: scan through command bytes in rxPacketBuf
-     * to determine whether the "odd-byte" flag (txCtrlWord bit0) should
-     * be set for this transaction.
-     *
-     * The loop (0x27DC..0x27E8) walks cmd indices from 2 up to idx,
-     * stepping by 1, clearing W1 (the parity flag) when it hits
-     * index == 5 (the "odd" reference position).
-     */
-    {
-        uint16_t parity = 1u;   /* W1 = 1 initially */
-        uint16_t i;
-        for (i = 5u; i <= idx; i++) {
-            if (i == 5u) {
-                parity = 0;   /* CLR.B W1 at index 5 */
+        /*
+         * 0x27DA..0x27EA: valid block lengths are 5, 8, 11, ... 29.
+         * txCtrlWord bit0 records whether the packet ended on a valid tuple
+         * boundary before the command table is scanned.
+         */
+        do {
+            probe = (uint16_t)(probe + 3u);
+            if (idx == probe) {
+                parity = 0;
+            }
+        } while (probe != 0x1Du);
+
+        txCtrlWord = (txCtrlWord & (uint16_t)~0x0001u) | (parity & 1u);
+
+        if (parity == 0u) {
+            for (uint16_t i = 0; i < sizeof(pmbusBlockOffsets); i++) {
+                uint8_t entry = pmbusBlockOffsets[i];
+                uint8_t cmd = rxPacketBuf[entry];
+                uint16_t invalid = pmbusCommandCodeSupported(cmd) ? 0u : 1u;
+
+                txCtrlWord = (txCtrlWord & (uint16_t)~0x0002u) |
+                             (uint16_t)(invalid << 1);
+                if ((uint16_t)(entry + 4u) >= idx || invalid != 0u) {
+                    break;
+                }
             }
         }
-        /* Mask to bit0, update txCtrlWord */
-        parity &= 1u;
-        uint16_t ctrl = txCtrlWord;
-        ctrl &= ~(1u << 0);
-        ctrl |= parity;
-        txCtrlWord = ctrl;
-    }
-
-    /* If txCtrlWord bit0 is SET -> jump to Tx-transmit path (0x2856) */
-    if (txCtrlWord & (1u << 1)) {
-        goto tx_main;
-    }
-
-    /* ------------------------------------------------------------------ *
-     * Command decode: read rxPacketBuf[0] to select sub-function.
-     * ------------------------------------------------------------------ */
-    {
-        uint8_t  cmd = rxPacketBuf[0];
-
-        /* Build word: W4 = 0x93B8, W8 = 0x1958 */
-        /* These are pointer constants for the Tx scan loop — captured above */
-
-        /* Scan loop (0x2802): for each entry in the Tx-pointer array [W4]
-         * check if the command index matches the pending Tx command.
-         * If the command byte is in a "supported" range -> set txCtrlWord bit1,
-         * clear bit1 of the loop result word.
-         * If not -> set txCtrlWord bit1 (error).                               */
-
-        /* Simplified: just dispatch on cmd */
-        if (cmd == 0x01u) {
-            goto cmd_01;
-        } else if (cmd == 0x11u) {
-            goto cmd_11;
-        } else if (cmd == 0x12u) {
-            goto cmd_12;
-        } else if (cmd == 0x20u) {
-            goto cmd_20;
-        } else if (cmd == 0x21u) {
-            goto cmd_21;
-        } else if (cmd == 0x22u) {
-            goto cmd_22;
-        } else if (cmd == 0x23u) {
-            goto cmd_23;
-        } else if (cmd == 0x24u) {
-            goto cmd_24;
-        } else if (cmd == 0x3Bu) {
-            goto cmd_3B;
-        } else if (cmd == 0x3Cu) {
-            goto cmd_3C;
-        } else if (cmd == 0x3Du) {
-            goto cmd_3D;
-        } else if (cmd == 0x3Eu) {
-            goto cmd_3E;
-        } else if (cmd == 0xE0u) {
-            goto cmd_E0;
-        } else if (cmd == 0xE3u) {
-            goto cmd_E3;
-        } else if (cmd == 0xE4u) {
-            goto cmd_E4;
-        } else if (cmd == 0x01u) {   /* duplicate maps to cmd_01_alt */
-            goto cmd_01_alt;
-        } else {
-            /* Unsupported command */
-            I2C2TRN = 0x55u;
-            goto tx_exit;
-        }
-
-        /* Per-command Tx handlers */
-cmd_01:       pmbusUnsupportedCommand(); goto tx_exit;
-cmd_11:       pmbusCommandRouter(); goto tx_exit;
-cmd_12:       pmbusReadVout(); goto tx_exit;
-cmd_20:       pmbusReadIout(); goto tx_exit;
-cmd_21:       pmbusBlockWrite(); goto tx_exit;
-cmd_22:       pmbusReadConfig(); goto tx_exit;
-cmd_23:       pmbusUnsupportedCommand(); goto tx_exit;
-cmd_24:       pmbusCmdSetVout(); goto tx_exit;
-cmd_3B:       pmbusCmdSetIout(); goto tx_exit;
-cmd_3C:       pmbusCmdMarginHi(); goto tx_exit;
-cmd_3D:       pmbusCmdMarginLo(); goto tx_exit;
-cmd_3E:       pmbusCmdOvFault(); goto tx_exit;
-cmd_E0:       pmbusCmdOvWarn(); goto tx_exit;
-cmd_E3:       pmbusCmdUvWarn(); goto tx_exit;
-cmd_E4:       pmbusCmdUvFault(); goto tx_exit;
-cmd_01_alt:   pmbusCmdOperation(); goto tx_exit;
-    }
-
-tx_main:
-    /* Tx main path: call  with txCtrlWord, then iterate over
-     * the Tx pointer array to load the response bytes.               */
-    {
-        uint16_t ctrl = txCtrlWord;
-        pmbusMultiByteTxSetup();  /* 0x163C - setup multi-byte Tx */
-
-        if (/*  returned 0 */ 1) {
-            /* Scan Tx pointer array from 0x93B8 upward, loading each byte */
-            uint16_t *scan = (uint16_t *)0x93B8u;
-            uint16_t  lim  = rxBufIndex;
-
-            while (1) {
-                uint8_t  entry_cmd = (uint8_t)(*scan);
-                /* Call 0x184A: load byte from rxPacketBuf[entry_cmd] and tx */
-                /* sub_184A(entry_cmd); */
-                scan++;
-                uint16_t next_idx = (uint16_t)(entry_cmd) + 4u;
-                if (next_idx >= lim) break;
-            }
-
-            /* After loop: if no multi-byte flag send 0xCE terminator */
-            if (!(txCtrlWord & (1u << 1))) {
-                /* Re-scan and build response block at 0x16BC */
-                /* sub_16BC(); */
-            }
-
-            /* Write 0xCE or 0x31 as block-read byte-count */
-            if (txCtrlWord & (1u << 1)) {
-                I2C2TRN = 0xCEu;
-            } else {
-                I2C2TRN = 0x31u;
-            }
-            txCtrlWord |= (1u << 1);
-        }
-    }
-
-tx_exit:
-    return;
-
-check_fallback:
-    /* idx > 0x1D: check simple sub-cases */
-    if (idx > 0x1Du) {
-        txCtrlWord |= (1u << 1);
-    } else if (idx == 0) {
-        /* nothing */
     } else {
-        txCtrlWord |= (1u << 0);
+        if (idx > 0x1Du) {
+            txCtrlWord |= (1u << 1);
+        } else if (idx != 0u) {
+            txCtrlWord |= (1u << 0);
+        }
     }
 
-    (txCtrlWord);
-    return;
+    if (pmbusEncodeResponse(txCtrlWord) != 0u) {
+        for (uint16_t i = 0; i < sizeof(pmbusBlockOffsets); i++) {
+            uint8_t entry = pmbusBlockOffsets[i];
+            if (pmbusBlockCommandInvalid(entry) != 0u) {
+                txCtrlWord |= (1u << 1);
+            }
+            if ((uint16_t)(entry + 4u) >= idx) {
+                break;
+            }
+        }
+
+        if ((txCtrlWord & (1u << 1)) == 0u) {
+            for (uint16_t i = 0; i < sizeof(pmbusBlockOffsets); i += 2u) {
+                uint8_t entry = pmbusBlockOffsets[i];
+                uint16_t word_val = (uint16_t)rxPacketBuf[entry + 1u]
+                                  | ((uint16_t)rxPacketBuf[entry + 2u] << 8);
+                /*
+                 * 0x2880 uses ZE [W9++], which consumes a word from the ROM
+                 * table, so this pass applies every other byte entry.
+                 */
+                pmbusWriteCommand(rxPacketBuf[entry], word_val, rxPacketBuf[entry + 1u]);
+                if ((uint16_t)(entry + 4u) >= rxBufIndex) {
+                    break;
+                }
+            }
+            I2C2TRN = 0x31u;
+        } else {
+            I2C2TRN = 0xCEu;
+        }
+
+        txCtrlWord |= (1u << 1);
+    }
 }
 
 /* ============================================================================
@@ -1529,24 +2139,45 @@ static void pmbusPacketValidate(void)
 {
     uint16_t idx = rxBufIndex;
 
-    if (idx == 0) {
-        /* No bytes received yet — send default filler */
-        I2C2TRN = 0xFAu;
-        return;
+    if (idx != 0u) {
+        txChecksumAccum = 0;
+        txCtrlWord = 0;
+
+        uint16_t cs_bad = pmbusChecksumVerify((uint8_t *)rxPacketBuf, idx);
+        txCtrlWord = (txCtrlWord & (uint16_t)~0x0004u) |
+                     (uint16_t)((cs_bad & 1u) << 2);
     }
 
-    /* Clear sequence and control */
-    txChecksumAccum  = 0;
-    txCtrlWord = 0;
+    if ((txCtrlWord & (1u << 2)) == 0u) {
+        switch (rxPacketBuf[0]) {
+            case 0x00u: pmbusMultiByteTxSetup(); goto done;
+            case 0x01u: pmbusCommandDispatcher(); goto done;
+            case 0x11u: pmbusReadVoutCommand(); goto done;
+            case 0x12u: pmbusReadIoutCommand(); goto done;
+            case 0x20u: pmbusBlockWriteModeSelect(); goto done;
+            case 0x21u: pmbusReadConfigCommand(); goto done;
+            case 0x22u: pmbusFlashReadWindow(); goto done;
+            case 0x23u: pmbusFlashWriteWindow(); goto done;
+            case 0x24u: pmbusSetOperationMode(); goto done;
+            case 0x3Au: pmbusProgramBlock(); goto done;
+            case 0x3Bu: pmbusReadbackBlock(); goto done;
+            case 0x3Cu: pmbusProgramHeader(); goto done;
+            case 0x3Du: pmbusStartFlashWrite(); goto done;
+            case 0xE0u: pmbusReadDeviceInfo(); goto done;
+            case 0xE2u: pmbusEnterProgramming(); goto done;
+            case 0xE3u: pmbusStoreProgrammingData(); goto done;
+            case 0xFFu: pmbusOperationUnlock(); goto done;
+            default:
+                I2C2TRN = 0x55u;
+                break;
+        }
+    } else {
+        I2C2TRN = 0xFAu;
+    }
 
-    /* Validate checksum of the received write packet */
-    uint16_t cs_ok = ((uint8_t *)0x1958u, idx);
-
-    /* Shift result left by 2 to place in bit2 of txCtrlWord */
-    uint16_t ctrl = txCtrlWord;
-    ctrl &= ~(1u << 2);
-    ctrl |= (cs_ok & 1u) << 2;
-    txCtrlWord = ctrl;
+done:
+    rxBufIndex = 0;
+    rxPendFlag = (uint16_t)(rxPendFlag + 1u);
 }
 
 /* ============================================================================
@@ -1609,23 +2240,13 @@ void __attribute__((interrupt, no_auto_psv)) _SI2C2Interrupt(void)
         }
     } else {
         /* R_W = 1: master is READING from us (transmit direction) */
-        if (!(stat & (1u << 2))) {
-            /* D_A = 0: address byte in read mode — discard */
-            (void)I2C2RCV;
-        } else {
-            /* D_A = 1: data byte in read mode */
-            if (stat & (1u << 5)) {
-                /* Call the write-then-read address setup / read dispatcher */
-                (void)I2C2RCV;
-                pmbusRxPacketDecode();   /* 0x28D6 */
-            }
-        }
+        (void)I2C2RCV;
+        pmbusPacketValidate();   /* 0x28D6 */
     }
 
-    /* Signal flashCmdFlags to co-processor if any flag is pending */
-    if (flashCmdFlags != 0) {
-        /* BSET 0x217, #4 — sets bit4 in peripheral register 0x216 */
-        SFR16(0x0216) |= (1u << 4);
+    /* Release SCL when no flash/I2C command flag is pending */
+    if (flashCmdFlags == 0) {
+        I2C2CON |= (1u << 12);
     }
 
     /* Clear SI2C2 interrupt flag (IFS3 bit1) */
