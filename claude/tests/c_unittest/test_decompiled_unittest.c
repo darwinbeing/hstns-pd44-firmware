@@ -23,8 +23,19 @@ uint16_t ADCBUF14;
 uint16_t ADCBUF15;
 uint16_t PDC5;
 uint16_t PORTD;
+uint16_t PORTG;
+uint16_t TRISF;
+uint16_t I2C2CON;
+uint16_t I2C2ADD;
+uint16_t I2C2TRN;
+uint16_t I2C2RCV;
+uint16_t I2C2STAT;
+uint16_t IPC12;
+uint16_t IFS3;
+uint16_t IEC3;
 volatile portd_bits_t PORTDbits;
 volatile latg_bits_t LATGbits;
+volatile i2c2stat_bits_t I2C2STATbits;
 
 volatile int16_t cal_vb;
 volatile int16_t ofs_vb;
@@ -87,9 +98,12 @@ volatile uint16_t pwmRunning;
 volatile uint16_t thermalFlags;
 volatile uint16_t systemState;
 volatile uint16_t droopMode;
+volatile uint16_t systemFlags;
 volatile uint16_t pmbusAlertFlags;
 volatile uint16_t statusFlags;
 volatile uint16_t auxFlags;
+volatile uint16_t currentLimitFlags;
+volatile uint16_t controlStatus;
 
 volatile int16_t debounceAdc12;
 volatile int16_t ocRampCounter;
@@ -112,6 +126,54 @@ uint16_t eeprom_crc_lo_saved;
 uint16_t eeprom_page_addr;
 uint16_t eeprom_crc_lo;
 uint16_t eeprom_cfg_reg;
+volatile uint16_t flashCmdFlags;
+uint8_t flash_buf_181E[256];
+uint8_t flash_program_scratch[16];
+uint8_t flash_buf_171E[256];
+uint8_t flash_read_buf_160E[256];
+uint16_t flashBlockByteCount;
+uint16_t flash_data_160A;
+uint16_t flash_data_160C;
+uint16_t flash_page_addr;
+volatile uint16_t flash_write_offset;
+volatile uint16_t flashBlockPageWord;
+volatile uint16_t flashBlockLastOffset;
+
+volatile uint16_t llcStatus;
+volatile uint16_t droopEnableFlags;
+volatile uint16_t eepromCrcShadow;
+volatile uint16_t flashUpdateResult;
+volatile uint16_t ioutCalFactor;
+volatile uint16_t ioutCalFactorShadow;
+volatile uint16_t rxBufIndex;
+volatile uint16_t rxPendFlag;
+volatile uint16_t rxEventFlags;
+volatile uint8_t rxPacketBuf[34];
+volatile uint8_t rxAddrByte;
+volatile uint16_t txCtrlWord;
+volatile uint16_t txByteCount;
+volatile uint16_t txChecksumAccum;
+volatile uint16_t txByteCntPreset;
+volatile uint16_t txSubReg;
+volatile uint16_t txBusStateFlags;
+volatile uint16_t i2cRxData;
+volatile uint8_t pmbusStringBuf[9];
+volatile uint8_t pmbusInfoBytes[10];
+
+volatile uint16_t pmbusReadPtr0;
+volatile uint16_t pmbusReadPtr1;
+volatile uint16_t voutCalE;
+volatile uint16_t voutCalD;
+volatile uint16_t tempLinearFmt;
+volatile uint16_t voutCalC;
+volatile uint16_t voutCalB;
+volatile uint16_t voutCalA;
+volatile uint16_t voutScaleA;
+volatile uint16_t voutScaleB;
+volatile uint16_t ioutScaleConst;
+volatile uint16_t ocpThresholdHw;
+volatile uint16_t ioutAdcRaw;
+volatile int16_t outputCurrent;
 const uint16_t crc16_table[256] = {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
     0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF,
@@ -139,6 +201,27 @@ int32_t __mulsi3(int32_t a, int32_t b)
 #include "../../decompiled/protection.c"
 #include "../../decompiled/flash.c"
 #include "../../decompiled/adc.c"
+
+void eepromCfgUpdate(uint8_t mode, uint8_t status, uint8_t enable)
+{
+    eepromSetConfig(mode, status, enable);
+}
+
+uint16_t eepromCfgRead(void)
+{
+    return eeprom_cfg_reg;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wattributes"
+/* Host GCC cannot compile dsPIC ISR attributes; the PMBus ISR itself is not exercised here. */
+#define __attribute__(x)
+#include "../../decompiled/pmbus.c"
+#undef __attribute__
+#pragma GCC diagnostic pop
 
 /* ---- Tiny test framework ---- */
 static int g_failures = 0;
@@ -290,18 +373,32 @@ static void reset_state(void)
     ADCBUF10 = ADCBUF11 = ADCBUF12 = ADCBUF13 = ADCBUF14 = ADCBUF15 = 0;
     PDC5 = 0;
     PORTD = 0;
+    PORTG = 0;
+    TRISF = 0;
+    I2C2CON = 0;
+    I2C2ADD = 0;
+    I2C2TRN = 0;
+    I2C2RCV = 0;
+    I2C2STAT = 0;
+    IPC12 = 0;
+    IFS3 = 0;
+    IEC3 = 0;
     PORTDbits.RD0 = 0;
     PORTDbits.RD6 = 0;
     PORTDbits.RD11 = 0;
+    I2C2STATbits.D_A = 0;
     tick_counter = 0;
 
     pwmRunning = 0;
     thermalFlags = 0;
     systemState = 0;
     droopMode = 0;
+    systemFlags = 0;
     pmbusAlertFlags = 0;
     statusFlags = 0;
     auxFlags = 0;
+    currentLimitFlags = 0;
+    controlStatus = 0;
 
     debounceAdc12 = 0;
     ocRampCounter = 0;
@@ -320,6 +417,52 @@ static void reset_state(void)
     memset(flash_sector_buf_1598, 0, sizeof(flash_sector_buf_1598));
     memset(flash_read_buf_15B0, 0, sizeof(flash_read_buf_15B0));
     memset(flash_read_buf_15D0, 0, sizeof(flash_read_buf_15D0));
+    memset(flash_buf_181E, 0, sizeof(flash_buf_181E));
+    memset(flash_program_scratch, 0, sizeof(flash_program_scratch));
+    memset(flash_buf_171E, 0, sizeof(flash_buf_171E));
+    memset(flash_read_buf_160E, 0, sizeof(flash_read_buf_160E));
+    memset((void *)rxPacketBuf, 0, sizeof(rxPacketBuf));
+    memset((void *)pmbusStringBuf, 0, sizeof(pmbusStringBuf));
+    memset((void *)pmbusInfoBytes, 0, sizeof(pmbusInfoBytes));
+    flashCmdFlags = 0;
+    flashBlockByteCount = 0;
+    flash_data_160A = 0;
+    flash_data_160C = 0;
+    flash_page_addr = 0;
+    flash_write_offset = 0;
+    flashBlockPageWord = 0;
+    flashBlockLastOffset = 0;
+    llcStatus = 0;
+    droopEnableFlags = 0;
+    eepromCrcShadow = 0;
+    flashUpdateResult = 0;
+    ioutCalFactor = 0;
+    ioutCalFactorShadow = 0;
+    rxBufIndex = 0;
+    rxPendFlag = 0;
+    rxEventFlags = 0;
+    rxAddrByte = 0;
+    txCtrlWord = 0;
+    txByteCount = 0;
+    txChecksumAccum = 0;
+    txByteCntPreset = 0;
+    txSubReg = 0;
+    txBusStateFlags = 0;
+    i2cRxData = 0;
+    pmbusReadPtr0 = 0;
+    pmbusReadPtr1 = 0;
+    voutCalE = 0;
+    voutCalD = 0;
+    tempLinearFmt = 0;
+    voutCalC = 0;
+    voutCalB = 0;
+    voutCalA = 0;
+    voutScaleA = 0;
+    voutScaleB = 0;
+    ioutScaleConst = 0;
+    ocpThresholdHw = 0;
+    ioutAdcRaw = 0;
+    outputCurrent = 0;
     eeprom_crc_lo_saved = 0;
     eeprom_page_addr = 0;
     eeprom_crc_lo = 0;
@@ -356,11 +499,16 @@ static void verify_signatures(void)
     void (*f18)(void) = droopTrimCalc;
     void (*f19)(void) = pidControl;
     void (*f20)(void) = ocpFoldback;
+    uint16_t (*f21)(uint8_t *, uint16_t) = pmbusChecksumVerify;
+    uint16_t (*f22)(uint16_t) = pmbusEncodeResponse;
+    void (*f23)(void) = pmbusRxPacketDecode;
+    uint16_t (*f24)(uint16_t) = pmbusBlockCommandInvalid;
     (void)f1; (void)f2; (void)f3; (void)f4; (void)f5; (void)f5a; (void)f5b;
     (void)f6; (void)f7; (void)f8; (void)f9; (void)f10;
     (void)f10a; (void)f10b; (void)f10c;
     (void)f11; (void)f12; (void)f13; (void)f14;
     (void)f15; (void)f16; (void)f17; (void)f18; (void)f19; (void)f20;
+    (void)f21; (void)f22; (void)f23; (void)f24;
 }
 
 /* ---- Simple tests ---- */
@@ -687,6 +835,390 @@ static void test_eeprom_and_lookup_simple(void)
     ASSERT_EQ_I32(0xA3, flash_lookup_15D0(3), "flash_lookup_15D0");
     ASSERT_EQ_I32(0xB4, flash_lookup_15B0(4), "flash_lookup_15B0");
     ASSERT_EQ_I32(0xC5, flash_lookup_1598(5), "flash_lookup_1598");
+}
+
+static uint8_t pmbus_checksum_byte(const uint8_t *buf, uint16_t data_len)
+{
+    uint16_t sum = (uint16_t)(I2C2ADD + I2C2ADD);
+    uint16_t i;
+
+    for (i = 0; i < data_len; i++)
+        sum = (uint16_t)(sum + buf[i]);
+
+    return (uint8_t)(-(uint8_t)sum);
+}
+
+static void pmbus_feed_rx(uint8_t value)
+{
+    I2C2RCV = value;
+    pmbusRxPacketDecode();
+}
+
+static void pmbus_set_tuple(uint16_t idx, uint8_t cmd, uint16_t word)
+{
+    rxPacketBuf[idx] = cmd;
+    rxPacketBuf[idx + 1u] = (uint8_t)word;
+    rxPacketBuf[idx + 2u] = (uint8_t)(word >> 8);
+}
+
+static void test_pmbus_checksum_encode_and_rx_medium(void)
+{
+    uint8_t pkt[] = {0x22, 0x10, 0x00};
+
+    reset_state();
+    I2C2ADD = 0x58;
+    pkt[2] = pmbus_checksum_byte(pkt, 2);
+    ASSERT_EQ_I32(0, pmbusChecksumVerify(pkt, sizeof(pkt)), "valid checksum should return zero");
+    pkt[2] ^= 0x01u;
+    ASSERT_EQ_I32(1, pmbusChecksumVerify(pkt, sizeof(pkt)), "invalid checksum should return one");
+    ASSERT_EQ_I32(0, pmbusChecksumVerify(pkt, 0), "zero-length checksum is a no-op");
+
+    I2C2TRN = 0x1234;
+    ASSERT_EQ_I32(0, pmbusEncodeResponse(1), "response code 1 accepted");
+    ASSERT_EQ_I32(0xFE, I2C2TRN, "response code 1");
+    ASSERT_EQ_I32(0, pmbusEncodeResponse(2), "response code 2 accepted");
+    ASSERT_EQ_I32(0xCE, I2C2TRN, "response code 2");
+    ASSERT_EQ_I32(0, pmbusEncodeResponse(4), "response code 4 accepted");
+    ASSERT_EQ_I32(0xFA, I2C2TRN, "response code 4");
+    ASSERT_EQ_I32(0, pmbusEncodeResponse(8), "response code 8 accepted");
+    ASSERT_EQ_I32(0x55, I2C2TRN, "response code 8");
+    ASSERT_EQ_I32(0, pmbusEncodeResponse(0x10), "response code 0x10 accepted");
+    ASSERT_EQ_I32(0xAA, I2C2TRN, "response code 0x10");
+    I2C2TRN = 0x77;
+    ASSERT_EQ_I32(1, pmbusEncodeResponse(0), "unsupported response code rejected");
+    ASSERT_EQ_I32(0x77, I2C2TRN, "unsupported response should not touch TRN");
+    pmbusUnsupportedCommand();
+    ASSERT_EQ_I32(0x55, I2C2TRN, "unsupported command helper byte");
+
+    reset_state();
+    txChecksumAccum = 0x34;
+    rxEventFlags = 0xFFFF;
+    pmbusChecksumResponse();
+    ASSERT_EQ_I32(1, (txCtrlWord >> 1) & 1, "checksum response sets end flag");
+    ASSERT_EQ_I32(0, rxEventFlags, "checksum response clears events");
+    ASSERT_EQ_I32(0xCC, I2C2TRN, "checksum response byte");
+
+    reset_state();
+    txChecksumAccum = 0x10;
+    pmbusSendDataByte(0x22);
+    ASSERT_EQ_I32(0x22, I2C2TRN, "send data byte loads TRN");
+    ASSERT_EQ_I32(0x32, txChecksumAccum, "send data byte accumulates checksum");
+    pmbusSendEndChecksum();
+    ASSERT_EQ_I32(1, (txCtrlWord >> 1) & 1, "send end checksum sets end flag");
+    ASSERT_EQ_I32(0xCE, I2C2TRN, "send end checksum byte");
+
+    reset_state();
+    pmbus_feed_rx(0x13);
+    ASSERT_EQ_I32(1, rxBufIndex, "rx index after first byte");
+    ASSERT_EQ_I32(0x13, rxPacketBuf[0], "rx byte stored at zero-based buffer index");
+    ASSERT_EQ_I32(1, (rxEventFlags >> 1) & 1, "cmd 0x13 event bit");
+
+    reset_state();
+    rxBufIndex = 0x21;
+    pmbus_feed_rx(0xB0);
+    ASSERT_EQ_I32(0xB0, rxAddrByte, "address byte stored separately");
+    ASSERT_EQ_I32(0x21, rxBufIndex, "address-byte path does not increment rx index");
+
+    reset_state();
+    pmbus_feed_rx(0x3B);
+    pmbus_feed_rx(0x00);
+    pmbus_feed_rx(0x12);
+    pmbus_feed_rx(0x34);
+    ASSERT_EQ_I32(0x1A34, i2cRxData, "cmd 0x3B adds flash page offset");
+    ASSERT_EQ_I32(1, (flashCmdFlags >> 1) & 1, "cmd 0x3B sets flash command bit1");
+
+    reset_state();
+    pmbus_feed_rx(0x20);
+    pmbus_feed_rx(2);
+    pmbus_feed_rx(8);
+    ASSERT_EQ_I32(0, flash_data_160A, "cmd 0x20 mode 2 page 8 offset");
+    ASSERT_EQ_I32(2, flash_data_160C, "cmd 0x20 mode 2 page 8 bank");
+    ASSERT_EQ_I32(1, (flashCmdFlags >> 5) & 1, "cmd 0x20 sets flash command bit5");
+}
+
+static void test_pmbus_block_validator_edges_medium(void)
+{
+    reset_state();
+
+    flash_read_buf_15E6[0x10] = 1;
+    pmbus_set_tuple(1, 0x31, 1);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x31 rejected when flash flag is set");
+
+    flash_read_buf_15E6[0x10] = 0;
+    droopEnableFlags = 0;
+    pmbus_set_tuple(1, 0x31, 0);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x31 rejects zero without bit10");
+    pmbus_set_tuple(1, 0x31, 1);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x31 accepts nonzero without bit10");
+
+    droopEnableFlags = 0x0400;
+    pmbus_set_tuple(1, 0x31, 0x00FF);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x31 accepts low update with bit10");
+    pmbus_set_tuple(1, 0x31, 0x8000);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x31 accepts 0x8000 with bit10");
+    pmbus_set_tuple(1, 0x31, 0x0100);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x31 rejects 0x0100 with bit10");
+
+    pmbus_set_tuple(1, 0x32, 0x3000);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x32 lower bound");
+    pmbus_set_tuple(1, 0x32, 0x2FFF);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x32 below lower bound");
+    pmbus_set_tuple(1, 0x32, 0x3133);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x32 upper bound");
+    pmbus_set_tuple(1, 0x32, 0x3134);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x32 above upper bound");
+
+    pmbus_set_tuple(1, 0x33, 0x0040);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x33 lower bound");
+    pmbus_set_tuple(1, 0x33, 0x003F);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x33 below lower bound");
+    pmbus_set_tuple(1, 0x34, 0x1180);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x34 upper bound");
+    pmbus_set_tuple(1, 0x34, 0x1181);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x34 above upper bound");
+
+    pmbusReadPtr0 = 0x1000;
+    pmbus_set_tuple(1, 0x35, 0x0F00);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x35 threshold equal");
+    pmbus_set_tuple(1, 0x35, 0x0F01);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x35 threshold above");
+
+    pmbusReadPtr1 = 0x1000;
+    pmbus_set_tuple(1, 0x36, 0x10FF);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x36 threshold below");
+    pmbus_set_tuple(1, 0x36, 0x1100);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x36 threshold equal");
+
+    voutCalD = 0x2000;
+    pmbus_set_tuple(1, 0x37, 0x1F00);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x37 threshold equal");
+    pmbus_set_tuple(1, 0x37, 0x1F01);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x37 threshold above");
+
+    voutCalE = 0x2000;
+    pmbus_set_tuple(1, 0x38, 0x20FF);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x38 threshold below");
+    pmbus_set_tuple(1, 0x38, 0x2100);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x38 threshold equal");
+
+    pmbus_set_tuple(1, 0x3D, 0x0000);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x3D rejects low byte zero");
+    pmbus_set_tuple(1, 0x3D, 0x00EF);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x3D accepts 0xEF");
+    pmbus_set_tuple(1, 0x3D, 0x00F0);
+    ASSERT_EQ_I32(1, pmbusBlockCommandInvalid(1), "cmd 0x3D rejects 0xF0");
+    pmbus_set_tuple(1, 0x3D, 0x00FA);
+    ASSERT_EQ_I32(0, pmbusBlockCommandInvalid(1), "cmd 0x3D accepts 0xFA");
+}
+
+static void test_pmbus_flash_and_programming_medium(void)
+{
+    uint16_t sum;
+
+    reset_state();
+    rxBufIndex = 3;
+    rxPacketBuf[1] = 2;
+    rxPendFlag = 1;
+    txChecksumAccum = 0x10;
+    flash_read_buf_160E[0x21] = 0xA5;
+    pmbusFlashReadWindow();
+    ASSERT_EQ_I32(0xA5, I2C2TRN, "flash read page window byte");
+    ASSERT_EQ_I32(0xB5, txChecksumAccum, "flash read checksum accumulates byte");
+
+    reset_state();
+    rxBufIndex = 3;
+    rxPacketBuf[1] = 2;
+    rxPendFlag = 0x10;
+    txChecksumAccum = 0x22;
+    pmbusFlashReadWindow();
+    ASSERT_EQ_I32(0xDE, I2C2TRN, "flash read page window checksum");
+    ASSERT_EQ_I32(1, (txCtrlWord >> 1) & 1, "flash read page window sets end flag");
+
+    reset_state();
+    rxBufIndex = 5;
+    rxPacketBuf[1] = 0xC8;
+    rxPacketBuf[2] = 0x11;
+    rxPacketBuf[3] = 0x22;
+    pmbusFlashWriteWindow();
+    ASSERT_EQ_I32(0x11, flash_read_buf_160E[0xC8], "flash write window byte 0");
+    ASSERT_EQ_I32(0x22, flash_read_buf_160E[0xC9], "flash write window byte 1");
+    ASSERT_EQ_I32(1, (flashCmdFlags >> 4) & 1, "flash write window changed bit");
+    ASSERT_EQ_I32(0x31, I2C2TRN, "flash write window ack");
+
+    reset_state();
+    rxBufIndex = 4;
+    rxPacketBuf[1] = 0xC7;
+    rxPacketBuf[2] = 0x55;
+    pmbusFlashWriteWindow();
+    ASSERT_EQ_I32(0, flash_read_buf_160E[0xC7], "protected write window without LLC mode");
+    ASSERT_EQ_I32(0xAA, I2C2TRN, "protected write window nack");
+
+    reset_state();
+    rxBufIndex = 8;
+    eepromCrcShadow = 0x1234;
+    rxPacketBuf[1] = 0x05;
+    rxPacketBuf[2] = 0xA6;
+    rxPacketBuf[3] = 0x02;
+    rxPacketBuf[4] = 0x01;
+    rxPacketBuf[5] = 0x12;
+    rxPacketBuf[6] = 0x34;
+    pmbusOperationUnlock();
+    ASSERT_EQ_I32(1, (systemFlags >> 9) & 1, "unlock sets programming enable");
+    ASSERT_EQ_I32(1, eeprom_cfg_reg & 1, "unlock persists enable bit");
+    ASSERT_EQ_I32(0x31, I2C2TRN, "unlock ack");
+
+    reset_state();
+    systemFlags = 0x0200;
+    rxBufIndex = 4;
+    rxPacketBuf[1] = 'P';
+    rxPacketBuf[2] = 'H';
+    pmbusProgramHeader();
+    ASSERT_EQ_I32(1, systemFlags & 1, "program header accepted");
+    ASSERT_EQ_I32(0x31, I2C2TRN, "program header ack");
+
+    reset_state();
+    systemFlags = 0x0200;
+    rxBufIndex = 8;
+    rxPacketBuf[1] = 3;
+    rxPacketBuf[2] = 0x00;
+    rxPacketBuf[3] = 0x10;
+    rxPacketBuf[4] = 0;
+    rxPacketBuf[5] = 0xAA;
+    rxPacketBuf[6] = 0xBB;
+    rxPacketBuf[7] = 0xCC;
+    sum = 0;
+    for (uint16_t i = 1; i <= 7; i++)
+        sum = (uint16_t)(sum + rxPacketBuf[i]);
+    rxPacketBuf[8] = (uint8_t)(-(uint8_t)sum);
+    pmbusProgramBlock();
+    ASSERT_EQ_I32(0x0810, flashBlockPageWord, "program block page offset");
+    ASSERT_EQ_I32(3, flashBlockByteCount, "program block byte count");
+    ASSERT_EQ_I32(0xAA, flash_program_scratch[0], "program block scratch byte 0");
+    ASSERT_EQ_I32(0xBB, flash_program_scratch[1], "program block scratch byte 1");
+    ASSERT_EQ_I32(0xCC, flash_program_scratch[2], "program block scratch byte 2");
+    ASSERT_EQ_I32(0xAA, flash_buf_171E[0x10], "program block page byte 0");
+    ASSERT_EQ_I32(0xBB, flash_buf_171E[0x11], "program block page byte 1");
+    ASSERT_EQ_I32(0xCC, flash_buf_171E[0x12], "program block page byte 2");
+    ASSERT_EQ_I32(0, flash_buf_181E[0x10], "program block leaves readback buffer");
+    ASSERT_EQ_I32(0x31, I2C2TRN, "program block ack");
+
+    reset_state();
+    llcStatus = 0x0100;
+    rxBufIndex = 0x0B;
+    for (uint16_t i = 0; i < 9; i++)
+        rxPacketBuf[i + 1u] = (uint8_t)('A' + i);
+    pmbusEnterProgramming();
+    ASSERT_EQ_I32('A', pmbusStringBuf[0], "enter programming stores string byte 0");
+    ASSERT_EQ_I32('I', pmbusStringBuf[8], "enter programming stores string byte 8");
+    ASSERT_EQ_I32(1, (currentLimitFlags >> 1) & 1, "enter programming sets current flag");
+    ASSERT_EQ_I32(0x31, I2C2TRN, "enter programming ack");
+
+    reset_state();
+    llcStatus = 0x0100;
+    pmbusStringBuf[8] = '\n';
+    pmbusInfoBytes[0] = '\r';
+    rxPendFlag = 10;
+    txChecksumAccum = 0x44;
+    pmbusEnterProgramming();
+    ASSERT_EQ_I32(0xBC, I2C2TRN, "enter programming terminator checksum");
+    ASSERT_EQ_I32(1, (txCtrlWord >> 2) & 1, "enter programming terminator sets checksum flag");
+
+    reset_state();
+    llcStatus = 0x0100;
+    rxBufIndex = 0x16;
+    rxPacketBuf[1] = 0x11;
+    rxPacketBuf[2] = 0x22;
+    rxPacketBuf[3] = 0x33;
+    rxPacketBuf[4] = 0x44;
+    for (uint16_t i = 0; i < 16; i++)
+        rxPacketBuf[i + 5u] = (uint8_t)(0x80u + i);
+    pmbusStoreProgrammingData();
+    ASSERT_EQ_I32(0x11, (uint8_t)flash_read_buf_15E6[0x11], "store programming metadata 0");
+    ASSERT_EQ_I32(0x44, (uint8_t)flash_read_buf_15E6[0x14], "store programming metadata 3");
+    ASSERT_EQ_I32(0x80, (uint8_t)flash_read_buf_15E6[0], "store programming data 0");
+    ASSERT_EQ_I32(0x8F, (uint8_t)flash_read_buf_15E6[15], "store programming data 15");
+    ASSERT_EQ_I32(1, (flashCmdFlags >> 6) & 1, "store programming sets flash bit6");
+    ASSERT_EQ_I32(1, (statusFlags >> 6) & 1, "store programming sets status bit6");
+    ASSERT_EQ_I32(0x31, I2C2TRN, "store programming ack");
+}
+
+static void test_pmbus_readback_and_mode_medium(void)
+{
+    reset_state();
+    rxBufIndex = 4;
+    rxPacketBuf[1] = 0;
+    rxPacketBuf[2] = 0;
+    rxPendFlag = 3;
+    flash_read_buf_15D0[3] = 0xA3;
+    pmbusBlockWriteModeSelect();
+    ASSERT_EQ_I32(0xA3, I2C2TRN, "summary block byte");
+
+    reset_state();
+    rxBufIndex = 4;
+    rxPacketBuf[1] = 2;
+    rxPacketBuf[2] = 0x0A;
+    rxPendFlag = 4;
+    flash_read_buf_15B0[4] = 0xB4;
+    pmbusBlockWriteModeSelect();
+    ASSERT_EQ_I32(0xB4, I2C2TRN, "data block byte");
+
+    reset_state();
+    rxBufIndex = 4;
+    rxPacketBuf[1] = 1;
+    rxPacketBuf[2] = 0;
+    rxPendFlag = 5;
+    flash_sector_buf_1598[5] = 0xC5;
+    pmbusBlockWriteModeSelect();
+    ASSERT_EQ_I32(0xC5, I2C2TRN, "status block byte");
+
+    reset_state();
+    rxBufIndex = 3;
+    rxPacketBuf[1] = 0xE0;
+    rxPendFlag = 4;
+    pmbusInfoBytes[4] = 0x44;
+    pmbusReadDeviceInfo();
+    ASSERT_EQ_I32(0x44, I2C2TRN, "device info byte");
+
+    reset_state();
+    rxBufIndex = 5;
+    rxPacketBuf[1] = 3;
+    rxPendFlag = 2;
+    flash_buf_181E[2] = 0x76;
+    pmbusReadbackBlock();
+    ASSERT_EQ_I32(0x76, I2C2TRN, "readback block byte");
+
+    reset_state();
+    rxBufIndex = 5;
+    rxPacketBuf[1] = 'P';
+    rxPacketBuf[2] = 'H';
+    rxPacketBuf[3] = 1;
+    pmbusSetOperationMode();
+    ASSERT_EQ_I32(1, (llcStatus >> 8) & 1, "operation mode enable");
+    ASSERT_EQ_I32(0x31, I2C2TRN, "operation mode enable ack");
+
+    reset_state();
+    llcStatus = 0x0100;
+    rxBufIndex = 3;
+    rxPacketBuf[1] = 1;
+    pmbusReadConfigCommand();
+    ASSERT_EQ_I32(0x0048, systemFlags & 0x0048, "read config sets update flags");
+    ASSERT_EQ_I32(0x31, I2C2TRN, "read config ack in LLC mode");
+
+    reset_state();
+    rxBufIndex = 3;
+    rxPacketBuf[1] = 0xAA;
+    ioutCalFactor = 0x1234;
+    pmbusReadVoutCommand();
+    ASSERT_EQ_I32(1, (currentLimitFlags >> 8) & 1, "read vout arms calibration");
+    ASSERT_EQ_I32(0x1234, ioutCalFactorShadow, "read vout shadows calibration");
+    ASSERT_EQ_I32(0x31, I2C2TRN, "read vout ack");
+
+    reset_state();
+    rxBufIndex = 2;
+    pmbusStartFlashWrite();
+    ASSERT_EQ_I32(1, (systemFlags >> 8) & 1, "start flash write sets pending bit");
+    ASSERT_EQ_I32(0x0800, flash_write_offset, "start flash write offset");
+    ASSERT_EQ_I32(0x31, I2C2TRN, "start flash write ack");
 }
 
 static void test_adc_misc_voltage_current_medium(void)
@@ -1039,6 +1571,10 @@ int main(int argc, char **argv)
     RUN_TEST(test_thresholdCompare_inline_asm_agree);
     RUN_TEST(test_flash_helpers_medium);
     RUN_TEST(test_eeprom_and_lookup_simple);
+    RUN_TEST(test_pmbus_checksum_encode_and_rx_medium);
+    RUN_TEST(test_pmbus_block_validator_edges_medium);
+    RUN_TEST(test_pmbus_flash_and_programming_medium);
+    RUN_TEST(test_pmbus_readback_and_mode_medium);
     RUN_TEST(test_adc_misc_voltage_current_medium);
     RUN_TEST(test_adc_droop_pid_ocp_complex);
     RUN_TEST(test_softStartRamp_complex);

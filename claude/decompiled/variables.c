@@ -147,12 +147,15 @@ volatile int16_t phase3_target;
 /* I2C2 -> Flash command interface */
 volatile uint16_t flashCmdFlags;
 volatile uint8_t  i2cRxPageNum;
+volatile uint16_t flashBlockPageWord;
 volatile uint16_t i2cRxData;
 volatile uint16_t flash_write_offset;
+volatile uint16_t flashBlockLastOffset;
 
 /* Flash buffers */
 uint8_t flash_buf_256[256];
 uint8_t flash_buf_181E[256];
+uint8_t flash_program_scratch[16];
 uint8_t flash_buf_171E[256];
 uint8_t flash_sector_buf_1498[256];
 uint8_t flash_sector_buf_1598[24];
@@ -160,6 +163,7 @@ uint8_t flash_read_buf_15B0[32];
 uint8_t flash_read_buf_15D0[32];
 int8_t flash_read_buf_15E6[32];
 uint8_t flash_read_buf_160E[256];
+uint16_t flashBlockByteCount;
 uint16_t flash_data_160A;
 uint16_t flash_data_160C;
 uint16_t flash_page_addr;
@@ -212,6 +216,7 @@ volatile uint16_t statusFlags2;
 volatile int32_t  droopIntegrator;
 volatile uint16_t pmbusAlertFlags;
 volatile uint16_t tempAdcValue;
+volatile uint16_t uartCmdParam2;
 volatile uint16_t voutRefInitial;
 volatile uint16_t vinUvSubCounter;
 volatile uint16_t vinUvSecCounter;
@@ -299,6 +304,7 @@ volatile uint16_t eepromPageShadow;
 volatile uint16_t eepromCrcShadow;
 volatile uint16_t ioutScaleConst;
 volatile uint16_t ioutCalFactor;
+volatile uint16_t ioutCalFactorShadow;
 volatile uint16_t eepromSavedShadow;
 
 /* UART1 subsystem */
@@ -311,6 +317,8 @@ volatile uint16_t uartTxPacketLen;
 volatile uint16_t uartTxPrescaler;
 volatile uint16_t uartTxByteIdx;
 volatile uint8_t  uartTxBuf[9];
+volatile uint8_t  pmbusStringBuf[9];
+volatile uint8_t  pmbusInfoBytes[10] = { 0, 0, 0, 0, 0, 'H', '0', '5', 'W', 'D' };
 volatile uint8_t  uartStreamSrc[7];
 volatile uint16_t uartStatusWord;
 volatile uint16_t uartCmdParam0;
@@ -321,6 +329,9 @@ volatile uint16_t uartCmdParamExt;
 volatile uint16_t oc2rsUpperLimit;
 volatile uint16_t oc2rsUpdateCnt;
 volatile uint16_t oc2rsTarget;
+volatile int16_t  oc2rsStepValues[5];
+volatile int16_t  oc2rsStepThresholds[5];
+volatile uint16_t oc2rsLookupIndex;
 
 /* I2C2 protocol */
 volatile uint16_t rxBufIndex;
@@ -335,6 +346,7 @@ volatile uint16_t txByteCntPreset;
 volatile uint16_t txSubReg;
 volatile uint16_t txBusStateFlags;
 volatile uint16_t rxAuxFlags;
+volatile uint16_t pwmRunRequestShadow;
 volatile uint16_t i2cPeriodCnt;
 volatile uint16_t i2cTxCounter;
 volatile uint32_t i2cTickCnt;

@@ -17,6 +17,8 @@ begin
       RD1 <= '1';
       RD10 <= '0';
       RD11 <= '1';  -- supply-good input
+      RG2 <= '1';   -- I2C2 SDA idle high
+      RG3 <= '1';   -- I2C2 SCL idle high
       wait;
    end process;
 

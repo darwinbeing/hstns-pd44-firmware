@@ -46,7 +46,7 @@ SIGNATURE_CASES: List[SignatureCase] = [
         name="thresholdCompare433C",
         source_relpath="decompiled/voltage_loop.c",
         asm_addr=0x4326,
-        expected_return="uint16_t",
+        expected_return="VLOOP_LOCAL uint16_t",
         expected_param_types=("uint16_t", "uint16_t", "uint16_t", "uint16_t"),
         call_sites=(0x4352,),
     ),
@@ -54,7 +54,7 @@ SIGNATURE_CASES: List[SignatureCase] = [
         name="latchCounter430C",
         source_relpath="decompiled/voltage_loop.c",
         asm_addr=0x430C,
-        expected_return="uint16_t",
+        expected_return="VLOOP_LOCAL uint16_t",
         expected_param_types=("uint16_t", "uint16_t", "volatile int16_t *", "uint16_t"),
         call_sites=(0x4362,),
     ),
@@ -106,7 +106,8 @@ def norm_ws(s: str) -> str:
 
 
 def norm_type(s: str) -> str:
-    # ignore whitespace differences for comparison
+    # Ignore whitespace differences only. Linkage macros remain part of the
+    # expected signature, so the audit does not silently weaken checks.
     return re.sub(r"\s+", "", s.strip())
 
 

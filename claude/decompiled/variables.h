@@ -262,21 +262,25 @@ extern volatile uint16_t flashCmdFlags;    /* 0x1928 - Flash operation flag bits
                                               *   bit5 = flashProgramRead32
                                               *   bit6 = flashReadPage7        */
 extern volatile uint8_t  i2cRxPageNum;       /* 0x1921 - page number from I2C2 host */
+extern volatile uint16_t flashBlockPageWord;  /* 0x1920 - PMBus block-write page/offset word */
 extern volatile uint16_t i2cRxData;          /* 0x1922:0x1923 - data word from I2C2 host */
 extern volatile uint16_t flash_write_offset; /* 0x191E (high byte @0x191F) */
+extern volatile uint16_t flashBlockLastOffset; /* 0x1930 - last copied PMBus flash byte offset */
 
 /* ============================================================================
  * Flash buffers
  * ============================================================================ */
 extern uint8_t flash_buf_256[256];           /* 0x1294 - 256-byte page buffer */
 extern uint8_t flash_buf_181E[256];          /* 0x181E - 256-byte read buffer */
-extern uint8_t flash_buf_171E[256];          /* 0x171E - 256-byte read buffer */
+extern uint8_t flash_program_scratch[16];    /* 0x170E - PMBus block program scratch */
+extern uint8_t flash_buf_171E[256];          /* 0x171E - 256-byte program buffer */
 extern uint8_t flash_sector_buf_1498[256];   /* 0x1498 - sector buffer */
 extern uint8_t flash_sector_buf_1598[24];    /* 0x1598 - sector buffer 2 */
 extern uint8_t flash_read_buf_15B0[32];      /* 0x15B0 */
 extern uint8_t flash_read_buf_15D0[32];      /* 0x15D0 */
 extern int8_t flash_read_buf_15E6[32];       /* 0x15E6 */
 extern uint8_t flash_read_buf_160E[256];     /* 0x160E */
+extern uint16_t flashBlockByteCount;          /* 0x1608 - PMBus flash block byte count */
 extern uint16_t flash_data_160A;             /* 0x160A */
 extern uint16_t flash_data_160C;             /* 0x160C */
 extern uint16_t flash_page_addr;             /* 0x1606 */
@@ -351,6 +355,7 @@ extern volatile uint16_t statusFlags2;       /* 0x1262 (high byte @0x1263) - Sta
 extern volatile int32_t  droopIntegrator;    /* 0x126E:0x1270 - 32-bit droop integrator */
 extern volatile uint16_t pmbusAlertFlags;    /* 0x192A - bit0 = PMBus alert */
 extern volatile uint16_t tempAdcValue;       /* 0x1D16 - temperature ADC value */
+extern volatile uint16_t uartCmdParam2;      /* 0x1E46 - extended UART command parameter */
 extern volatile uint16_t voutRefInitial;     /* 0x1DA2 - Vout ref initial */
 extern volatile uint16_t vinUvSubCounter;    /* 0x1DEE - Vin UV sub-counter (ms ticks) */
 extern volatile uint16_t vinUvSecCounter;    /* 0x1DF0 - Vin UV seconds counter */
@@ -454,6 +459,7 @@ extern volatile uint16_t eepromPageShadow;      /* 0x1BB8 - shadow of eeprom_pag
 extern volatile uint16_t eepromCrcShadow;       /* 0x1BBA - shadow of eeprom CRC */
 extern volatile uint16_t ioutScaleConst;        /* 0x1BC6 - Iout scale constant */
 extern volatile uint16_t ioutCalFactor;         /* 0x1BCA - Iout cal factor (word) */
+extern volatile uint16_t ioutCalFactorShadow;   /* 0x1BCC - PMBus shadow of Iout cal factor */
 extern volatile uint16_t eepromSavedShadow;     /* 0x198E - shadow of eeprom_crc_lo_saved */
 
 /* ============================================================================
@@ -468,6 +474,8 @@ extern volatile uint16_t uartTxPacketLen;       /* 0x1CE8 - TX packet byte count
 extern volatile uint16_t uartTxPrescaler;       /* 0x1CEA - TX rate limiter counter */
 extern volatile uint16_t uartTxByteIdx;         /* 0x1CEC - TX current byte index */
 extern volatile uint8_t  uartTxBuf[9];          /* 0x1CEE - TX packet buffer */
+extern volatile uint8_t  pmbusStringBuf[9];    /* 0x1CFA - PMBus string scratch buffer */
+extern volatile uint8_t  pmbusInfoBytes[10];   /* 0x1D03 - PMBus info/ID byte window */
 extern volatile uint8_t  uartStreamSrc[7];      /* 0x1CF9 - streaming source buffer */
 extern volatile uint16_t uartStatusWord;        /* 0x1D0E - status payload for TX */
 extern volatile uint16_t uartCmdParam0;         /* 0x1D12 - parsed cmd parameter 0 */
@@ -480,6 +488,9 @@ extern volatile uint16_t uartCmdParamExt;       /* 0x1D14 - extended cmd paramet
 extern volatile uint16_t oc2rsUpperLimit;       /* 0x1E3C - OC2RS hard upper clamp */
 extern volatile uint16_t oc2rsUpdateCnt;        /* 0x1E52 - divide-by-10 rate limiter */
 extern volatile uint16_t oc2rsTarget;           /* 0x1E54 - computed OC2RS target value */
+extern volatile int16_t  oc2rsStepValues[5];    /* 0x1E24..0x1E2C - OC2RS lookup values */
+extern volatile int16_t  oc2rsStepThresholds[5]; /* 0x1E2E..0x1E36 - OC2RS lookup thresholds */
+extern volatile uint16_t oc2rsLookupIndex;      /* 0x1E50 - OC2RS lookup hysteresis index */
 
 /* ============================================================================
  * I2C2 protocol variables
@@ -496,6 +507,7 @@ extern volatile uint16_t txByteCntPreset;       /* 0x1952 - Tx byte-count preset
 extern volatile uint16_t txSubReg;              /* 0x192E - Tx sub-register */
 extern volatile uint16_t txBusStateFlags;       /* 0x194E - Tx-ready/bus-state flags */
 extern volatile uint16_t rxAuxFlags;            /* 0x1948 - Rx auxiliary flags */
+extern volatile uint16_t pwmRunRequestShadow;   /* 0x1932 - previous pwmRunRequest snapshot */
 extern volatile uint16_t i2cPeriodCnt;          /* 0x197C - I2C2 period counter */
 extern volatile uint16_t i2cTxCounter;          /* 0x19A4 - I2C2 transaction counter */
 extern volatile uint32_t i2cTickCnt;            /* 0x1936:0x1938 - 32-bit tick counter */
