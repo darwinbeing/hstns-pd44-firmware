@@ -1,4 +1,5 @@
 #include <xc.h>
+#include "define.h"
 
 /* ============================================================================
  * System state machine states
@@ -9,6 +10,11 @@
 #define ST_FAULT     3
 #define ST_HOLDOFF   5
 #define ST_RELAY     6
+
+extern s16 pdc1;
+extern s16 pdc2;
+extern s16 pdc3;
+extern void pwm_force_off(void);
 
 /* State machine & control flags */
 volatile uint16_t systemState;
@@ -22,12 +28,159 @@ volatile uint16_t auxFlags;
 volatile uint16_t currentLimitFlags;
 volatile uint16_t controlStatus;
 
-void state0Idle(void) {}
-void state1Startup(void) {}
-void state2Active(void) {}
-void state3Fault(void) {}
-void state5Handler(void) {}
-void state6Handler(void) {}
+volatile uint16_t pwmRunRequest;       /* DAT_ram_1bf0 */
+volatile uint16_t pwmRunning;          /* DAT_ram_1bf2 */
+volatile uint16_t pmbusAlertFlags;     /* DAT_ram_192a */
+volatile uint16_t faultResetTimer;     /* DAT_ram_1e0e */
+volatile uint16_t fanI2cAddr;          /* DAT_ram_1e08 */
+volatile uint16_t adcLiveA;            /* DAT_ram_1be8 */
+volatile uint16_t tempAdcValue;        /* DAT_ram_1d16 */
+volatile uint16_t fanDroopStepCnt;     /* DAT_ram_193c */
+
+/* Shared shutdown tail from faultHandler 0x3386 and OVP 0x444C. */
+void llcFaultShutdown(uint16_t control_flags)
+{
+    controlStatus |= control_flags;
+    pwmRunRequest |= (1u << 0);
+    pwmRunning &= ~(1u << 0);
+    pmbusAlertFlags |= (1u << 0);
+
+    pdc1 = 0;
+    pdc2 = 0;
+    pdc3 = 0;
+    PDC1 = 0;
+    PDC2 = 0;
+    PDC3 = 0;
+
+    pwm_force_off();
+    systemState = ST_FAULT;
+}
+
+void state0Idle(void)
+{
+    pwm_force_off();
+    pwmRunning &= ~(1u << 0);
+}
+
+void state1Startup(void)
+{
+    statusFlags |= STATUS_FLAG_STARTUP;
+    systemState = ST_ACTIVE;
+}
+
+void state2Active(void)
+{
+    if (controlStatus & 0x0001u)
+        llcFaultShutdown(0);
+}
+
+void state3Fault(void)
+{
+    pwm_force_off();
+    pwmRunning &= ~(1u << 0);
+}
+
+void state5Handler(void)
+{
+    state3Fault();
+}
+
+void state6Handler(void)
+{
+    state3Fault();
+}
+
+void checkFanControl(void)
+{
+    uint16_t addr_bits;
+
+    /* 0x4FBC: update fan controller I2C address from hardware straps. */
+    addr_bits = fanI2cAddr;
+    addr_bits &= ~(1u << 1);
+    addr_bits |= ((uint16_t)PORTCbits.RC14 << 1);
+    addr_bits &= ~(1u << 2);
+    addr_bits |= ((uint16_t)PORTCbits.RC13 << 2);
+    addr_bits &= ~(1u << 3);
+    addr_bits |= ((uint16_t)PORTDbits.RD10 << 3);
+    fanI2cAddr = addr_bits;
+    I2C2ADD = ((addr_bits & 0x000Eu) | 0x00B0u) >> 1;
+}
+
+static uint16_t fanNormalBand(uint16_t val)
+{
+    if (fanDroopStepCnt == 1u) {
+        if ((uint16_t)(val - 0x0AA0u) > 800u)
+            fanDroopStepCnt = 0;
+    } else if (fanDroopStepCnt == 2u) {
+        if ((uint16_t)(val - 0x0D20u) > 0x0400u)
+            fanDroopStepCnt = 0;
+    } else if (fanDroopStepCnt == 3u) {
+        if ((uint16_t)(val + 0xEA20u) > 0x10E0u)
+            fanDroopStepCnt = 0;
+    } else {
+        fanDroopStepCnt = 0;
+    }
+
+    if ((fanDroopStepCnt == 0) && (val > 0x0B3Fu)) {
+        if (val < 0x0D81u)
+            fanDroopStepCnt = 1;
+        else if (val < 0x1081u)
+            fanDroopStepCnt = 2;
+        else if ((val > 0x167Fu) && (val < 0x2621u))
+            fanDroopStepCnt = 3;
+    }
+
+    return fanDroopStepCnt;
+}
+
+static uint16_t fanHighPowerBand(uint16_t val)
+{
+    if (fanDroopStepCnt == 2u) {
+        if ((uint16_t)(val - 0x0E60u) > 0x19A0u)
+            fanDroopStepCnt = 0;
+    } else if (fanDroopStepCnt == 3u) {
+        if ((uint16_t)(val + 0xDA80u) > 0x0FA0u)
+            fanDroopStepCnt = 0;
+    }
+
+    if ((fanDroopStepCnt == 0) && (val > 0x0EFFu)) {
+        if (val < 0x26C1u)
+            fanDroopStepCnt = 2;
+        else if (val < 0x3481u)
+            fanDroopStepCnt = 3;
+    }
+
+    return fanDroopStepCnt | 0x04u;
+}
+
+static uint16_t fanBandToOc2rs(uint16_t band)
+{
+    switch (band & 0x03u) {
+        case 1:  return 0x00C8u;
+        case 2:  return 0x012Cu;
+        case 3:  return 0x0190u;
+        default: return 0x0064u;
+    }
+}
+
+void tempFanHandler(void)
+{
+    uint16_t mode = pwmRunning & 0x0402u;
+    uint16_t band;
+
+    if (mode == 0x0002u) {
+        band = fanNormalBand(adcLiveA);
+    } else if (mode == 0x0402u) {
+        band = fanHighPowerBand(adcLiveA);
+    } else {
+        fanDroopStepCnt = 0;
+        band = 0;
+    }
+
+    /* 0x2398 stores the selected band in pwmRunning high byte. */
+    pwmRunning = (pwmRunning & 0x00FFu) | (band << 8);
+    OC2RS = fanBandToOc2rs(band);
+}
 
 void mainStateDispatch(void)
 {
@@ -46,6 +199,7 @@ void mainStateDispatch(void)
         default: break;
     }
 
+    checkFanControl();        /* 0x4FBC */
     ClrWdt();
     IFS1bits.T4IF = 0;     /* clear T4 trigger flag */
 }

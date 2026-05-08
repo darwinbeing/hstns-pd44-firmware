@@ -25,7 +25,7 @@ MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE TER
 #include "p33Fxxxx.h"
 #include "define.h"
 
-
+extern int spi_at45db_page_program(const uint8_t *buf, uint16_t page);
 
 void uart2_putc(char c)
 {
@@ -165,11 +165,7 @@ static uint16_t crc16XmodemFrame(uint16_t page_index, const uint8_t *buf, uint16
 static int at45dbWritePage256Binary(const uint8_t *buf, uint16_t page_idx)
 {
   uint16_t page_addr = page_idx & 0x03FFu;
-  at45dbPageErase(page_addr);
-  at45dbBufferWrite(buf, FLASH_FRAME_DATA);
-  at45dbBufferProgramToPage(page_addr);
-  at45dbWaitReady();
-  return 1;
+  return spi_at45db_page_program(buf, page_addr) == 0;
 }
 
 static void flashRxResetToSync0(void)
@@ -224,24 +220,21 @@ static void flashRxHandleFullFrame(uint8_t last_byte)
     return;
   }
 
-//  if (LATFbits.LATF1) {
-//    /* PSU output active: block flash writes for safety. */
-//    serialPutc((char)FLASH_ACK_BUSY);
-//    flashRxResetToSync0();
-//    return;
-//  }
-
-  // spi_at45db_page_program(flashRxPayload, flashRxPageIndex);
+  if (LATFbits.LATF1) {
+    /* PSU output active: block flash writes for safety. */
+    serialPutc((char)FLASH_ACK_BUSY);
+    flashRxResetToSync0();
+    return;
+  }
 
   if((flashUartFrameCount % 8) == 0) {
     LED_TOGGLE();
   }
 
-  //
-  //    if (!at45dbWritePage256Binary(flashRxPayload, flashRxPageIndex)) {
-  //        flashRxFailAndResync(last_byte);
-  //        return;
-  //    }
+  if (!at45dbWritePage256Binary(flashRxPayload, flashRxPageIndex)) {
+    flashRxFailAndResync(last_byte);
+    return;
+  }
 
   flashUartWritePage = flashRxPageIndex;
   flashUartFrameCount++;

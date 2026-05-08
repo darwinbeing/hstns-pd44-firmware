@@ -227,6 +227,20 @@ typedef int64_t  s64;
 /* Over-current protection */
 #define OCP_THRESHOLD      0x800    /* vout_sum OCP level                   */
 #define OCP_DURATION      25000     /* OCP must persist this many cycles    */
+#define OCP_LATCH_THRESHOLD  0x1401 /* stateInit 0x2E3C soft OCP level     */
+#define OCP_HARD_THRESHOLD   0x1781 /* stateInit 0x2E3C hard OCP level     */
+#define OCP_LATCH_DELAY      0x0018 /* stateInit debounce limit, 24 ticks  */
+#define OCP_LATCH_FLAG       (1u << 7)
+#define OCP_FOLDBACK_DELAY   0x0225 /* droopMode 3 debounce limit          */
+#define OCP_FOLDBACK_FLAG    (1u << 8)
+#define OCP_DROOP3_THRESHOLD 0x1180 /* pmbusRamInit 0x14B6 ioutAdcRaw      */
+
+/* Over-voltage protection, voutCalibrationAndOvpDetect 0x444C */
+#define OVP_THRESHOLD_NORMAL 0x36F  /* AN5/Vout threshold, ~13.9 V          */
+#define OVP_THRESHOLD_MODE4  0x1DF  /* Lower droop-mode threshold            */
+#define OVP_FREQ_CTRL_MIN    0x1F3F /* freq_ctrl arm threshold               */
+#define OVP_ARM_FLAG         (1u << 4)
+#define STATUS_FLAG_STARTUP  (1u << 4)
 
 /* Frequency calculation constant
  *   0xB3FB00 = 11,796,224 = PWM_CLK_HZ / scaling_factor

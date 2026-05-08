@@ -299,6 +299,69 @@ int16_t vref_ocp_adj;
 // int16_t Imeas = 0;
 extern int16_t vfb_sum2ch;
 extern s16  voutSetpoint;
+extern volatile uint16_t systemState;
+extern volatile uint16_t protectionStatus;
+extern volatile uint16_t controlStatus;
+extern volatile uint16_t droopMode;
+extern void llcFaultShutdown(uint16_t control_flags);
+
+uint16_t ocp_shutdown_counter;       // DAT_ram_1220, stateInit OCP timer
+uint16_t ocp_foldback_counter;       // DAT_ram_1222, droopMode 3 OCP timer
+uint16_t ioutAdcRaw = OCP_DROOP3_THRESHOLD; // DAT_ram_1bb4, pmbusRamInit default
+uint16_t ocp_latch_threshold = OCP_LATCH_THRESHOLD;
+uint16_t ocp_hard_threshold = OCP_HARD_THRESHOLD;
+uint16_t ocp_latch_delay = OCP_LATCH_DELAY;
+uint16_t ocp_foldback_delay = OCP_FOLDBACK_DELAY;
+
+// =================================================================
+// HSTNS-PD44 LLC OCP Fault Latch
+// RE basis: stateInit() 0x2E3C normal and droopMode 3 branches,
+// followed by the faultHandler() shutdown path for bits 7/8.
+// =================================================================
+void ocpShutdownCheck(void)
+{
+    if (systemState != 2) {          // DAT_ram_1e22 = normal run
+        ocp_shutdown_counter = 0;
+        ocp_foldback_counter = 0;
+        return;
+    }
+
+    if (controlStatus & 0x0001u) {
+        ocp_shutdown_counter = 0;
+        ocp_foldback_counter = 0;
+        return;
+    }
+
+    if (droopMode == 3u) {
+        ocp_shutdown_counter = 0;
+        if (((uint16_t)Imeas_scaled <= ioutAdcRaw) && (vref_ocp_adj <= 0)) {
+            ocp_foldback_counter = 0;
+            return;
+        }
+
+        ocp_foldback_counter++;
+        if (ocp_foldback_counter > ocp_foldback_delay) {
+            protectionStatus |= OCP_FOLDBACK_FLAG;
+            llcFaultShutdown(0x0001u);
+        }
+        return;
+    }
+
+    ocp_foldback_counter = 0;
+    if ((uint16_t)Imeas_scaled > ocp_latch_threshold) {
+        ocp_shutdown_counter++;
+
+        if ((ocp_shutdown_counter > ocp_latch_delay) ||
+            ((uint16_t)Imeas_scaled > ocp_hard_threshold) ||
+            LATDbits.LATD4 ||
+            (protectionStatus & (1u << 10))) {
+            protectionStatus |= OCP_LATCH_FLAG;
+            llcFaultShutdown(0x0001u);
+        }
+    } else {
+        ocp_shutdown_counter = 0;
+    }
+}
 
 void ocpVrefFoldbackUpdate(void)
 {
