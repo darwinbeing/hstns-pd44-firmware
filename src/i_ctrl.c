@@ -308,6 +308,10 @@ extern void llcFaultShutdown(uint16_t control_flags);
 uint16_t ocp_shutdown_counter;       // DAT_ram_1220, stateInit OCP timer
 uint16_t ocp_foldback_counter;       // DAT_ram_1222, droopMode 3 OCP timer
 uint16_t ioutAdcRaw = OCP_DROOP3_THRESHOLD; // DAT_ram_1bb4, pmbusRamInit default
+uint16_t ocp_latch_threshold = OCP_LATCH_THRESHOLD;
+uint16_t ocp_hard_threshold = OCP_HARD_THRESHOLD;
+uint16_t ocp_latch_delay = OCP_LATCH_DELAY;
+uint16_t ocp_foldback_delay = OCP_FOLDBACK_DELAY;
 
 // =================================================================
 // HSTNS-PD44 LLC OCP Fault Latch
@@ -336,7 +340,7 @@ void ocpShutdownCheck(void)
         }
 
         ocp_foldback_counter++;
-        if (ocp_foldback_counter > OCP_FOLDBACK_DELAY) {
+        if (ocp_foldback_counter > ocp_foldback_delay) {
             protectionStatus |= OCP_FOLDBACK_FLAG;
             llcFaultShutdown(0x0001u);
         }
@@ -344,11 +348,11 @@ void ocpShutdownCheck(void)
     }
 
     ocp_foldback_counter = 0;
-    if ((uint16_t)Imeas_scaled > OCP_LATCH_THRESHOLD) {
+    if ((uint16_t)Imeas_scaled > ocp_latch_threshold) {
         ocp_shutdown_counter++;
 
-        if ((ocp_shutdown_counter > OCP_LATCH_DELAY) ||
-            ((uint16_t)Imeas_scaled > OCP_HARD_THRESHOLD) ||
+        if ((ocp_shutdown_counter > ocp_latch_delay) ||
+            ((uint16_t)Imeas_scaled > ocp_hard_threshold) ||
             LATDbits.LATD4 ||
             (protectionStatus & (1u << 10))) {
             protectionStatus |= OCP_LATCH_FLAG;

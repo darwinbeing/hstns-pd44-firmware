@@ -62,6 +62,13 @@ extern uint16_t ocp_shutdown_counter;
 extern uint16_t ocp_foldback_counter;
 extern uint16_t ioutAdcRaw;
 extern uint16_t ovp_counter;
+extern uint16_t ocp_latch_threshold;
+extern uint16_t ocp_hard_threshold;
+extern uint16_t ocp_latch_delay;
+extern uint16_t ocp_foldback_delay;
+extern uint16_t ovp_threshold_normal;
+extern uint16_t ovp_threshold_mode4;
+extern uint16_t ovp_freq_ctrl_min;
 unsigned char softStartFlag;
 
 void initVars(void)
@@ -113,6 +120,13 @@ void initVars(void)
   ocp_foldback_counter = 0;
   ioutAdcRaw = OCP_DROOP3_THRESHOLD;
   ovp_counter = 0;
+  ocp_latch_threshold = OCP_LATCH_THRESHOLD;
+  ocp_hard_threshold = OCP_HARD_THRESHOLD;
+  ocp_latch_delay = OCP_LATCH_DELAY;
+  ocp_foldback_delay = OCP_FOLDBACK_DELAY;
+  ovp_threshold_normal = OVP_THRESHOLD_NORMAL;
+  ovp_threshold_mode4 = OVP_THRESHOLD_MODE4;
+  ovp_freq_ctrl_min = OVP_FREQ_CTRL_MIN;
 
   cal_a_gain = 0x2030;
   cal_a_offset = (int16_t)0xFFF8;
